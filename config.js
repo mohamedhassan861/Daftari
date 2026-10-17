@@ -5,5 +5,5 @@
 // linked without asking Google again; without it, Google asks about once an hour.
 window.DAFTARI_CONFIG = {
   googleClientId: "309872061893-l5h4g0ldu1m7do7cqpih8b1jokk0pce0.apps.googleusercontent.com",
-  authWorker: ""
+  authWorker: "https://daftari-auth.mohamed-hassan861.workers.dev"
 };
