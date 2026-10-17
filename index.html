@@ -510,6 +510,7 @@ instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %
 closeTitle:['إقفال الشهر','Close the month'],closeBtn:['اعتمد','Confirm'],later:['بعدين','Later'],moveTo:['رحّل لـ','Move to'],finalAmt:['ده المبلغ النهائي','This is final'],keepDue:['سيبه مستحق','Keep it due'],
 closeHint:['دي الحاجات اللي كانت متوقعة في الشهر ده ولسه متدفعتش كلها. لكل واحدة اختار: المبلغ اللي اتدفع هو النهائي، ولا ترحّل الباقي لشهر تاني.','These were planned this month and are not fully paid. For each: is what was paid final, or move the rest to another month?'],
 closeNothing:['كل اللي كان متوقع في الشهر ده اتعمل. دوس اعتمد.','Everything planned this month was done. Tap Confirm.'],closedMsg:['الشهر اتقفل','Month closed'],carriedFrom:['مرحّل من','moved from'],
+extraPlan:['مبالغ متوقعة إضافية','Extra planned amounts'],addPlan:['مبلغ متوقع','Planned amount'],repeatFor:['لمدة','For'],thisMonthOnly:['الشهر ده بس','This month only'],monthsW:['شهور','months'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1772,7 +1773,27 @@ function fcMonthSheet(m){
   const part=p=>Object.entries(r.lines).filter(([k])=>k.startsWith(p)).sort((a,b)=>b[1].v-a[1].v).map(([k,x])=>row(x.label+(r.kind==='cur'&&x.a?' ('+t('actual')+' '+fmt(x.a)+')':''),x.v,p==='in:'?'pos':'')).join('')||`<div class="empty">${t('noItems')}</div>`;
   openSheet(monthLbl(m),`<div class="form"><div class="grp"><span>${t('cashIn')}</span><span class="num">${money(r.i)}</span></div><div class="list">${part('in:')}</div>
     <div class="grp"><span>${t('cashOut')}</span><span class="num">${money(r.e)}</span></div><div class="list">${part('out:')}</div>
-    <div class="list">${row(t('gapW'),r.i-r.e,r.i-r.e<0?'neg':'pos')}</div><p class="hint">${t('fcMonthHint')}</p></div>`);
+    <div class="list">${row(t('gapW'),r.i-r.e,r.i-r.e<0?'neg':'pos')}</div>
+    ${(()=>{const adj=(S.planAdj||[]).map((a,i)=>({a,i})).filter(z=>z.a.m===m);return adj.length?`<div class="grp"><span>${t('extraPlan')}</span></div><div class="list">${adj.map(({a,i})=>`<div class="row"><div class="main"><span class="t">${esc(a.label||catName(a.cat))}</span><span class="s">${a.type==='income'?t('inc1'):t('exp1')}</span></div><b class="amt ${a.type==='income'?'pos':''}">${money(a.amount)}</b><button type="button" class="btn sm danger" data-adj="${i}">${t('del')}</button></div>`).join('')}</div>`:''})()}
+    <button type="button" class="btn block" id="adjAdd">+ ${t('addPlan')}</button>
+    <p class="hint">${t('fcMonthHint')}</p></div>`,rr=>{
+    rr.querySelectorAll('[data-adj]').forEach(b=>b.onclick=()=>{S.planAdj.splice(+b.dataset.adj,1);commit(t('deleted'));fcMonthSheet(m)});
+    rr.querySelector('#adjAdd').onclick=()=>planAdjForm(m);
+  });
+}
+function planAdjForm(m){
+  let ty='expense';
+  openSheet(t('addPlan')+' · '+monthLbl(m),`<form class="form" id="f">${segHTML('pa',[['expense',t('exp1')],['income',t('inc1')]],ty)}
+    <label class="fld"><span>${t('category')}</span><select class="in-f" id="pc">${catOptsTree('expense','',false)}</select></label>
+    <label class="fld"><span>${t('amount')}</span><input class="in-f amt num" id="pv" inputmode="decimal" placeholder="0"></label>
+    <label class="fld"><span>${t('note')}</span><input class="in-f" id="pn"></label>
+    <label class="fld"><span>${t('repeatFor')}</span><select class="in-f" id="pr">${[1,2,3,6,12].map(n=>`<option value="${n}">${n===1?t('thisMonthOnly'):n+' '+t('monthsW')}</option>`).join('')}</select></label>
+    <div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
+    bindSeg(r,'pa',v=>{ty=v;r.querySelector('#pc').innerHTML=catOptsTree(v,'',false)});
+    r.querySelector('#f').onsubmit=e=>{e.preventDefault();const v=numv(r,'pv');if(!(v>0)){toast(t('needAmt'));return}
+      const n=+val(r,'pr')||1,cat=val(r,'pc'),note=val(r,'pn');for(let i=0;i<n;i++)S.planAdj.push({m:ymAdd(m,i),type:ty,cat,amount:v,label:note||catName(cat)});
+      commit(t('saved'));fcMonthSheet(m)};
+  });
 }
 
 /* ---------- closing a month: confirm what was final, move what is still expected ---------- */
@@ -1905,7 +1926,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.30 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.31 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
