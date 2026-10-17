@@ -308,6 +308,7 @@ driveNotSetup:['ربط Google Drive لسه متجهزش في النسخة دي.'
 driveNone:['مفيش نسخ على Drive لسه.','No backups on Drive yet.'],driveSyncNow:['احفظ على Drive دلوقتي','Save to Drive now'],
 driveKeep:['بنحتفظ بآخر 100 نسخة، والأقدم بتروح سلة المهملات في الـ Drive.','The latest 100 copies are kept; older ones move to Drive trash.'],
 driveAccount:['الحساب المربوط','Linked account'],driveSwitch:['غيّر الحساب','Change account'],driveAccUnknown:['هيظهر بعد أول حفظ على Drive','Shown after the next save to Drive'],
+driveAgain:['اضغط "اربط Google Drive" مرة كمان علشان نكمّل الربط.','Tap "Connect Google Drive" once more to finish linking.'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -375,7 +376,7 @@ const readVault=()=>{try{return JSON.parse(localStorage.getItem(VAULT)||'null')}
 let saving=Promise.resolve();
 let tokenAsked=0;
 function save(){
-  if(typeof drv!=='undefined'&&drv.linked&&driveReady()&&!hasToken()&&Date.now()-tokenAsked>60000){
+  if(typeof drv!=='undefined'&&!useWorker()&&drv.linked&&driveReady()&&!hasToken()&&Date.now()-tokenAsked>60000){
     tokenAsked=Date.now();requestToken('').then(()=>scheduleDrive()).catch(()=>{drv.needAuth=true;if(S)render()});
   }
   if(!KEYOBJ||!S)return;const snap=JSON.parse(JSON.stringify(S));const key=KEYOBJ,salt=SALT;
@@ -663,7 +664,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v1.4 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v1.5 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -773,7 +774,7 @@ function changePinForm(){
       if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}
       err(t('working'));
       try{const vt=readVault();const k=await derive(p0,fromB64(vt.salt),vt.iter);await unseal(k,vt.iv,vt.ct)}catch(x){err(t('wrongPin'));return}
-      await saving;SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);
+      await saving;SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);await saveRT();
       closeSheet();commit(t('pinChanged'));
     };
   });
@@ -792,6 +793,46 @@ const keepToken=()=>{try{gToken?localStorage.setItem(TOK_KEY,JSON.stringify({t:g
 const driveConfigured=()=>!!CFG.googleClientId;
 const driveReady=()=>driveConfigured()&&!!(window.google&&google.accounts&&google.accounts.oauth2);
 const hasToken=()=>!!gToken&&Date.now()<gExp;
+const SCOPE='https://www.googleapis.com/auth/drive.file';
+const useWorker=()=>!!CFG.authWorker;
+/* long-lived Google grant: kept encrypted with the PIN key, never in backups */
+const RT_KEY='daftari-rt';let RT=null;
+async function saveRT(){if(!KEYOBJ)return;try{if(RT){localStorage.setItem(RT_KEY,JSON.stringify(await seal(KEYOBJ,{rt:RT})))}else localStorage.removeItem(RT_KEY)}catch(e){}}
+async function loadRT(){RT=null;try{const o=JSON.parse(localStorage.getItem(RT_KEY)||'null');if(o&&KEYOBJ)RT=(await unseal(KEYOBJ,o.iv,o.ct)).rt||null}catch(e){}}
+function setAccess(j){gToken=j.access_token;gExp=Date.now()+((+j.expires_in||3600)-120)*1000;keepToken();drv.needAuth=false}
+async function workerCall(path,body){
+  const r=await fetch(CFG.authWorker.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||j.error){const e=new Error(j.error||('http '+r.status));e.code=j.error;throw e}
+  return j;
+}
+async function ensureAccess(){
+  if(hasToken())return true;
+  if(useWorker()&&RT){
+    try{setAccess(await workerCall('/refresh',{refresh_token:RT}));return true}
+    catch(e){if(e.code==='invalid_grant'){RT=null;await saveRT()}return false}
+  }
+  return false;
+}
+function requestCode(selectAccount){
+  return new Promise((res,rej)=>{
+    if(!driveReady()){rej(new Error('notready'));return}
+    const cfg={client_id:CFG.googleClientId,scope:SCOPE,ux_mode:'popup',callback:r=>{r&&r.code?res(r.code):rej(r)},error_callback:e=>rej(e)};
+    if(selectAccount)cfg.select_account=true;else if(drv.email)cfg.login_hint=drv.email;
+    google.accounts.oauth2.initCodeClient(cfg).requestCode();
+  });
+}
+/* interactive: must run from a tap */
+async function authorize(selectAccount){
+  if(!useWorker()){await requestToken(selectAccount?'select_account consent':'consent');return}
+  const j=await workerCall('/exchange',{code:await requestCode(selectAccount)});
+  setAccess(j);
+  if(j.refresh_token){RT=j.refresh_token;await saveRT();return}
+  /* Google skipped the long-lived grant because an older one exists: clear it so the next tap gets a fresh one */
+  try{google.accounts.oauth2.revoke(gToken,()=>{})}catch(e){}
+  gToken=null;keepToken();toast(t('driveAgain'));throw new Error('again');
+}
+function revokeAll(){try{if(driveReady()){if(RT)google.accounts.oauth2.revoke(RT,()=>{});else if(gToken)google.accounts.oauth2.revoke(gToken,()=>{})}}catch(e){}}
 function requestToken(prompt){
   return new Promise((res,rej)=>{
     if(!driveReady()){rej(new Error('notready'));return}
@@ -840,16 +881,19 @@ async function driveUpload(){
 }
 async function syncDrive(manual){
   if(!drv.linked||!S||!KEYOBJ||drv.busy)return;
-  if(!hasToken()){drv.needAuth=true;render();return}
   drv.busy=true;
+  if(!(await ensureAccess())){drv.busy=false;drv.needAuth=true;render();return}
   try{await driveUpload();if(manual)toast(t('driveSaved'))}
-  catch(e){if(e.message==='auth'){drv.needAuth=true}else if(manual)toast(t('driveErr'))}
+  catch(e){
+    if(e.message==='auth'&&await ensureAccess()){try{await driveUpload();if(manual)toast(t('driveSaved'))}catch(x){drv.needAuth=x.message==='auth';if(manual&&!drv.needAuth)toast(t('driveErr'))}}
+    else if(e.message==='auth'){drv.needAuth=true}else if(manual)toast(t('driveErr'));
+  }
   finally{drv.busy=false;if(tab==='set'||drv.needAuth)render()}
 }
 function scheduleDrive(){if(!drv.linked)return;clearTimeout(drvTimer);drvTimer=setTimeout(()=>syncDrive(false),5000)}
 async function driveConnect(){
   if(!driveReady()){toast(driveConfigured()?t('loading'):t('driveNotSetup'));return}
-  try{await requestToken('consent');try{const a=await (await gfetch('/drive/v3/about?fields=user(emailAddress)')).json();drv.email=(a.user&&a.user.emailAddress)||''}catch(x){}
+  try{await authorize(false);try{const a=await (await gfetch('/drive/v3/about?fields=user(emailAddress)')).json();drv.email=(a.user&&a.user.emailAddress)||''}catch(x){}
     await ensureFolder();drv.linked=true;drvSave();await syncDrive(true)}catch(e){}
   render();
 }
@@ -859,21 +903,21 @@ async function fetchDriveEmail(){
 async function driveSwitch(){
   if(!driveReady())return;
   try{
-    try{if(gToken)google.accounts.oauth2.revoke(gToken,()=>{})}catch(e){}
+    revokeAll();RT=null;await saveRT();
     gToken=null;keepToken();drv.email='';drv.folderId=null;drv.lastUp=null;drvSave();
-    await requestToken('select_account consent');await fetchDriveEmail();await ensureFolder();drv.linked=true;drvSave();await syncDrive(true);
+    await authorize(true);await fetchDriveEmail();await ensureFolder();drv.linked=true;drvSave();await syncDrive(true);
   }catch(e){}
   render();
 }
-async function driveResume(){try{await requestToken('');await syncDrive(true)}catch(e){render()}}
+async function driveResume(){try{if(!(await ensureAccess())){if(useWorker())await authorize(false);else await requestToken('')}await syncDrive(true)}catch(e){render()}}
 function driveUnlink(){
   confirmSheet(t('driveUnlink')+'?',t('driveUnlink'),()=>{
-    try{if(gToken&&driveReady())google.accounts.oauth2.revoke(gToken,()=>{})}catch(e){}
+    revokeAll();RT=null;saveRT();
     gToken=null;keepToken();drv={linked:false,folderId:null,lastUp:null,email:'',needAuth:false,busy:false};drvSave();render();
   });
 }
 async function driveRestore(){
-  try{if(!hasToken())await requestToken('');const folder=await ensureFolder();const files=await driveList(folder,30);
+  try{if(!(await ensureAccess())){if(useWorker())await authorize(false);else await requestToken('')}const folder=await ensureFolder();const files=await driveList(folder,30);
     openSheet(t('driveRestore'),files.length?`<div class="list">${files.map(f=>`<div class="row tap" data-f="${esc(f.id)}"><div class="main"><span class="t num">${esc(f.name)}</span><span class="s">${esc(new Intl.DateTimeFormat(L(),{dateStyle:'medium',timeStyle:'short'}).format(new Date(f.createdTime)))}</span></div></div>`).join('')}</div>`:`<div class="empty">${t('driveNone')}</div>`,r=>{
       r.querySelectorAll('[data-f]').forEach(el=>el.onclick=async()=>{const txt=await (await gfetch('/drive/v3/files/'+el.dataset.f+'?alt=media')).text();closeSheet();doImport(txt)});
     });
@@ -936,13 +980,13 @@ function showLock(){
     catch(x){fails++;$('#lp1').value='';if(fails>=5){blockedUntil=Date.now()+30000;fails=0;err(t('waitTry'))}else err(t('wrongPin'))}
   };
 }
-function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;render()}
-function lockNow(){clearTimeout(bkTimer);closeSheet();S=null;KEYOBJ=null;SALT=null;$('#view').innerHTML='';showLock()}
+function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;render();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
+function lockNow(){clearTimeout(bkTimer);closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;$('#view').innerHTML='';showLock()}
 $('#lkForgot').onclick=()=>{
   $('#lkT').textContent=t('forgotConfirm');$('#lkH').textContent='';$('#lkE').textContent='';$('#lkForgot').hidden=true;
   $('#lkF').innerHTML=`<div class="foot"><button type="button" class="btn grow" id="fNo">${t('cancel')}</button><button type="button" class="btn grow" id="fYes" style="background:var(--neg);border-color:var(--neg);color:#fff">${t('del')}</button></div>`;
   $('#fNo').onclick=showLock;
-  $('#fYes').onclick=()=>{try{localStorage.removeItem(VAULT);localStorage.removeItem(KEY)}catch(e){}showLock()};
+  $('#fYes').onclick=()=>{try{localStorage.removeItem(VAULT);localStorage.removeItem(KEY);localStorage.removeItem('daftari-rt');localStorage.removeItem('daftari-gtoken')}catch(e){}showLock()};
 };
 $('#lockBtn').onclick=()=>{if(S)lockNow()};
 document.addEventListener('visibilitychange',()=>{
