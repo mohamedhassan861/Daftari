@@ -58,8 +58,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .top.shared{background:var(--accent-soft)}
 .top.shared .brand{color:var(--accent)}
 .month{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
-.month span,.perbtn{min-width:118px;text-align:center;font-weight:500;font-size:14px}
-.perbtn{border:0;background:none;cursor:pointer;padding:4px 2px;white-space:nowrap;max-width:52vw;overflow:hidden;text-overflow:ellipsis}
+.month span,.perbtn{min-width:96px;text-align:center;font-weight:500;font-size:14px}
+.perbtn{border:0;background:none;cursor:pointer;padding:4px 2px;white-space:nowrap;max-width:48vw;overflow:hidden;text-overflow:ellipsis;flex:1 1 auto}
+.top .wrap>*{min-width:0}.month{min-width:0;flex-shrink:1}
+main{overflow-x:clip}
 .perbtn:hover{color:var(--accent)}
 .iconbtn{width:34px;height:34px;border:0;background:transparent;border-radius:999px;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
 .iconbtn:hover{background:var(--sunk);color:var(--ink)}
@@ -172,7 +174,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .in-f{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 12px;min-width:0}
 .in-f.amt{font-family:var(--f-display);font-size:22px;font-weight:600}
 textarea.in-f{min-height:90px;font-family:ui-monospace,monospace;font-size:12px;direction:ltr}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.two>*{min-width:0}
+input[type=date].in-f,input[type=month].in-f,input[type=time].in-f{min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;min-height:44px;text-align:start}
+.flowb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:10px 14px;border-top:1px dashed var(--line)}.flowb span{display:block;font-size:12px;color:var(--muted)}.flowb b{font-size:15px;font-variant-numeric:tabular-nums}
+.cmp{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:4px 8px;padding:8px 14px;align-items:center;font-size:13px;border-bottom:1px solid var(--line)}.cmp.h{font-size:12px;color:var(--muted)}.cmp.t{font-weight:600}.cmp b,.cmp span:not(:first-child){text-align:end;font-variant-numeric:tabular-nums}.cmp>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chk{display:flex;align-items:center;gap:8px}
 .chk input{width:18px;height:18px;accent-color:var(--accent)}
 .foot{display:flex;gap:8px;margin-top:4px}
@@ -479,6 +485,11 @@ recTitle:['نسيت الرقم السري؟','Forgot your PIN?'],recHint:['اد�
 recBtn:['استرجع بحساب جوجل','Recover with Google'],recWipe:['مش قادر، امسح كل البيانات','I can\'t, erase all data'],recSetNew:['اختار رقم سري جديد لدفتري.','Choose a new PIN for Daftari.'],
 recFail:['معرفناش نسترجع. اتأكد إنك اخترت نفس حساب جوجل','Could not recover. Make sure you chose the same Google account'],recNoKey:['مفتاح الاسترجاع مش موجود على Drive بتاعك','The recovery key was not found in your Drive'],
 payCat:['بند المصروف','Expense category'],
+balOpen:['رصيد أول الفترة','Opening balance'],balClose:['رصيد آخر الفترة','Closing balance'],asOf:['في','as of'],fxDiff:['فرق أسعار العملات:','Currency difference:'],
+loanDue:['ميعاد السداد المتوقع','Expected repayment'],noAccount:['من غير حساب','No account'],repayHint:['لو اخترت حساب، المبلغ هيتسجل حركة عليه علشان رصيده يتظبط.','If you pick an account, the amount is recorded on it so its balance stays right.'],
+planVsAct:['المتوقع مقابل الفعلي','Planned vs actual'],planned:['المتوقع','Planned'],actual:['الفعلي','Actual'],variance:['الفرق','Variance'],category:['البند','Category'],total:['الإجمالي','Total'],monthW:['الشهر','Month'],
+planHint:['المتوقع جاي من الحركات المتكررة والأقساط والجمعيات ومواعيد سداد السلف والحد الشهري للبنود. الفرق الموجب يعني أحسن من المتوقع.','Planned comes from recurring entries, installments, gam\'eyas, loan due dates and category budgets. A positive variance is better than planned.'],
+forecastT:['الرصيد المتوقع','Balance forecast'],forecastHint:['الشهور اللي فاتت فعلي، والشهر الحالي (•) الأكبر بين الفعلي والمتوقع لكل بند، والشهور الجاية متوقع. الرصيد = كل الحسابات مع بعض، والكريديت بالسالب.','Past months are actual, this month (•) takes the larger of actual and plan per category, later months are planned. Balance = all accounts together, cards as negative.'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -634,7 +645,8 @@ function migrate(){
   for(const o of S.gam)if(!o.currency)o.currency=S.base;
   const addCat=(ty,id,ar,en,sys,before)=>{if(!S.cats[ty].some(c=>c.id===id)){const i=S.cats[ty].findIndex(c=>c.id===before);S.cats[ty].splice(i<0?S.cats[ty].length:i,0,{id,ar,en,sys})}};
   addCat('expense','bankfees','رسوم ومصاريف بنكية','Bank fees',false,'inst');addCat('expense','adjust','فروقات تسوية','Reconciliation difference',true,'other');
-  addCat('income','interest','فوايد وعوائد','Interest & returns',false,'gamin');addCat('income','iadjust','فروقات تسوية','Reconciliation difference',true,'iother');
+  addCat('income','interest','فوايد وعوائد','Interest & returns',false,'gamin');
+  addCat('expense','loanpay','سداد سلف','Loan repayments',true,'other');addCat('income','loanback','تحصيل سلف','Loan collections',true,'iother');addCat('income','iadjust','فروقات تسوية','Reconciliation difference',true,'iother');
   if(!S.defAcc||!ids.has(S.defAcc))S.defAcc=S.accounts[0].id;
   if('currency' in S)delete S.currency;
 }
@@ -1055,7 +1067,8 @@ function perLabel(){
   if(per.mode==='half'){const h=m<=6?1:2;return en?'H'+h+' '+y:'النص '+(h===1?'الأول':'التاني')+' '+y}
   if(per.mode==='year')return y;
   const [a,b]=perRange();
-  return dmyOf(dsDate(a))+' – '+dmyOf(dsDate(b));
+  const A=dsDate(a),B=dsDate(b),sh=d=>pad(d.getDate())+'/'+pad(d.getMonth()+1);
+  return A.getFullYear()===B.getFullYear()?sh(A)+' – '+sh(B)+'/'+B.getFullYear():dmyOf(A)+' – '+dmyOf(B);
 }
 function perShift(k){
   if(per.mode==='custom'){const [a,b]=perRange(),len=Math.round((dOf(b)-dOf(a))/864e5)+1;per.from=iso(new Date(dOf(a).getTime()+k*len*864e5));per.to=iso(new Date(dOf(b).getTime()+k*len*864e5));return}
@@ -1163,6 +1176,7 @@ function payInst(id){payForm('inst',id)}
 function payGam(id){payForm('gam',id)}
 function recvGam(id){const g=S.gam.find(x=>x.id===id);if(!g||g.received)return;payForm('gam',id,true)}
 function unlink(tx){if(!tx.link)return;const l=tx.link;
+  if(l.k==='loan'){const o=S.loans.find(x=>x.id===l.id);if(o)o.pays=o.pays.filter(p=>p.id!==l.pay);return}
   if(l.k==='gamr'){const g=S.gam.find(x=>x.id===l.id);if(g)g.received=false;return}
   const o=(l.k==='inst'?S.inst:S.gam).find(x=>x.id===l.id);if(!o)return;
   const per=oblPer(l.k,o),alloc=l.alloc||(l.ym?{[l.ym]:per}:{});o.part=o.part||{};
@@ -1363,16 +1377,17 @@ function loanForm(l){
     <label class="fld"><span>${t('group')}</span><input class="in-f" id="gp" list="dl-lg" value="${esc(l.group||'')}" placeholder="${t('groupHint')}">${datalist('dl-lg',S.loans.map(x=>x.group))}</label></div>
     <div class="two"><label class="fld"><span>${t('amount')}</span><input class="in-f amt num" id="amt" inputmode="decimal" value="${l.amount}"></label>
     <label class="fld"><span>${t('currency')}</span><select class="in-f" id="lc">${curOpts(l.currency||BASE())}</select></label></div>
-    <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${l.date}"></label>
+    <div class="two"><label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${l.date}"></label>
+    <label class="fld"><span>${t('loanDue')}</span><input class="in-f" type="month" id="ld" value="${l.due||''}"></label></div>
     <label class="fld"><span>${t('note')}</span><input class="in-f" id="nt" value="${esc(l.note)}"></label>
     ${!isNew&&l.pays.length?`<div class="list">${l.pays.map(p=>`<div class="row"><div class="main"><span class="t">${moneyC(p.amount,l.currency)}</span><span class="s">${esc(dayLbl(p.date))}</span></div><button type="button" class="btn sm danger" data-pay="${p.id}">${t('del')}</button></div>`).join('')}</div>`:''}
     <div class="foot">${isNew?'':`<button type="button" class="btn danger" id="del">${t('del')}</button>`}<button class="btn pri grow">${t('save')}</button></div>
   </form>`,r=>{
     bindSeg(r,'dr',v=>dir=v);
-    r.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{const o=S.loans.find(x=>x.id===l.id);o.pays=o.pays.filter(p=>p.id!==b.dataset.pay);save();render();loanForm(o)});
+    r.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{const o=S.loans.find(x=>x.id===l.id);o.pays=o.pays.filter(p=>p.id!==b.dataset.pay);S.tx=S.tx.filter(x=>!(x.link&&x.link.k==='loan'&&x.link.pay===b.dataset.pay));save();render();loanForm(o)});
     if(!isNew)r.querySelector('#del').onclick=()=>confirmSheet(t('confirmDel'),t('del'),()=>{S.loans=S.loans.filter(x=>x.id!==l.id);commit(t('deleted'))});
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const pr=val(r,'pr'),a=numv(r,'amt');if(!pr){toast(t('needName'));return}if(a<=0){toast(t('needAmt'));return}
-      const o={dir,person:pr,group:val(r,'gp'),amount:a,currency:val(r,'lc'),date:val(r,'dt')||TODAY,note:val(r,'nt')};
+      const o={dir,person:pr,group:val(r,'gp'),amount:a,currency:val(r,'lc'),date:val(r,'dt')||TODAY,due:val(r,'ld')||'',note:val(r,'nt')};
       if(isNew)S.loans.push(Object.assign({id:uid(),pays:[]},o));else Object.assign(S.loans.find(x=>x.id===l.id),o);
       closeSheet();commit(t('saved'))};
   });
@@ -1380,10 +1395,14 @@ function loanForm(l){
 function repayForm(l){
   openSheet(t('repay')+' · '+l.person,`<form class="form" id="f">
     <label class="fld"><span>${t('amount')} (${t('remaining')}: ${fmt(loanLeft(l))} ${esc(curSym(l.currency||BASE()))})</span><input class="in-f amt num" id="amt" inputmode="decimal" value="${loanLeft(l)}"></label>
-    <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${TODAY}"></label>
+    <div class="two"><label class="fld"><span>${l.dir==='borrowed'?t('fromAcc'):t('toAcc')}</span><select class="in-f" id="ra"><option value="">${t('noAccount')}</option>${S.accounts.filter(a=>a.currency===(l.currency||BASE())).map(a=>`<option value="${a.id}" ${a.id===payAcc(l.currency||BASE())?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
+    <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${TODAY}"></label></div>
+    <p class="hint">${t('repayHint')}</p>
     <div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const a=numv(r,'amt');if(a<=0){toast(t('needAmt'));return}
-      S.loans.find(x=>x.id===l.id).pays.push({id:uid(),amount:a,date:val(r,'dt')||TODAY});closeSheet();commit(t('saved'))}});
+      const pid=uid(),date=val(r,'dt')||TODAY,acc=val(r,'ra');S.loans.find(x=>x.id===l.id).pays.push({id:pid,amount:a,date});
+      if(acc)S.tx.push({id:uid(),type:l.dir==='borrowed'?'expense':'income',acc,cat:l.dir==='borrowed'?'loanpay':'loanback',amount:a,date,note:t('repay')+' · '+l.person,link:{k:'loan',id:l.id,pay:pid}});
+      closeSheet();commit(t('saved'))}});
 }
 function budgetForm(){
   openSheet(t('editBudget'),`<form class="form" id="f">${S.cats.expense.filter(c=>!c.sys).map(c=>`<label class="fld ${c.parent?'sub':''}"><span>${esc(c.parent?catPath(c.id):cName(c))}</span><input class="in-f num" inputmode="decimal" data-b="${c.id}" value="${S.budgets[c.id]||''}" placeholder="${t('noBudget')}"></label>`).join('')}
@@ -1406,16 +1425,17 @@ function budgetState(){
   return Object.entries(S.budgets).map(([id,l])=>{const lim=Math.round(l*f),sp=sumB(tx.filter(x=>inCat(x,id)));return{id,lim,sp,p:sp/lim}});
 }
 function accountsHTML(){
-  const total=S.accounts.reduce((v,a)=>v+toBase(accBalance(a),a.currency),0),miss=missingRates();
+  const pEnd=perRange()[1],AB=a=>accBalanceAt(a,pEnd);
+  const total=S.accounts.reduce((v,a)=>v+toBase(AB(a),a.currency),0),miss=missingRates();
   const groups=groupsOf(S.accounts,accGroup);
-  return `<details class="box" open><summary><h2>${t('accounts')}</h2><span class="sumv">${fmt(total)} <small>${esc(curSym(BASE()))}</small></span></summary>
-    <div class="list">${[...groups].map(([g,accs])=>{const gt=accs.reduce((v,a)=>v+toBase(accBalance(a),a.currency),0);const banks=groupsOf(accs,a=>a.name);
+  return `<details class="box" open><summary><h2>${t('accounts')} <small class="muted" style="font-weight:400;font-size:12px">${t('asOf')} ${esc(dmyOf(dsDate(pEnd)))}</small></h2><span class="sumv">${fmt(total)} <small>${esc(curSym(BASE()))}</small></span></summary>
+    <div class="list">${[...groups].map(([g,accs])=>{const gt=accs.reduce((v,a)=>v+toBase(AB(a),a.currency),0);const banks=groupsOf(accs,a=>a.name);
       return `<div class="grp"><span>${esc(g)}</span><span class="num">${fmt(gt)} ${esc(curSym(BASE()))}</span></div>`+[...banks].map(([name,list])=>`<div class="row" style="align-items:flex-start"><div class="glyph">${esc(initial(name))}</div>
       <div class="main"><span class="t">${esc(name)} <button class="link" style="padding:0 6px;font-size:12px" data-act="editAcc" data-id="${list[0].id}">${t('edit')}</button></span>
-        <span class="balchips">${list.map(a=>{const v=accBalance(a);return `<button class="balchip" data-act="stmtAcc" data-id="${a.id}"><span class="num ${v<0?'neg':''}">${fmt(v)}</span><small class="cur">${esc(curSym(a.currency))}</small></button>`}).join('')}
+        <span class="balchips">${list.map(a=>{const v=AB(a);return `<button class="balchip" data-act="stmtAcc" data-id="${a.id}"><span class="num ${v<0?'neg':''}">${fmt(v)}</span><small class="cur">${esc(curSym(a.currency))}</small></button>`}).join('')}
         ${list[0].type==='gold'||list[0].type==='cert'?'':`<button class="balchip add" data-act="addAccCur" data-name="${esc(name)}" data-type="${list[0].type}" data-group="${esc(list[0].group||'')}">+ ${t('addCur')}</button>`}</span>
         ${list[0].type==='cert'&&list[0].rate?`<span class="s">${list[0].rate}% · ${list[0].payout==='maturity'?t('atMaturity'):freqName(list[0].payout)}${list[0].maturity?' · '+t('certEnd')+' '+esc(shortDate(list[0].maturity)):''}</span>`:''}
-        ${list[0].type==='gold'?`<span class="s">≈ ${fmt(list.reduce((v,a)=>v+toBase(accBalance(a),a.currency),0))} ${esc(curSym(BASE()))}</span>`:''}</div></div>`).join('')}).join('')}
+        ${list[0].type==='gold'?`<span class="s">≈ ${fmt(list.reduce((v,a)=>v+toBase(AB(a),a.currency),0))} ${esc(curSym(BASE()))}</span>`:''}</div></div>`).join('')}).join('')}
       <div class="row"><button class="link" data-act="addAcc">+ ${t('addAcc')}</button></div>
     </div>${miss.length?`<div class="banner"><span>${t('needRates')}: ${miss.join('، ')}</span><button class="btn sm pri" data-act="rates">${t('rates')}</button></div>`:''}
     <p class="hint">${t('tapForStmt')}</p></details>`;
@@ -1464,6 +1484,7 @@ function vHome(){
     <div class="net tile" data-act="stmtFlow" data-ty="net"><span class="label">${per.mode==='month'?t('net'):t('netPer')}</span><span class="big ${net<0?'neg':''}">${money(net)}<small>${esc(curSym(BASE()))}</small></span></div>
     <div class="perf"></div>
     <div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(exp)}</span></div></div>
+    ${(()=>{const [a,b]=perRange(),o=balAll(dayBefore(a)),c=balAll(b);return `<div class="flowb"><div><span>${t('balOpen')}</span><b class="${o<0?'neg':''}">${money(o)}</b></div><div><span>${net<0?'−':'+'} ${t('netShort')}</span><b>${money(Math.abs(net))}</b></div><div><span>${t('balClose')}</span><b class="${c<0?'neg':''}">${money(c)}</b></div></div>${Math.abs(c-o-net)>1?`<p class="hint" style="padding:0 14px 8px;margin:0">${t('fxDiff')} ${money(c-o-net)}</p>`:''}`})()}
   </section>
   <section class="sec"><div class="sec-h"><h2>${t('dueMonth')}</h2>${dueTotal?`<span class="muted">${money(dueTotal)} ${esc(curSym(BASE()))}</span>`:''}</div>
     <div class="list">${due.length?due.map(d=>`<div class="row"><div class="glyph ${d.k==='gamr'?'in':''}">${esc(initial(d.name))}</div>
@@ -1539,7 +1560,7 @@ function vObl(){
       <div class="acts">${nx?`<button class="btn sm pri" data-act="payGam" data-id="${g.id}">${t('pay')}</button>`:''}${!g.received?`<button class="btn sm" data-act="recvGam" data-id="${g.id}">${t('collectPay')}</button>`:''}<button class="btn sm" data-act="stmtObl" data-k="gam" data-id="${g.id}">${t('statement')}</button><button class="btn sm" data-act="editGam" data-id="${g.id}">${t('edit')}</button></div></div>`}).join(''):`<div class="list"><div class="empty">${t('noItems')}</div></div>`;
   }else{
     body=`<p class="hint">${t('loansHint')}</p>`+(S.loans.length?[...S.loans].sort((a,b)=>(loanLeft(a)===0)-(loanLeft(b)===0)).map(l=>{const left=loanLeft(l),pd=loanPaid(l);
-      return `<div class="card"><div class="hd tap" data-act="stmtPerson" data-name="${esc(l.person)}"><div><h3>${esc(l.person)} ›</h3><span class="muted">${l.dir==='lent'?t('lent'):t('borrowed')} · ${esc(dayLbl(l.date))}</span></div>${left===0?`<span class="pill ok">${t('settled')}</span>`:`<span class="pill ${l.dir==='lent'?'ok':'warn'}">${l.dir==='lent'?t('owedToMe'):t('iOwe')}</span>`}</div>
+      return `<div class="card"><div class="hd tap" data-act="stmtPerson" data-name="${esc(l.person)}"><div><h3>${esc(l.person)} ›</h3><span class="muted">${l.dir==='lent'?t('lent'):t('borrowed')} · ${esc(dayLbl(l.date))}${l.due&&left?' · '+t('loanDue')+': '+esc(monthLbl(l.due)):''}</span></div>${left===0?`<span class="pill ok">${t('settled')}</span>`:`<span class="pill ${l.dir==='lent'?'ok':'warn'}">${l.dir==='lent'?t('owedToMe'):t('iOwe')}</span>`}</div>
       <div class="kv"><div><span class="label">${t('amount')}</span><b>${moneyC(l.amount,l.currency)}</b></div><div><span class="label">${t('paidLbl')}</span><b>${moneyC(pd,l.currency)}</b></div><div><span class="label">${t('remaining')}</span><b class="${left&&l.dir==='borrowed'?'neg':''}">${moneyC(left,l.currency)}</b></div></div>
       <div class="bar"><i style="width:${Math.min(100,pd/l.amount*100)}%"></i></div>
       ${l.note?`<span class="muted">${esc(l.note)}</span>`:''}
@@ -1555,6 +1576,9 @@ function vObl(){
   const addLbl={inst:t('addInst'),gam:t('addGam'),loan:t('addLoan'),rec:t('addRec'),goal:t('addGoal')}[oblTab];
   return `${segHTML('obf',[['inst',t('installments')],['gam',t('gameyas')],['loan',t('loans')],['rec',t('recurring')],['goal',t('goals')]],oblTab)}${body}<button class="btn block" data-act="addObl">+ ${addLbl}</button>`;
 }
+const dayBefore=d=>iso(new Date(dOf(d).getTime()-864e5));
+const monthEnd=ym=>{const [y,m]=ym.split('-').map(Number);return ym+'-'+pad(new Date(y,m,0).getDate())};
+const balAll=date=>S.accounts.reduce((v,a)=>v+toBase(accBalanceAt(a,date),a.currency),0);
 function accBalanceAt(a,date){let b=+a.opening||0;for(const x of S.tx){if(x.date>date)continue;
   if(x.type==='transfer'){if(x.acc===a.id)b-=+x.amount||0;if(x.toAcc===a.id)b+=+(x.toAmount??x.amount)||0}else if(x.acc===a.id)b+=x.type==='income'?+x.amount:-x.amount}return b}
 const loanLeftAt=(l,date)=>l.date>date?0:Math.max(0,l.amount-l.pays.filter(p=>p.date<=date).reduce((v,p)=>v+(+p.amount||0),0));
@@ -1602,6 +1626,60 @@ function tagsHTML(){
   const by=new Map();tx.forEach(x=>x.tags.forEach(g=>by.set(g,(by.get(g)||0)+baseAmt(x))));const rows=[...by].sort((a,b)=>b[1]-a[1]);
   return `<details class="box" open><summary><h2>${t('byTag')}</h2></summary><div class="list">${rows.map(([g,v])=>`<div class="catbar tile" data-act="stmtTag" data-name="${esc(g)}"><div class="l"><span>#${esc(g)}</span><span>${fmt(v)}</span></div><div class="bar"><i style="width:${v/rows[0][1]*100}%;background:var(--neg)"></i></div></div>`).join('')}</div></details>`;
 }
+
+/* ---------- planned (expected) amounts per month, from everything the app already knows ---------- */
+function planItems(m){
+  const out=[],add=(type,cat,amount)=>{if(amount>0)out.push({type,cat,amount})};
+  for(const r of S.recur||[]){const a=accOf(r.tpl.acc);if(!a||!['income','expense'].includes(r.tpl.type))continue;
+    S.tx.filter(x=>x.rec===r.id&&x.date.slice(0,7)===m).forEach(x=>add(x.type,x.cat,baseAmt(x)));
+    let d=r.next,g=0;while(d&&d.slice(0,7)<=m&&g++<400){if(r.end&&d>r.end)break;if(d.slice(0,7)===m)add(r.tpl.type,r.tpl.cat,toBase(+r.tpl.amount,a.currency));d=advance(d,r.freq,r.day)}}
+  S.inst.forEach(o=>{if(instMonths(o).includes(m))add('expense',o.cat||'inst',toBase(+o.monthly,o.currency||BASE()))});
+  S.gam.forEach(o=>{if(gamMonths(o).includes(m))add('expense','gam',toBase(+o.share,o.currency||BASE()));if(gamPayout(o)===m)add('income','gamin',toBase(o.share*o.members,o.currency||BASE()))});
+  S.loans.forEach(l=>{if(l.due===m)add(l.dir==='borrowed'?'expense':'income',l.dir==='borrowed'?'loanpay':'loanback',toBase(+l.amount,l.currency||BASE()))});
+  const has=new Set(out.filter(x=>x.type==='expense').map(x=>x.cat));
+  Object.entries(S.budgets||{}).forEach(([c,v])=>{if(!has.has(c))add('expense',c,+v)});
+  return out;
+}
+const byRoot=(list,type,amt)=>{const o={};list.filter(x=>x.type===type).forEach(x=>{const k=catRoot(x.cat);o[k]=(o[k]||0)+amt(x)});return o};
+function planVsActual(months){
+  const P={income:{},expense:{}},A={income:{},expense:{}};
+  months.forEach(m=>{const it=planItems(m),tx=txOf(m);
+    ['income','expense'].forEach(ty=>{const p=byRoot(it,ty,x=>x.amount),a=byRoot(tx,ty,baseAmt);
+      Object.entries(p).forEach(([k,v])=>P[ty][k]=(P[ty][k]||0)+v);Object.entries(a).forEach(([k,v])=>A[ty][k]=(A[ty][k]||0)+v)})});
+  return {P,A};
+}
+/* past months = actual, this month = the larger of actual and plan per category, later months = plan */
+function monthBest(m){
+  const tx=txOf(m);if(m<TODAY_YM)return {i:sumB(tx.filter(x=>x.type==='income')),e:sumB(tx.filter(x=>x.type==='expense')),kind:'act'};
+  const it=planItems(m);const r={kind:m===TODAY_YM?'cur':'plan'};
+  ['income','expense'].forEach(ty=>{const p=byRoot(it,ty,x=>x.amount);let v=0;
+    if(m===TODAY_YM){const a=byRoot(tx,ty,baseAmt);new Set([...Object.keys(p),...Object.keys(a)]).forEach(k=>v+=Math.max(p[k]||0,a[k]||0))}
+    else v=Object.values(p).reduce((x,y)=>x+y,0);
+    r[ty==='income'?'i':'e']=v});
+  return r;
+}
+function planHTML(){
+  const months=perMonths(),{P,A}=planVsActual(months);
+  const sec=ty=>{const keys=[...new Set([...Object.keys(P[ty]),...Object.keys(A[ty])])].sort((a,b)=>Math.max(P[ty][b]||0,A[ty][b]||0)-Math.max(P[ty][a]||0,A[ty][a]||0));
+    let tp=0,ta=0;const rows=keys.map(k=>{const p=P[ty][k]||0,a=A[ty][k]||0;tp+=p;ta+=a;const d=ty==='income'?a-p:p-a;
+      return `<div class="cmp tap" data-act="stmtCat" data-id="${k}" data-ty="${ty}"><span>${esc(catName(k))}</span><span>${money(p)}</span><span>${money(a)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`}).join('');
+    const d=ty==='income'?ta-tp:tp-ta;
+    return {html:`<div class="grp"><span>${ty==='income'?t('income'):t('expense')}</span></div>${rows||`<div class="empty">${t('noItems')}</div>`}<div class="cmp t"><span>${t('total')}</span><span>${money(tp)}</span><span>${money(ta)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`,tp,ta}};
+  const I=sec('income'),E=sec('expense'),np=I.tp-E.tp,na=I.ta-E.ta;
+  const start=TODAY_YM,horizon=per.mode==='month'?Array.from({length:12},(_,i)=>ymAdd(cur>start?cur:start,i)):months.filter(m=>m>=start).slice(0,36);
+  let bal=balAll(monthEnd(ymAdd(horizon[0]||start,-1)));
+  const fc=horizon.map(m=>{const r=monthBest(m);if(m<TODAY_YM)bal=balAll(monthEnd(m));else bal+=r.i-r.e;return Object.assign({m,bal},r)});
+  return `<details class="box" open><summary><h2>${t('planVsAct')}</h2></summary><div class="list">
+    <div class="cmp h"><span>${t('category')}</span><span>${t('planned')}</span><span>${t('actual')}</span><span>${t('variance')}</span></div>
+    ${I.html}${E.html}
+    <div class="cmp t"><span>${t('netShort')}</span><span>${money(np)}</span><span>${money(na)}</span><b class="${na-np<-0.5?'neg':na-np>0.5?'pos':''}">${na-np>0.5?'+':''}${money(na-np)}</b></div>
+    </div><p class="hint">${t('planHint')}</p></details>
+  ${fc.length?`<details class="box" open><summary><h2>${t('forecastT')}</h2></summary><div class="list">
+    <div class="cmp h"><span>${t('monthW')}</span><span>${t('income')}</span><span>${t('expense')}</span><span>${t('balClose')}</span></div>
+    ${fc.map(r=>`<div class="cmp"><span>${esc(monthLbl(r.m))}${r.kind==='cur'?' •':''}</span><span class="pos">${money(r.i)}</span><span>${money(r.e)}</span><b class="${r.bal<0?'neg':''}">${money(r.bal)}</b></div>`).join('')}
+    </div><p class="hint">${t('forecastHint')}</p></details>`:''}`;
+}
+
 function vRep(){
   const tx=txIn(),exp=tx.filter(x=>x.type==='expense'),inc=sumB(tx.filter(x=>x.type==='income')),te=sumB(exp),bf=perFactor(),B=id=>S.budgets[id]?Math.round(S.budgets[id]*bf):0;
   const by={};exp.forEach(x=>{const k=catRoot(x.cat);by[k]=(by[k]||0)+baseAmt(x)});
@@ -1620,6 +1698,7 @@ function vRep(){
     <div class="list" style="overflow-x:auto"><div class="cols" dir="ltr" style="grid-template-columns:repeat(${ms.length},minmax(18px,1fr))">${(S.lang==='ar'?[...ms].reverse():ms).map(o=>`<div class="c" title="${esc(monthLbl(o.m))}"><i class="a" style="height:${o.i/top*100}%"></i><i class="b" style="height:${o.e/top*100}%"></i></div>`).join('')}</div>
     <div class="colsx" dir="ltr" style="grid-template-columns:repeat(${ms.length},minmax(18px,1fr))">${(S.lang==='ar'?[...ms].reverse():ms).map(o=>`<span style="${per.mode==='month'&&o.m===cur?'color:var(--ink);font-weight:600':''}">${esc(monthShort(o.m))}${ms.length>12?'':''}</span>`).join('')}</div>
     <div class="legend"><span style="--c:var(--accent)">${t('income')}</span><span style="--c:var(--neg)">${t('expense')}</span></div></div></section>
+  ${planHTML()}
   ${catTotalsHTML('income').replace('<details class="box">','<details class="box" open>')}
   ${tagsHTML()}
   ${netWorthHTML()}${zakatHTML()}`;
@@ -1668,7 +1747,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.22 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.23 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
