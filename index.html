@@ -178,7 +178,7 @@ textarea.in-f{min-height:90px;font-family:ui-monospace,monospace;font-size:12px;
 .foot{display:flex;gap:8px;margin-top:4px}
 .foot .grow{flex:1}
 
-.toast{position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:10px;font-weight:500;font-size:14px}
+.toast{max-width:min(92vw,520px);text-align:center;line-height:1.6;cursor:pointer;position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + 90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:10px;font-weight:500;font-size:14px}
 
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px}
 .setrow + .setrow{border-top:1px solid var(--line)}
@@ -447,7 +447,7 @@ account:['الحساب','Account'],notReg:['مش مسجّل','Not signed in'],un
 users:['المستخدمين','Users'],usersHint2:['قايمة اللي سجّلوا في البرنامج','People who signed up'],usersHint:['الرقم جنب كل واحد: عدد مرات التسجيل (أول مرة + أي جهاز جديد).','The number is how many times they signed in (first time and each new device).'],
 joined:['سجّل','Joined'],lastOpen:['آخر مرة','Last'],regCount:['مرات التسجيل','Sign-ins'],lang:['اللغة','Language'],notAdmin:['القايمة دي لصاحب البرنامج بس','Only the app owner can see this list'],
 pinMin:['الرقم السري 6 أرقام على الأقل','PIN: at least 6 digits'],
-quickHint:['اكتب الحركة… مثلاً: صرفت 250 بنزين كاش','Type an entry… e.g. spent 250 fuel cash'],noVoice:['المتصفح ده مش بيدعم الكلام','Voice input is not supported here'],voiceFail:['مسمعتش كويس، جرّب تاني','Did not catch that; try again'],listening:['اتكلم دلوقتي…','Listening…'],
+quickHint:['اكتب الحركة… مثلاً: صرفت 250 بنزين كاش','Type an entry… e.g. spent 250 fuel cash'],noVoice:['المتصفح ده مش بيدعم الكلام','Voice input is not supported here'],voiceFail:['مسمعتش كويس، جرّب تاني','Did not catch that; try again'],listening:['اتكلم دلوقتي… (قول مثلاً: صرفت 250 بنزين كاش)','Listening… (say e.g. spent 250 fuel cash)'],micDenied:['المايك مقفول للبرنامج. افتحه من إعدادات المتصفح أو الموبايل','The microphone is blocked for this app. Allow it in browser or phone settings'],voiceNet:['تحويل الكلام محتاج إنترنت','Voice input needs an internet connection'],voiceStop:['اتلغى التسجيل','Recording cancelled'],
 parseFail:['مفهمتش المبلغ، كمّل البيانات بإيدك','Could not read the amount; fill it in'],saveQuick:['احفظها كحركة جاهزة','Save as a quick entry'],quickList:['الحركات الجاهزة','Quick entries'],
 tags:['تاجات','Tags'],tagsHint:['مثلاً: رمضان، المصيف، دخول المدارس','e.g. Ramadan, Summer trip'],allTags:['كل التاجات','All tags'],byTag:['المصروفات حسب التاج','Spending by tag'],viewList:['قايمة','List'],viewCal:['تقويم','Calendar'],dueSoon:['مستحق','Due'],
 safeTitle:['تقدر تصرف','Safe to spend'],perDay:['في اليوم','a day'],daysLeft:['يوم فاضل','days left'],safeLiquid:['الكاش والبنوك والمحافظ','Cash, banks & wallets'],safeObl:['أقساط وجمعيات مستحقة الشهر ده','Installments & gam\'eyas due this month'],
@@ -473,6 +473,7 @@ splitHint:['كل مصروف بيتقسم بالتساوي على أعضاء ال
 bioOn:['الفتح بالبصمة','Fingerprint unlock'],bioHint:['اكتب رقمك السري مرة أخيرة، وبعدها الموبايل هيطلب بصمتك علشان يحفظ مفتاح دفتري.','Enter your PIN once more; your phone will then ask for your fingerprint to save a Daftari key.'],
 bioSetup:['فعّل البصمة','Set up fingerprint'],bioDone:['البصمة اشتغلت','Fingerprint unlock is on'],bioOffMsg:['البصمة اتقفلت','Fingerprint unlock is off'],bioUnlock:['افتح بالبصمة','Unlock with fingerprint'],
 bioFail:['معرفناش نستخدم البصمة، اكتب الرقم السري','Fingerprint failed; enter your PIN'],bioUnsupported:['الموبايل أو المتصفح ده مش بيدعم الفتح بالبصمة','This phone or browser does not support fingerprint unlock'],bioReset:['غيّرت الرقم السري، فعّل البصمة تاني من الإعدادات','PIN changed; turn fingerprint unlock on again in Settings'],
+foundBackup:['لقينا نسخ ليك على Google Drive، اختار اللي ترجّعها أو اقفل لو مش عايز','We found backups in your Google Drive. Pick one to restore, or close to skip'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -950,7 +951,11 @@ const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
 function listen(cb){
   if(!SpeechRec){toast(t('noVoice'));return}
   const r=new SpeechRec();r.lang=lng()==='en'?'en-US':'ar-EG';r.interimResults=false;r.maxAlternatives=1;
-  r.onresult=e=>cb(e.results[0][0].transcript);r.onerror=()=>toast(t('voiceFail'));r.start();toast(t('listening'));
+  let got=false;
+  r.onresult=e=>{got=true;toastOff(t('listening'));cb(e.results[0][0].transcript)};
+  r.onerror=e=>{got=true;const c=e&&e.error;toast(c==='not-allowed'||c==='service-not-allowed'?t('micDenied'):c==='network'?t('voiceNet'):c==='aborted'?t('voiceStop'):t('voiceFail'))};
+  r.onend=()=>{if(!got)toast(t('voiceFail'));else toastOff(t('listening'))};
+  try{r.start();toast(t('listening'),0)}catch(e){toast(t('voiceFail'))}
 }
 function quickFromText(text){const p=parseEntry(text);if(!p||!p.amount){toast(t('parseFail'));txForm(null,'',p?{note:p.note}:{});return}txForm(null,'',p)}
 
@@ -1171,7 +1176,8 @@ function undoLast(kind,id){
 }
 
 function commit(msg){save();render();if(msg)toast(msg)}
-let tt;function toast(m){const el=$('#toast');el.textContent=m;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,1800)}
+let tt;function toast(m,ms){const el=$('#toast');el.textContent=m;el.hidden=false;el.onclick=()=>{el.hidden=true};clearTimeout(tt);if(ms===0)return;tt=setTimeout(()=>el.hidden=true,ms||Math.max(3500,String(m).length*90))}
+const toastOff=m=>{const el=$('#toast');if(!m||el.textContent===m)el.hidden=true};
 
 /* ---------- sheet ---------- */
 function openSheet(title,html,ready){$('#shT').textContent=title;$('#shB').innerHTML=html;$('#sheet').hidden=false;if(ready)ready($('#shB'))}
@@ -1655,7 +1661,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.18 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.19 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -1831,11 +1837,11 @@ async function ensureAccess(){
   }
   return false;
 }
-function requestCode(selectAccount){
+function requestCode(selectAccount,withId,hint){
   return new Promise((res,rej)=>{
     if(!driveReady()){rej(new Error('notready'));return}
-    const cfg={client_id:CFG.googleClientId,scope:SCOPE,ux_mode:'popup',callback:r=>{r&&r.code?res(r.code):rej(r)},error_callback:e=>rej(e)};
-    if(selectAccount)cfg.select_account=true;else if(drv.email)cfg.login_hint=drv.email;
+    const cfg={client_id:CFG.googleClientId,scope:withId?SCOPE+' openid email profile':SCOPE,ux_mode:'popup',callback:r=>{r&&r.code?res(r.code):rej(r)},error_callback:e=>rej(e)};
+    if(selectAccount)cfg.select_account=true;else{const h=hint||drv.email||(REG&&REG.email);if(h)cfg.login_hint=h}
     google.accounts.oauth2.initCodeClient(cfg).requestCode();
   });
 }
@@ -2190,7 +2196,19 @@ function idToken(prompt,hint){
   });
 }
 const workerPost=async(path,body)=>{const r=await fetch(CFG.authWorker.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error(j.error||'http '+r.status);return j};
+let PENDING_RT=null,FRESH_DRIVE=false;
+/* one Google tap: sign up and link Drive together */
+async function signUpWithDrive(){
+  const j=await workerCall('/exchange',{code:await requestCode(!REG,true,REG&&REG.email)});
+  setAccess(j);
+  const r=await workerPost('/register',{access_token:j.access_token,lang:lng()});
+  REG={email:r.email,name:r.name,admin:!!r.admin,at:new Date().toISOString()};try{localStorage.setItem(REG_KEY,JSON.stringify(REG))}catch(x){}
+  drv.linked=true;drv.email=r.email;drv.folderId=null;drvSave();
+  if(j.refresh_token){if(KEYOBJ){RT=j.refresh_token;await saveRT()}else PENDING_RT=j.refresh_token}
+  FRESH_DRIVE=true;return REG;
+}
 async function doRegister(){
+  if(useWorker()&&!drv.linked){try{return await signUpWithDrive()}catch(e){if(e&&e.type==='popup_closed')throw e}}
   const tok=await idToken(REG?'':'select_account',REG&&REG.email);
   const j=await workerPost('/register',{access_token:tok,lang:lng()});
   REG={email:j.email,name:j.name,admin:!!j.admin,at:new Date().toISOString()};try{localStorage.setItem(REG_KEY,JSON.stringify(REG))}catch(x){}
@@ -2204,10 +2222,10 @@ function regGate(done){
   const sk=$('#regSkip');if(sk)sk.onclick=()=>{box.hidden=true;$('#lkF').innerHTML='';done&&done()};
   $('#lkF').onsubmit=async e=>{e.preventDefault();const err=m=>$('#lkE').textContent=m;
     if(!driveReady()){err(t('regLoading'));return}
-    try{err(t('working'));const tok=await idToken('select_account');
-      const j=await workerPost('/register',{access_token:tok,lang:lng()});
-      REG={email:j.email,name:j.name,admin:!!j.admin,at:new Date().toISOString()};try{localStorage.setItem(REG_KEY,JSON.stringify(REG))}catch(x){}
+    try{err(t('working'));const j=await doRegister();
       box.hidden=true;$('#lkF').innerHTML='';toast(t('regDone')+' '+j.email);done&&done();
+      if(PENDING_RT&&KEYOBJ){RT=PENDING_RT;PENDING_RT=null;await saveRT()}
+      if(FRESH_DRIVE&&KEYOBJ&&S){FRESH_DRIVE=false;syncDrive(true);render()}
     }catch(x){err(t('regFail'))}};
 }
 async function usersSheet(){
@@ -2444,7 +2462,9 @@ function showLock(){
     catch(x){fails++;$('#lp1').value='';if(fails>=5){blockedUntil=Date.now()+30000;fails=0;err(t('waitTry'))}else err(t('wrongPin'))}
   };
 }
-function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);if(pendingShare){const txt=pendingShare;pendingShare=null;setTimeout(()=>quickFromText(txt),350)}render();runRecurring();maybeUpdateRates();writeReminders();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
+function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);if(pendingShare){const txt=pendingShare;pendingShare=null;setTimeout(()=>quickFromText(txt),350)}render();runRecurring();maybeUpdateRates();writeReminders();loadRT().then(async()=>{if(PENDING_RT&&KEYOBJ){RT=PENDING_RT;PENDING_RT=null;await saveRT()}
+    if(FRESH_DRIVE&&drv.linked){FRESH_DRIVE=false;try{const f=await ensureFolder();const has=(await driveList(f,5)).some(x=>!x.name.startsWith('receipt_'));if(has){toast(t('foundBackup'));driveRestore()}else syncDrive(true)}catch(e){}}
+    if(drv.linked&&useWorker()&&!RT&&!hasToken()&&S){drv.needAuth=true;render()}})}
 function lockNow(){clearTimeout(bkTimer);if(ACT!=='me'&&shDirty)shPush();stopPoll();ACT='me';SHM=null;PS=null;closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;$('#view').innerHTML='';showLock()}
 $('#lkForgot').onclick=()=>{
   $('#lkT').textContent=t('forgotConfirm');$('#lkH').textContent='';$('#lkE').textContent='';$('#lkForgot').hidden=true;
