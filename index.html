@@ -1778,11 +1778,12 @@ function fcMonthSheet(m){
   openSheet(monthLbl(m),`<div class="form"><div class="grp"><span>${t('cashIn')}</span><span class="num">${money(r.i)}</span></div><div class="list">${part('in:')}</div>
     <div class="grp"><span>${t('cashOut')}</span><span class="num">${money(r.e)}</span></div><div class="list">${part('out:')}</div>
     <div class="list">${row(t('gapW'),r.i-r.e,r.i-r.e<0?'neg':'pos')}</div>
-    ${(()=>{const adj=(S.planAdj||[]).map((a,i)=>({a,i})).filter(z=>z.a.m===m);return adj.length?`<div class="grp"><span>${t('extraPlan')}</span></div><div class="list">${adj.map(({a,i})=>`<div class="row"><div class="main"><span class="t">${esc(a.label||catName(a.cat))}</span><span class="s">${a.type==='income'?t('inc1'):t('exp1')}</span></div><b class="amt ${a.type==='income'?'pos':''}">${money(a.amount)}</b><button type="button" class="btn sm danger" data-adj="${i}">${t('del')}</button></div>`).join('')}</div>`:''})()}
-    ${(()=>{const it=planItems(m).filter(x=>x.src&&!x.done);return it.length?`<div class="grp"><span>${t('planLines')}</span></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''}</span><span class="s">${x.type==='income'?t('inc1'):t('exp1')} · ${esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
+    ${(()=>{const adj=(S.planAdj||[]).map((a,i)=>({a,i})).filter(z=>z.a.m===m);return adj.length?`<div class="grp"><span>${t('extraPlan')}</span></div><div class="list">${adj.map(({a,i})=>`<div class="row tap" data-adje="${i}"><div class="main"><span class="t">${esc(a.label||catName(a.cat))} ›</span><span class="s">${a.type==='income'?t('inc1'):t('exp1')}</span></div><b class="amt ${a.type==='income'?'pos':''}">${money(a.amount)}</b><button type="button" class="btn sm danger" data-adj="${i}">${t('del')}</button></div>`).join('')}</div>`:''})()}
+    ${(()=>{const it=planItems(m).filter(x=>x.src&&!x.done);return it.length?`<div class="grp"><span>${t('planLines')}</span></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''} ›</span><span class="s">${x.type==='income'?t('inc1'):t('exp1')} · ${esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
     <button type="button" class="btn block" id="adjAdd">+ ${t('addPlan')}</button>
     <p class="hint">${t('fcMonthHint')}</p></div>`,rr=>{
-    rr.querySelectorAll('[data-adj]').forEach(b=>b.onclick=()=>{S.planAdj.splice(+b.dataset.adj,1);commit(t('deleted'));fcMonthSheet(m)});
+    rr.querySelectorAll('[data-adj]').forEach(b=>b.onclick=e=>{e.stopPropagation();S.planAdj.splice(+b.dataset.adj,1);commit(t('deleted'));fcMonthSheet(m)});
+    rr.querySelectorAll('[data-adje]').forEach(el=>el.onclick=()=>planAdjForm(m,+el.dataset.adje));
     rr.querySelector('#adjAdd').onclick=()=>planAdjForm(m);
     rr.querySelectorAll('[data-pe]').forEach(el=>el.onclick=()=>planEditForm(m,el.dataset.pe,el.dataset.pl,+el.dataset.pv,+el.dataset.pb));
   });
@@ -1806,17 +1807,18 @@ function planEditForm(m,src,label,amount,base){
       back()};
   });
 }
-function planAdjForm(m){
-  let ty='expense';
-  openSheet(t('addPlan')+' · '+monthLbl(m),`<form class="form" id="f">${segHTML('pa',[['expense',t('exp1')],['income',t('inc1')]],ty)}
-    <label class="fld"><span>${t('category')}</span><select class="in-f" id="pc">${catOptsTree('expense','',false)}</select></label>
-    <label class="fld"><span>${t('amount')}</span><input class="in-f amt num" id="pv" inputmode="decimal" placeholder="0"></label>
-    <label class="fld"><span>${t('note')}</span><input class="in-f" id="pn"></label>
-    <label class="fld"><span>${t('repeatFor')}</span><select class="in-f" id="pr">${[1,2,3,6,12].map(n=>`<option value="${n}">${n===1?t('thisMonthOnly'):n+' '+t('monthsW')}</option>`).join('')}</select></label>
+function planAdjForm(m,idx){
+  const ed=idx!=null?S.planAdj[idx]:null;let ty=ed?(ed.type||'expense'):'expense';
+  openSheet((ed?t('edit'):t('addPlan'))+' · '+monthLbl(m),`<form class="form" id="f">${segHTML('pa',[['expense',t('exp1')],['income',t('inc1')]],ty)}
+    <label class="fld"><span>${t('category')}</span><select class="in-f" id="pc">${catOptsTree(ty,ed?ed.cat:'',false)}</select></label>
+    <label class="fld"><span>${t('amount')}</span><input class="in-f amt num" id="pv" inputmode="decimal" placeholder="0" value="${ed?ed.amount:''}"></label>
+    <label class="fld"><span>${t('note')}</span><input class="in-f" id="pn" value="${ed?esc(ed.label&&ed.label!==catName(ed.cat)?ed.label:''):''}"></label>
+    <label class="fld" ${ed?'hidden':''}><span>${t('repeatFor')}</span><select class="in-f" id="pr">${[1,2,3,6,12].map(n=>`<option value="${n}">${n===1?t('thisMonthOnly'):n+' '+t('monthsW')}</option>`).join('')}</select></label>
     <div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
     bindSeg(r,'pa',v=>{ty=v;r.querySelector('#pc').innerHTML=catOptsTree(v,'',false)});
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const v=numv(r,'pv');if(!(v>0)){toast(t('needAmt'));return}
-      const n=+val(r,'pr')||1,cat=val(r,'pc'),note=val(r,'pn');for(let i=0;i<n;i++)S.planAdj.push({m:ymAdd(m,i),type:ty,cat,amount:v,label:note||catName(cat)});
+      const n=+val(r,'pr')||1,cat=val(r,'pc'),note=val(r,'pn');
+      if(ed)Object.assign(ed,{type:ty,cat,amount:v,label:note||catName(cat)});else for(let i=0;i<n;i++)S.planAdj.push({m:ymAdd(m,i),type:ty,cat,amount:v,label:note||catName(cat)});
       commit(t('saved'));fcMonthSheet(m)};
   });
 }
@@ -1951,7 +1953,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.32 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.33 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
