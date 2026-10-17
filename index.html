@@ -519,6 +519,7 @@ cardPayLine:['سداد الكارت المتوقع','Expected card payment'],cas
 paidIn:['هيتسدد في','paid in'],
 curUsed:['في الرصيد المتوقع للشهر ده بنحسب الأكبر بين المتوقع والفعلي لكل سطر:','For this month the forecast uses the larger of planned and actual per line:'],
 showLines:['التفاصيل','Details'],notYet:['الشهر لسه مجاش','Not here yet'],cashBanks:['كاش وبنوك','cash & banks'],diffActPlan:['الفرق (الفعلي − المتوقع)','Difference (actual − planned)'],editPlan:['عدّل المتوقع','Edit the plan'],
+planCatHint:['المتوقع جاي من السطور اللي فوق: الأقساط والمتكرر والحد الشهري والمبالغ الإضافية. ✓ يعني اتدفع، و💳 يعني بالكارت.','Planned comes from the lines above: installments, recurring, budgets and extra amounts. ✓ means paid, 💳 means by card.'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1886,11 +1887,24 @@ function maybeAskClose(){
   setTimeout(()=>{if(S&&$('#sheet').hidden)closeMonthSheet(m,true)},900);
 }
 
+/* one category in plan vs actual: where the planned amount comes from, and what actually happened */
+function planCatSheet(root,ty){
+  const months=perMonths(),pl=[],ac=[];
+  months.forEach(m=>{planItems(m).filter(x=>x.type===ty&&catRoot(x.cat)===root).forEach(x=>pl.push(Object.assign({m},x)));
+    txOf(m).filter(x=>x.type===ty&&catRoot(x.cat)===root).forEach(x=>ac.push(x))});
+  const tp=pl.reduce((v,x)=>v+x.amount,0),ta=ac.reduce((v,x)=>v+baseAmt(x),0),d=ty==='income'?ta-tp:tp-ta;
+  const multi=months.length>1;
+  openSheet(catName(root)+' · '+perLabel(),`<div class="form">
+    <div class="blk plan"><div class="blk-h"><span>● ${t('planned')}</span><b>${money(tp)}</b></div><div style="padding:0 14px 8px">${pl.length?pl.map(x=>{const a=accOf(x.acc);return `<div class="ln"><span>${esc(x.label||catName(x.cat))}${multi?' · '+esc(monthShort(x.m)):''}${x.done?' ✓':''}${a&&a.type==='card'?' 💳':''}</span><b>${money(x.amount)}</b></div>`}).join(''):`<div class="ln"><span>${t('noItems')}</span></div>`}</div></div>
+    <div class="blk act"><div class="blk-h"><span>● ${t('actual')}</span><b>${money(ta)}</b></div><div style="padding:0 14px 8px">${ac.length?ac.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>{const a=accOf(x.acc);return `<div class="ln"><span>${esc(shortDate(x.date))} · ${esc(x.note||catName(x.cat))}${a?' · '+esc(a.name):''}</span><b>${money(baseAmt(x))}</b></div>`}).join(''):`<div class="ln"><span>${t('noItems')}</span></div>`}</div></div>
+    <div class="blk"><div class="blk-h"><span>${t('variance')}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div><p class="hint" style="padding:0 14px">${t('planCatHint')}</p></div>
+    <button type="button" class="btn block" id="pcStmt">${t('statement')} ›</button></div>`,r=>{r.querySelector('#pcStmt').onclick=()=>catStmt(root)});
+}
 function planHTML(){
   const months=perMonths(),{P,A}=planVsActual(months);
   const sec=ty=>{const keys=[...new Set([...Object.keys(P[ty]),...Object.keys(A[ty])])].sort((a,b)=>Math.max(P[ty][b]||0,A[ty][b]||0)-Math.max(P[ty][a]||0,A[ty][a]||0));
     let tp=0,ta=0;const rows=keys.map(k=>{const p=P[ty][k]||0,a=A[ty][k]||0;tp+=p;ta+=a;const d=ty==='income'?a-p:p-a;
-      return `<div class="cmp tap" data-act="stmtCat" data-id="${k}" data-ty="${ty}"><span>${esc(catName(k))}</span><span>${money(p)}</span><span>${money(a)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`}).join('');
+      return `<div class="cmp tap" data-act="planCat" data-id="${k}" data-ty="${ty}"><span>${esc(catName(k))} ›</span><span>${money(p)}</span><span>${money(a)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`}).join('');
     const d=ty==='income'?ta-tp:tp-ta;
     return {html:`<div class="grp"><span>${ty==='income'?t('income'):t('expense')}</span></div>${rows||`<div class="empty">${t('noItems')}</div>`}<div class="cmp t"><span>${t('total')}</span><span>${money(tp)}</span><span>${money(ta)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`,tp,ta}};
   const I=sec('income'),E=sec('expense'),np=I.tp-E.tp,na=I.ta-E.ta;
@@ -1977,7 +1991,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.38 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.39 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -2035,7 +2049,7 @@ $('#view').addEventListener('click',e=>{
     budget:budgetForm,
     clearSample:()=>{const l=S.lang,keep=S.ledgers;S=blank();S.lang=l;S.ledgers=keep||[];if(ACT==='me')PS=S;commit()},
     addCat:()=>catForm(b.dataset.ty),editCat:()=>{const ty=b.dataset.ty;catForm(ty,S.cats[ty].find(c=>c.id===id))},
-    fcMonth:()=>fcMonthSheet(b.dataset.m),closeMonth:()=>closeMonthSheet(b.dataset.m,false),
+    fcMonth:()=>fcMonthSheet(b.dataset.m),planCat:()=>planCatSheet(id,b.dataset.ty),closeMonth:()=>closeMonthSheet(b.dataset.m,false),
     stmtAcc:()=>accStmt(id),stmtCat:()=>catStmt(id),catGroup:()=>catGroupSheet(b.dataset.ty,id),stmtFlow:()=>flowStmt(b.dataset.ty),
     stmtPerson:()=>personStmt(b.dataset.name),stmtObl:()=>oblStmt(b.dataset.k,id),recon:()=>recForm(accOf(id)),
     addCatOld:()=>{const ty=b.dataset.ty;openSheet(t('addCat'),`<form class="form" id="f"><label class="fld"><span>${t('name')}</span><input class="in-f" id="nm"></label><div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
