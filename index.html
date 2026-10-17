@@ -318,7 +318,7 @@ const ymDiff=(a,b)=>{const [y1,m1]=a.split('-').map(Number),[y2,m2]=b.split('-')
 const T={
 app:['دفتري','Daftari'],home:['الرئيسية','Home'],tx:['الحركات','Activity'],obl:['الالتزامات','Obligations'],rep:['التقارير','Reports'],set:['الإعدادات','Settings'],
 income:['الإيرادات','Income'],expense:['المصروفات','Spending'],net:['المتبقي من الشهر','Left this month'],inc1:['إيراد','Income'],exp1:['مصروف','Expense'],
-dueMonth:['مستحق الشهر ده','Due this month'],nothingDue:['مفيش مستحقات متبقية الشهر ده','Nothing left to pay this month'],
+dueMonth:['مستحق الشهر ده','Due this month'],dueUntil:['مستحق لحد','Due up to'],nothingDueP:['مفيش مستحقات متبقية في الفترة دي','Nothing left to pay in this period'],fromToday:['من النهارده','from today'],nothingDue:['مفيش مستحقات متبقية الشهر ده','Nothing left to pay this month'],
 pay:['ادفع','Pay'],receive:['اقبض','Collect'],owedToMe:['ليك عند الناس','Owed to you'],iOwe:['عليك للناس','You owe'],
 recent:['آخر الحركات','Recent activity'],seeAll:['الكل','See all'],budgetAlerts:['تنبيهات الميزانية','Budget alerts'],
 installments:['أقساط','Installments'],gameyas:['جمعيات','Gam\'eyas'],loans:['سلف','Loans'],
@@ -389,7 +389,7 @@ driveAgain:['اضغط "اربط Google Drive" مرة كمان علشان نكم�
 driveNeedRT:['خطوة أخيرة علشان Google Drive يفضل مربوط على طول، من غير ما يسألك تاني.','One last step so Google Drive stays linked without asking again.'],driveFinish:['كمّل الربط','Finish linking'],
 restorePick:['اختار النسخة اللي عايز ترجعلها. هيطلب منك الرقم السري اللي كان وقتها.','Pick the copy to go back to. You will be asked for the PIN used at that time.'],
 period:['اختار الفترة','Choose period'],pMonth:['شهر','Month'],pQuarter:['ربع سنة','Quarter'],pHalf:['نص سنة','Half year'],pYear:['سنة','Year'],pCustom:['من - إلى','Custom'],
-pFrom:['من','From'],pTo:['إلى','To'],pNow:['الفترة الحالية','Current period'],apply:['اعرض','Show'],pNeedDates:['اختار تاريخ البداية والنهاية','Choose a start and end date'],
+pFrom:['من','From'],qThisM:['الشهر ده','This month'],qLastM:['الشهر اللي فات','Last month'],q3M:['آخر ٣ شهور','Last 3 months'],qYTD:['من أول السنة','Year to date'],pTo:['إلى','To'],pNow:['الفترة الحالية','Current period'],apply:['اعرض','Show'],pNeedDates:['اختار تاريخ البداية والنهاية','Choose a start and end date'],
 netPer:['صافي الفترة','Net for the period'],byMonth:['حسب الشهور','By month'],
 shareApp:['شارك البرنامج','Share the app'],shareText:['دفتري — برنامج بسيط لمتابعة المصروفات والأقساط والجمعيات والسلف. بياناتك بتفضل متشفرة على موبايلك.','Daftari — a simple app for expenses, installments, savings circles and loans. Your data stays encrypted on your phone.'],linkCopied:['اتنسخ اللينك','Link copied'],
 transfer:['تحويل','Transfer'],transfers:['تحويلات','Transfers'],account:['الحساب','Account'],fromAcc:['من حساب','From account'],toAcc:['إلى حساب','To account'],
@@ -1145,18 +1145,27 @@ function periodForm(){
       <label class="fld" id="wh"><span>${t('pHalf')}</span><select class="in-f" id="sh">${hn.map((l,i)=>`<option value="${i+1}" ${(m<=6?0:1)===i?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="fld" id="wy"><span>${t('pYear')}</span><select class="in-f" id="sy">${yOpts}</select></label>
     </div>
-    <div class="two" id="pc">
-      <label class="fld"><span>${t('pFrom')}</span><input class="in-f" type="date" id="pf" value="${per.from}"></label>
-      <label class="fld"><span>${t('pTo')}</span><input class="in-f" type="date" id="pt" value="${per.to}"></label>
+    <div id="pc">
+      <div class="qchips" style="padding:0 0 8px;flex-wrap:wrap;overflow:visible">${[['qThisM',t('qThisM')],['qLastM',t('qLastM')],['q3M',t('q3M')],['qYTD',t('qYTD')]].map(([v,l])=>`<button type="button" class="balchip" data-q="${v}">${esc(l)}</button>`).join('')}</div>
+      ${['f','t'].map(w=>{const [yy,mm,dd]=((w==='f'?per.from:per.to)||TODAY).split('-').map(Number);return `<div class="fld"><span>${w==='f'?t('pFrom'):t('pTo')}</span><div class="dmy" style="display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr) minmax(0,1fr);gap:6px">
+        <select class="in-f" id="p${w}d">${Array.from({length:31},(_,i)=>`<option value="${i+1}" ${i+1===dd?'selected':''}>${i+1}</option>`).join('')}</select>
+        <select class="in-f" id="p${w}m">${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${i+1===mm?'selected':''}>${esc(new Intl.DateTimeFormat(L(),{month:'long'}).format(new Date(2026,i,1)))}</option>`).join('')}</select>
+        <select class="in-f" id="p${w}y">${Array.from({length:y1-y0+1},(_,i)=>y1-i).map(v=>`<option value="${v}" ${v===yy?'selected':''}>${v}</option>`).join('')}</select></div></div>`}).join('')}
     </div>
     <div class="foot"><button type="button" class="btn grow" id="pnow">${t('pNow')}</button><button class="btn pri grow">${t('apply')}</button></div>
   </form>`,r=>{
     const $r=q=>r.querySelector(q);
     const show=()=>{$r('#pick').hidden=mode==='custom';$r('#pc').hidden=mode!=='custom';$r('#wm').hidden=mode!=='month';$r('#wq').hidden=mode!=='quarter';$r('#wh').hidden=mode!=='half'};
     bindSeg(r,'pm',v=>{mode=v;show()});show();
+    const getD=w=>{const y=+$r('#p'+w+'y').value,m=+$r('#p'+w+'m').value,d=Math.min(+$r('#p'+w+'d').value,new Date(y,m,0).getDate());return y+'-'+pad(m)+'-'+pad(d)};
+    const setD=(w,ds)=>{const [y,m,d]=ds.split('-').map(Number);const ys=$r('#p'+w+'y');if(![...ys.options].some(o=>+o.value===y))ys.add(new Option(y,y));ys.value=y;$r('#p'+w+'m').value=m;$r('#p'+w+'d').value=d};
+    ['f','t'].forEach(w=>['m','y'].forEach(z=>$r('#p'+w+z).addEventListener('change',()=>setD(w,getD(w)))));
+    r.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const q=b.dataset.q,lm=ymAdd(TODAY_YM,-1);
+      const [f,to]=q==='qThisM'?[TODAY_YM+'-01',monthEnd(TODAY_YM)]:q==='qLastM'?[lm+'-01',monthEnd(lm)]:q==='q3M'?[ymAdd(TODAY_YM,-2)+'-01',monthEnd(TODAY_YM)]:[TODAY.slice(0,4)+'-01-01',TODAY];
+      setD('f',f);setD('t',to)});
     $r('#pnow').onclick=()=>{per.mode=mode;cur=TODAY_YM;if(mode==='custom'){per.from=TODAY_YM+'-01';per.to=TODAY}closeSheet();render()};
     $r('#f').onsubmit=e=>{e.preventDefault();per.mode=mode;const yy=$r('#sy').value;
-      if(mode==='custom'){const a=$r('#pf').value,b=$r('#pt').value;if(!a||!b){toast(t('pNeedDates'));return}per.from=a<=b?a:b;per.to=a<=b?b:a}
+      if(mode==='custom'){const a=getD('f'),b=getD('t');per.from=a<=b?a:b;per.to=a<=b?b:a}
       else cur=yy+'-'+pad(mode==='month'?+$r('#sm').value:mode==='quarter'?(+$r('#sq').value-1)*3+1:mode==='half'?(+$r('#sh').value===1?1:7):1);
       closeSheet();render()};
   });
@@ -1546,7 +1555,7 @@ function catTotalsHTML(ty){
     <div class="list">${rows.map(([id,v])=>{const kids=catKids(ty,id).length;return `<div class="catbar tile" data-act="${kids?'catGroup':'stmtCat'}" data-ty="${ty}" data-id="${id}"><div class="l"><span>${esc(catName(id))}${kids?' ›':''}</span><span>${fmt(v)}<span class="pct">${Math.round(v/tot*100)}%</span></span></div><div class="bar"><i style="width:${v/rows[0][1]*100}%;${ty==='income'?'':'background:var(--neg)'}"></i></div></div>`}).join('')}</div></details>`;
 }
 function loansHTML(){
-  if(!S.loans.length)return '';
+  if(!S.loans.length)return '';const E=perRange()[1],loanLeft=l=>loanLeftAt(l,E);
   const people=groupsOf(S.loans,l=>l.person);
   const bal=ls=>ls.reduce((v,l)=>v+(l.dir==='lent'?1:-1)*toBase(loanLeft(l),l.currency||BASE()),0);
   const owed=S.loans.filter(l=>l.dir==='lent').reduce((a,l)=>a+toBase(loanLeft(l),l.currency||BASE()),0),owe=S.loans.filter(l=>l.dir==='borrowed').reduce((a,l)=>a+toBase(loanLeft(l),l.currency||BASE()),0);
@@ -1555,6 +1564,7 @@ function loansHTML(){
     <div class="list">${[...groups].map(([g,ps])=>`<div class="grp"><span>${esc(g)}</span><span class="num">${fmt(bal(ps.flatMap(p=>p[1])))}</span></div>`+ps.map(([p,ls])=>{const v=bal(ls);return `<div class="row tap" data-act="stmtPerson" data-name="${esc(p)}"><div class="glyph ${v>0?'in':''}">${esc(initial(p))}</div><div class="main"><span class="t">${esc(p)}</span><span class="s">${v>0.004?t('drPerson'):v<-0.004?t('crPerson'):t('settledBal')}</span></div><b class="amt ${v<0?'neg':v>0?'pos':''}">${money(Math.abs(v))}</b></div>`}).join('')).join('')}</div></details>`;
 }
 function oblHTML(){
+  const E=perRange()[1],oblLeft=(k,o)=>oblLeftAt(k,o,E);
   const items=[...S.inst.map(o=>({k:'inst',o,per:o.monthly,n:o.count})),...S.gam.map(o=>({k:'gam',o,per:o.share,n:o.members}))];
   if(!items.length)return '';
   const rem=it=>toBase(oblLeft(it.k,it.o),it.o.currency||BASE());
@@ -1564,23 +1574,22 @@ function oblHTML(){
 }
 function goalsHTML(){
   if(!S.goals.length)return '';
-  return `<details class="box"><summary><h2>${t('goals')}</h2><span class="sumv">${S.goals.length}</span></summary><div class="list">${S.goals.map(g=>{const sv=goalSaved(g),p=Math.min(1,sv/(+g.target||1));return `<div class="catbar tile" data-act="goGoals"><div class="l"><span>${esc(g.name)}</span><span>${fmt(sv)} / ${fmt(g.target)}<span class="pct">${Math.round(p*100)}%</span></span></div><div class="bar"><i style="width:${p*100}%"></i></div></div>`}).join('')}</div></details>`;
+  return `<details class="box"><summary><h2>${t('goals')}</h2><span class="sumv">${S.goals.length}</span></summary><div class="list">${S.goals.map(g=>{const sv=goalSavedAt(g,perRange()[1]),p=Math.min(1,sv/(+g.target||1));return `<div class="catbar tile" data-act="goGoals"><div class="l"><span>${esc(g.name)}</span><span>${fmt(sv)} / ${fmt(g.target)}<span class="pct">${Math.round(p*100)}%</span></span></div><div class="bar"><i style="width:${p*100}%"></i></div></div>`}).join('')}</div></details>`;
 }
 function vHome(){
   const tx=txIn(),inc=sumB(tx.filter(x=>x.type==='income')),exp=sumB(tx.filter(x=>x.type==='expense')),net=inc-exp;
-  const due=dueFor(per.mode==='month'?cur:TODAY_YM);
-  const owed=S.loans.filter(l=>l.dir==='lent').reduce((a,l)=>a+toBase(loanLeft(l),l.currency||BASE()),0);
-  const owe=S.loans.filter(l=>l.dir==='borrowed').reduce((a,l)=>a+toBase(loanLeft(l),l.currency||BASE()),0);
+  const [PA,PE]=perRange(),DM=PE.slice(0,7),due=dueFor(DM),past=PE<TODAY,future=PA>TODAY;
+  const nw=netWorth(PE).net;
   const alerts=budgetState().filter(b=>b.p>=.8),sa=shortAlert();
   const recent=[...tx].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
   const dueTotal=due.filter(d=>d.k!=='gamr').reduce((a,d)=>a+toBase(d.amount*(1+d.late),d.cur||BASE()),0);
   return `${sa?`<div class="banner" style="background:color-mix(in srgb,var(--neg) 14%,var(--surface))"><span>⚠️ ${esc(t('shortMsg').replace('%d',shortDate(sa.date)).replace('%l',sa.label).replace('%n',fmt(sa.need)))}</span><button class="btn sm pri" data-act="cashSheet">${t('details')}</button></div>`:''}${drv.linked&&drv.needAuth?`<div class="banner"><span>${useWorker()&&!RT?t('driveNeedRT'):t('driveNeedAuth')}</span><button class="btn sm pri" data-act="driveResume">${useWorker()&&!RT?t('driveFinish'):t('driveResume')}</button></div>`:''}${!S.sample&&!drv.linked&&backupDue()?`<div class="banner"><span>${t('remindBk')}</span><button class="btn sm pri" data-act="shareDrive">${t('shareDrive')}</button></div>`:''}${S.sample?`<div class="banner"><span>${t('sampleBanner')}</span><button class="btn sm" data-act="clearSample">${t('clearSample')}</button></div>`:''}
   <form class="qadd" id="qadd"><div class="qbox"><input class="in-f" id="qtext" placeholder="${t('quickHint')}" autocomplete="off" enterkeyhint="send"></div>${SpeechRec?`<button type="button" class="btn" id="qmic" aria-label="voice">🎤</button>`:''}<button class="btn pri" aria-label="add">↵</button></form>
   ${S.quick.length?`<div class="qchips">${S.quick.map(q=>{const a=accOf(q.acc);return `<button class="balchip" data-act="useQuick" data-id="${q.id}">${esc(q.note||catName(q.cat))} <small class="cur">${fmt(q.amount)}${a&&a.currency!==BASE()?' '+esc(curSym(a.currency)):''}</small></button>`}).join('')}</div>`:''}
-  ${(()=>{const x=safeToSpend();return `<div class="slip tile" data-act="safe"><div class="net"><span class="label">${t('safeTitle')} ›</span><span class="mid ${x.safe<0?'neg':''}">${money(x.safe)} <small class="muted">${esc(curSym(BASE()))}</small></span><span class="label">${x.safe>0?fmt(x.perDay)+' '+esc(curSym(BASE()))+' '+t('perDay')+' · ':''}${x.daysLeft} ${t('daysLeft')}</span></div></div>`})()}
+  ${past?'':(()=>{const x=safeToSpend();return `<div class="slip tile" data-act="safe"><div class="net"><span class="label">${t('safeTitle')}${future?' <small class="muted">('+t('fromToday')+')</small>':''} ›</span><span class="mid ${x.safe<0?'neg':''}">${money(x.safe)} <small class="muted">${esc(curSym(BASE()))}</small></span><span class="label">${x.safe>0?fmt(x.perDay)+' '+esc(curSym(BASE()))+' '+t('perDay')+' · ':''}${x.daysLeft} ${t('daysLeft')}</span></div></div>`})()}
   <section class="slip">
     ${(()=>{const [a,b]=perRange(),o=liqAll(dayBefore(a)),c=liqAll(b),cf=cashActual(tx),ci=Object.entries(cf).filter(([k])=>k.startsWith('in:')).reduce((v,[,x])=>v+x.v,0),co=Object.entries(cf).filter(([k])=>k.startsWith('out:')).reduce((v,[,x])=>v+x.v,0);
-      const owe=cards().map(x=>({x,c:cardInfo(x)})).filter(z=>z.c.owed>0),oweT=owe.reduce((v,z)=>v+toBase(z.c.owed,z.x.currency),0),nextD=owe.map(z=>z.c.dueDate||cardDueFor(z.x,TODAY)).sort()[0];
+      const owe=cards().map(x=>({x,c:cardInfo(x,b)})).filter(z=>z.c.owed>0),oweT=owe.reduce((v,z)=>v+toBase(z.c.owed,z.x.currency),0),nextD=owe.map(z=>z.c.dueDate||cardDueFor(z.x,b)).sort()[0];
       return `<div class="net tile" data-act="goAcc"><span class="label">${per.mode==='month'?t('availEndMonth'):t('availEnd')} ›</span><span class="big ${c<0?'neg':''}">${money(c)}<small>${esc(curSym(BASE()))}</small></span></div>
     <div class="perf"></div>
     <div class="flowb"><div><span>${t('carried')}</span><b class="${o<0?'neg':''}">${money(o)}</b></div><div><span>+ ${t('cashIn')}</span><b class="pos">${money(ci)}</b></div><div><span>− ${t('cashOut')}</span><b>${money(co)}</b></div></div>
@@ -1589,17 +1598,17 @@ function vHome(){
     <div class="net tile" data-act="stmtFlow" data-ty="net" style="padding-top:6px"><span class="label">${per.mode==='month'?t('netMonthOnly'):t('netPer')} ›</span><span class="mid ${net<0?'neg':'pos'}">${money(net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div>
     ${Math.abs(c-o-(ci-co))>1?`<p class="hint" style="padding:0 14px 8px;margin:0">${t('fxDiff')} ${money(c-o-(ci-co))}</p>`:''}`})()}
   </section>
-  <section class="sec"><div class="sec-h"><h2>${t('dueMonth')}</h2>${dueTotal?`<span class="muted">${money(dueTotal)} ${esc(curSym(BASE()))}</span>`:''}</div>
+  <section class="sec"><div class="sec-h"><h2>${per.mode==='month'?t('dueMonth'):t('dueUntil')+' '+esc(monthLbl(DM))}</h2>${dueTotal?`<span class="muted">${money(dueTotal)} ${esc(curSym(BASE()))}</span>`:''}</div>
     <div class="list">${due.length?due.map(d=>`<div class="row"><div class="glyph ${d.k==='gamr'?'in':''}">${esc(initial(d.name))}</div>
       <div class="main"><span class="t">${esc(d.name)}</span><span class="s">${d.k==='inst'?t('installments'):d.k==='gam'?t('gameyas'):t('payout')} · ${esc(monthLbl(d.ym))}</span></div>
       ${d.late?`<span class="pill neg">${t('overdue')} ${d.late}</span>`:''}${d.partial?`<span class="pill warn">${t('partial')}</span>`:''}
       <span class="amt ${d.k==='gamr'?'pos':''}">${moneyC(d.amount,d.cur)}</span>
       <button class="btn sm ${d.k==='gamr'?'':'pri'}" data-act="${d.k==='inst'?'payInst':d.k==='gam'?'payGam':'recvGam'}" data-id="${d.id}">${d.k==='gamr'?t('receive'):t('pay')}</button></div>`).join(''):''}
-      ${S.loans.map(l=>({l,v:loanOwedUpTo(l,per.mode==='month'?cur:TODAY_YM)})).filter(o=>o.v>0).map(({l,v})=>`<div class="row"><div class="glyph ${l.dir==='lent'?'in':''}">${esc(initial(l.person))}</div><div class="main"><span class="t">${esc(l.person)}</span><span class="s">${l.dir==='lent'?t('owedToMe'):t('loans')}${l.plan==='inst'?' · '+t('planInst'):''}</span></div><span class="amt ${l.dir==='lent'?'pos':''}">${moneyC(v,l.currency)}</span><button class="btn sm ${l.dir==='lent'?'':'pri'}" data-act="repay" data-id="${l.id}">${l.dir==='lent'?t('receive'):t('pay')}</button></div>`).join('')}
-      ${cards().map(a=>({a,c:cardInfo(a)})).filter(o=>o.c.due>0&&o.c.dueDate&&o.c.dueDate.slice(0,7)<=(per.mode==='month'?cur:TODAY_YM)).map(({a,c})=>`<div class="row"><div class="glyph">💳</div><div class="main"><span class="t">${esc(a.name)}</span><span class="s">${t('cardDue')} · ${esc(shortDate(c.dueDate))}</span></div>${c.dueDate<TODAY?`<span class="pill neg">${t('overdue')}</span>`:''}<span class="amt">${moneyC(c.due,a.currency)}</span><button class="btn sm pri" data-act="payCard" data-id="${a.id}">${t('pay')}</button></div>`).join('')}
-      ${!due.length&&!S.loans.some(l=>loanOwedUpTo(l,per.mode==='month'?cur:TODAY_YM)>0)&&!cards().some(a=>{const c=cardInfo(a);return c.due>0&&c.dueDate&&c.dueDate.slice(0,7)<=(per.mode==='month'?cur:TODAY_YM)})?`<div class="empty">${t('nothingDue')}</div>`:''}</div></section>
+      ${S.loans.map(l=>({l,v:loanOwedUpTo(l,DM)})).filter(o=>o.v>0).map(({l,v})=>`<div class="row"><div class="glyph ${l.dir==='lent'?'in':''}">${esc(initial(l.person))}</div><div class="main"><span class="t">${esc(l.person)}</span><span class="s">${l.dir==='lent'?t('owedToMe'):t('loans')}${l.plan==='inst'?' · '+t('planInst'):''}</span></div><span class="amt ${l.dir==='lent'?'pos':''}">${moneyC(v,l.currency)}</span><button class="btn sm ${l.dir==='lent'?'':'pri'}" data-act="repay" data-id="${l.id}">${l.dir==='lent'?t('receive'):t('pay')}</button></div>`).join('')}
+      ${cards().map(a=>({a,c:cardInfo(a)})).filter(o=>o.c.due>0&&o.c.dueDate&&o.c.dueDate.slice(0,7)<=DM).map(({a,c})=>`<div class="row"><div class="glyph">💳</div><div class="main"><span class="t">${esc(a.name)}</span><span class="s">${t('cardDue')} · ${esc(shortDate(c.dueDate))}</span></div>${c.dueDate<TODAY?`<span class="pill neg">${t('overdue')}</span>`:''}<span class="amt">${moneyC(c.due,a.currency)}</span><button class="btn sm pri" data-act="payCard" data-id="${a.id}">${t('pay')}</button></div>`).join('')}
+      ${!due.length&&!S.loans.some(l=>loanOwedUpTo(l,DM)>0)&&!cards().some(a=>{const c=cardInfo(a);return c.due>0&&c.dueDate&&c.dueDate.slice(0,7)<=DM})?`<div class="empty">${per.mode==='month'?t('nothingDue'):t('nothingDueP')}</div>`:''}</div></section>
   ${alerts.length?`<section class="sec"><div class="sec-h"><h2>${t('budgetAlerts')}</h2></div><div class="list">${alerts.map(b=>`<div class="catbar"><div class="l"><span>${esc(catName(b.id))} <span class="pill ${b.p>=1?'neg':'warn'}">${b.p>=1?t('over'):t('near')}</span></span><span>${money(b.sp)} / ${money(b.lim)}</span></div><div class="bar"><i class="${b.p>=1?'neg':'warn'}" style="width:${Math.min(100,b.p*100)}%"></i></div></div>`).join('')}</div></section>`:''}
-  <div class="slip tile" data-act="goNW"><div class="net"><span class="label">${t('netWorth')} ›</span><span class="mid ${netWorth().net<0?'neg':''}">${money(netWorth().net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div></div>
+  <div class="slip tile" data-act="goNW"><div class="net"><span class="label">${t('netWorth')} <small class="muted">${t('asOf')} ${esc(dmyOf(dsDate(PE)))}</small> ›</span><span class="mid ${nw<0?'neg':''}">${money(nw)} <small class="muted">${esc(curSym(BASE()))}</small></span></div></div>
   ${splitHTML()}${accountsHTML()}${catTotalsHTML('expense')}${catTotalsHTML('income')}${loansHTML()}${oblHTML()}${goalsHTML()}
   <section class="sec"><div class="sec-h"><h2>${t('recent')}</h2><button class="link" data-act="goTx">${t('seeAll')}</button></div>
     <div class="list">${recent.length?recent.map(txRow).join(''):`<div class="empty">${t('noTx')}</div>`}</div></section>`;
@@ -1657,12 +1666,12 @@ function vTx(){
 
 /* ---------- credit cards: statement close day, payment day, what is due ---------- */
 const dateIn=(y,m,d)=>{while(m<1){m+=12;y--}while(m>12){m-=12;y++}return y+'-'+pad(m)+'-'+pad(Math.min(d,new Date(y,m,0).getDate()))};
-function cardInfo(a){
-  const owed=Math.max(0,-accBalance(a));if(!a.closeDay)return {owed,due:0};
-  const cd=+a.closeDay,dd=+(a.dueDay||cd),y=+TODAY.slice(0,4),m=+TODAY.slice(5,7);
-  let close=dateIn(y,m,cd);if(close>TODAY)close=dateIn(y,m-1,cd);
+function cardInfo(a,at){
+  const lim=at||'9999-12-31';at=at||TODAY;const owed=Math.max(0,-(lim===at?accBalanceAt(a,at):accBalance(a)));if(!a.closeDay)return {owed,due:0};
+  const cd=+a.closeDay,dd=+(a.dueDay||cd),y=+at.slice(0,4),m=+at.slice(5,7);
+  let close=dateIn(y,m,cd);if(close>at)close=dateIn(y,m-1,cd);
   const [cy,cm]=close.split('-').map(Number);let dueDate=dateIn(cy,dd>cd?cm:cm+1,dd);if(a.defer&&a.defer.close===close)dueDate=a.defer.to;
-  const stmt=Math.max(0,-accBalanceAt(a,close)),paid=S.tx.filter(x=>x.date>close&&((x.type==='transfer'&&x.toAcc===a.id)||(x.type==='income'&&x.acc===a.id))).reduce((v,x)=>v+(+(x.type==='transfer'?(x.toAmount??x.amount):x.amount)||0),0);
+  const stmt=Math.max(0,-accBalanceAt(a,close)),paid=S.tx.filter(x=>x.date>close&&x.date<=lim&&((x.type==='transfer'&&x.toAcc===a.id)||(x.type==='income'&&x.acc===a.id))).reduce((v,x)=>v+(+(x.type==='transfer'?(x.toAmount??x.amount):x.amount)||0),0);
   const due=Math.max(0,Math.round((stmt-paid)*100)/100);
   return {owed,due,dueDate,close,nextClose:dateIn(cy,cm+1,cd),cycle:Math.max(0,owed-due)};
 }
@@ -1734,6 +1743,9 @@ const monthEnd=ym=>{const [y,m]=ym.split('-').map(Number);return ym+'-'+pad(new 
 const balAll=date=>S.accounts.reduce((v,a)=>v+toBase(accBalanceAt(a,date),a.currency),0);
 function accBalanceAt(a,date){let b=+a.opening||0;for(const x of S.tx){if(x.date>date)continue;
   if(x.type==='transfer'){if(x.acc===a.id)b-=+x.amount||0;if(x.toAcc===a.id)b+=+(x.toAmount??x.amount)||0}else if(x.acc===a.id)b+=x.type==='income'?+x.amount:-x.amount}return b}
+/* remaining on an installment/gam'eya as it stood on a date: add back linked payments made after it */
+const oblLeftAt=(k,o,date)=>date>=TODAY?oblLeft(k,o):oblLeft(k,o)+S.tx.filter(x=>x.link&&x.link.k===k&&x.link.id===o.id&&x.date>date).reduce((v,x)=>v+(+x.amount||0),0);
+const goalSavedAt=(g,date)=>g.acc&&S.accounts.some(a=>a.id===g.acc)?Math.max(0,accBalanceAt(accOf(g.acc),date)):(g.saved||[]).filter(p=>!p.date||p.date<=date).reduce((v,p)=>v+(+p.amount||0),0);
 const loanLeftAt=(l,date)=>l.date>date?0:Math.max(0,l.amount+loanAdj(l)-l.pays.filter(p=>p.date<=date).reduce((v,p)=>v+(+p.amount||0),0));
 function netWorth(date){
   date=date||TODAY;let assets=0,neg=0;
@@ -2135,7 +2147,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.47 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.48 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -2841,10 +2853,10 @@ const myEmail=()=>(REG&&REG.email)||drv.email||'';
 const shortName=e=>String(e||'').split('@')[0];
 function ledgerMembers(){const set=new Set([...(S.members||[]),...S.tx.map(x=>x.paidBy||x.by).filter(Boolean)]);if(myEmail())set.add(myEmail());return [...set]}
 function splitBalances(){
-  const mem=ledgerMembers(),bal={};mem.forEach(m=>bal[m]={paid:0,share:0,net:0});
-  S.tx.filter(x=>x.type==='expense').forEach(x=>{const payer=x.paidBy||x.by;if(!payer||!bal[payer])return;const v=baseAmt(x);bal[payer].paid+=v;
+  const E=perRange()[1],mem=ledgerMembers(),bal={};mem.forEach(m=>bal[m]={paid:0,share:0,net:0});
+  S.tx.filter(x=>x.type==='expense'&&x.date<=E).forEach(x=>{const payer=x.paidBy||x.by;if(!payer||!bal[payer])return;const v=baseAmt(x);bal[payer].paid+=v;
     if(x.split==='self')bal[payer].share+=v;else mem.forEach(m=>bal[m].share+=v/mem.length)});
-  (S.settles||[]).forEach(z=>{if(bal[z.from])bal[z.from].paid+=+z.amount;if(bal[z.to])bal[z.to].paid-=+z.amount});
+  (S.settles||[]).filter(z=>!z.date||z.date<=E).forEach(z=>{if(bal[z.from])bal[z.from].paid+=+z.amount;if(bal[z.to])bal[z.to].paid-=+z.amount});
   mem.forEach(m=>bal[m].net=bal[m].paid-bal[m].share);
   /* simplest set of payments to settle */
   const debt=mem.filter(m=>bal[m].net<-0.5).map(m=>({m,v:-bal[m].net})),cred=mem.filter(m=>bal[m].net>0.5).map(m=>({m,v:bal[m].net})),plan=[];
