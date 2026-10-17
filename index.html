@@ -492,7 +492,7 @@ balOpen:['رصيد أول الفترة','Opening balance'],balClose:['رصيد �
 loanDue:['ميعاد السداد المتوقع','Expected repayment'],noAccount:['من غير حساب','No account'],repayHint:['لو اخترت حساب، المبلغ هيتسجل حركة عليه علشان رصيده يتظبط.','If you pick an account, the amount is recorded on it so its balance stays right.'],
 planVsAct:['المتوقع مقابل الفعلي','Planned vs actual'],planned:['المتوقع','Planned'],actual:['الفعلي','Actual'],variance:['الفرق','Variance'],category:['البند','Category'],total:['الإجمالي','Total'],monthW:['الشهر','Month'],
 planHint:['بالفلوس الفعلية (كاش وبنوك)، زي الرصيد المتوقع: اللي بالكارت بيتحسب في سداد الكارت. الفرق الموجب يعني أحسن من المتوقع.','Planned comes from recurring entries, installments, gam\'eyas, loan due dates and category budgets. A positive variance is better than planned.'],
-forecastT:['الرصيد المتوقع','Balance forecast'],forecastHint:['ده حساب الفلوس الفعلية (كاش وبنوك): اللي بتشتريه بالكارت بيتحسب خرج في يوم سداد الكارت مش يوم الشرا. الشهور اللي فاتت فعلي، والشهر الحالي (•) الأكبر بين الفعلي والمتوقع لكل بند، والشهور الجاية متوقع.','Past months are actual, this month (•) takes the larger of actual and plan per category, later months are planned. Balance = all accounts together, cards as negative.'],
+forecastT:['الرصيد المتوقع','Balance forecast'],forecastHint:['ده حساب الفلوس الفعلية (كاش وبنوك): اللي بتشتريه بالكارت بيتحسب خرج في يوم سداد الكارت مش يوم الشرا. الشهور اللي فاتت فعلي، والشهور الجاية متوقع. الشهر الحالي (•) دخله وخرجه هما المتوقع زي الجدول اللي فوق، ولو صرفت في بند أكتر من المتوقع الزيادة بتظهر تحته وبتتحسب في الرصيد.','Past months are actual, this month (•) takes the larger of actual and plan per category, later months are planned. Balance = all accounts together, cards as negative.'],
 balEndMonth:['رصيدك آخر الشهر','Balance at month end'],carried:['من اللي فات','Carried over'],
 cardsT:['الكروت','Cards'],addCard:['كارت جديد','New card'],closeDay:['يوم قفل الكشف','Statement day'],payDay:['يوم السداد','Payment day'],cardLimit:['الحد الائتماني','Credit limit'],cardAvail:['المتاح','Available'],
 cardOwed:['عليك','Owed'],cardDue:['مطلوب سداده','Due'],cardCycle:['مشتريات الكشف الجاي','Next statement'],cardNoDays:['حدد يوم قفل الكشف ويوم السداد من تعديل','Set statement and payment days in Edit'],noCards:['مفيش كروت لسه','No cards yet'],
@@ -525,6 +525,7 @@ nowHave:['معاك دلوقتي','You have now'],warnBefore:['نبهني قبل�
 shortMsg:['يوم %d الفلوس مش هتكفي (%l). محتاج %n زيادة أو تأجّل حاجات.','On %d money runs short (%l). You need %n more, or postpone something.'],
 willLastHint:['بنبدأ من الكاش والبنوك اللي معاك دلوقتي، ونمشي يوم بيوم على الدخل والمصاريف المتوقعة اللي لسه محصلتش. الحد الشهري للبنود بيتوزع على باقي أيام الشهر. سداد الكارت في يومه.','Starts from your cash and banks now and walks day by day through planned income and spending still to come. Category budgets are spread over the remaining days; card bills land on their due day.'],
 inCardPay:['بيتحسب في سداد الكارت','counted in the card payment'],
+overPlan:['الفعلي عدّى المتوقع ومحسوب في الرصيد','Actual went past the plan, included in the balance'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1782,8 +1783,10 @@ function monthCash(m){
   const act=cashActual(txOf(m));const sum=(o,p)=>Object.entries(o).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
   if(m<TODAY_YM)return {i:sum(act,'in:'),e:sum(act,'out:'),kind:'act',lines:act};
   const pl=cashPlan(m);if(m>TODAY_YM)return {i:sum(pl,'in:'),e:sum(pl,'out:'),kind:'plan',lines:pl};
-  const lines={};new Set([...Object.keys(pl),...Object.keys(act)]).forEach(k=>{const p=pl[k]?pl[k].v:0,a=act[k]?act[k].v:0;lines[k]={label:(pl[k]||act[k]).label,v:Math.max(p,a),a}});
-  return {i:sum(lines,'in:'),e:sum(lines,'out:'),kind:'cur',lines};
+  /* this month: the row shows the plan as it is; the balance also takes into account where actual already went past the plan */
+  const lines={},dev=[];new Set([...Object.keys(pl),...Object.keys(act)]).forEach(k=>{const p=pl[k]?pl[k].v:0,a=act[k]?act[k].v:0;lines[k]={label:(pl[k]||act[k]).label,v:Math.max(p,a),a,p};if(a-p>0.5)dev.push({k,label:lines[k].label,v:a-p})});
+  const sp=pfx=>Object.entries(lines).filter(([k])=>k.startsWith(pfx)).reduce((v,[,x])=>v+x.p,0);
+  return {i:sp('in:'),e:sp('out:'),iMax:sum(lines,'in:'),eMax:sum(lines,'out:'),kind:'cur',lines,dev};
 }
 function fcMonthSheet(m){
   const r=monthCash(m),row=(l,v,c)=>`<div class="row"><div class="main"><span class="t">${esc(l)}</span></div><b class="amt ${c||''}">${money(v)}</b></div>`;
@@ -1955,7 +1958,7 @@ function planHTML(){
   const I=sec('income'),E=sec('expense'),np=I.tp-E.tp,na=I.ta-E.ta;
   const start=TODAY_YM,endY=(+TODAY.slice(0,4)+1)+'-12',horizon=[];for(let m=start;m<=endY&&horizon.length<36;m=ymAdd(m,1))horizon.push(m);
   let bal=liqAll(monthEnd(ymAdd(horizon[0]||start,-1)));
-  const fc=horizon.map(m=>{const r=monthCash(m);if(m<TODAY_YM)bal=liqAll(monthEnd(m));else bal+=r.i-r.e;return Object.assign({m,bal},r)});
+  const fc=horizon.map(m=>{const r=monthCash(m);if(m<TODAY_YM)bal=liqAll(monthEnd(m));else if(r.kind==='cur')bal+=r.iMax-r.eMax;else bal+=r.i-r.e;return Object.assign({m,bal},r)});
   const cm=per.mode==='month'?cur:ymAdd(TODAY_YM,-1);
   return `<details class="box" open><summary><h2>${t('planVsAct')}</h2></summary>${cm<=TODAY_YM?`<button class="btn block" data-act="closeMonth" data-m="${cm}" style="margin:8px 0">${S.closed[cm]?'✓ ':''}${t('closeTitle')} · ${esc(monthLbl(cm))}</button>`:''}<div class="list">
     <div class="cmp h"><span>${t('category')}</span><span>${t('planned')}</span><span>${t('actual')}</span><span>${t('variance')}</span></div>
@@ -1966,7 +1969,7 @@ function planHTML(){
   ${fc.length?`<details class="box" open><summary><h2>${t('forecastT')}</h2></summary><div class="list">
     ${(()=>{const low=fc.reduce((a,r)=>r.bal<a.bal?r:a,fc[0]),firstGap=fc.find(r=>r.i-r.e<0);return `<div class="flowb" style="border-top:0"><div><span>${t('lowestBal')}</span><b class="${low.bal<0?'neg':''}">${money(low.bal)}</b><span>${esc(monthLbl(low.m))}</span></div><div><span>${t('firstGap')}</span><b class="${firstGap?'neg':'pos'}">${firstGap?money(firstGap.i-firstGap.e):'—'}</b><span>${firstGap?esc(monthLbl(firstGap.m)):t('noGap')}</span></div><div><span>${t('endBal')}</span><b class="${fc[fc.length-1].bal<0?'neg':''}">${money(fc[fc.length-1].bal)}</b><span>${esc(monthLbl(fc[fc.length-1].m))}</span></div></div>`})()}
     <div class="cmp h fc"><span>${t('monthW')}</span><span>${t('cashIn')}</span><span>${t('cashOut')}</span><span>${t('gapW')}</span><span>${t('availEnd')}</span></div>
-    ${fc.map(r=>`<div class="cmp fc tap" data-act="fcMonth" data-m="${r.m}"><span>${esc(monthShort(r.m))} ${r.m.slice(2,4)}${r.kind==='cur'?' •':''}</span><span class="pos">${money(r.i)}</span><span>${money(r.e)}</span><b class="${r.i-r.e<0?'neg':'pos'}">${money(r.i-r.e)}</b><b class="${r.bal<0?'neg':''}">${money(r.bal)}</b></div>`).join('')}
+    ${fc.map(r=>`<div class="cmp fc tap" data-act="fcMonth" data-m="${r.m}"><span>${esc(monthShort(r.m))} ${r.m.slice(2,4)}${r.kind==='cur'?' •':''}</span><span class="pos">${money(r.i)}</span><span>${money(r.e)}</span><b class="${r.i-r.e<0?'neg':'pos'}">${money(r.i-r.e)}</b><b class="${r.bal<0?'neg':''}">${money(r.bal)}</b></div>${r.dev&&r.dev.length?`<div class="cmp fc" style="font-size:11px"><span style="grid-column:1/5;white-space:normal">↳ ${t('overPlan')}: ${r.dev.map(d=>esc(d.label)+' '+(d.k.startsWith('in:')?'+':'−')+fmt(d.v)).join('، ')}</span><b></b></div>`:''}`).join('')}
     </div><p class="hint">${t('forecastHint')}</p></details>`:''}`;
 }
 
@@ -2037,7 +2040,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.41 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.42 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
