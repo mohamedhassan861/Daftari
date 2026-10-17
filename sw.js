@@ -1,5 +1,5 @@
 // Network first, cache as fallback, so updates show up right away and the app still opens offline.
-const CACHE = 'daftari-v26';
+const CACHE = 'daftari-v27';
 const SHELL = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
@@ -31,6 +31,8 @@ self.addEventListener('push', e => {
       shown[r.id + '@' + today] = 1;
       await self.registration.showNotification(r.title || title, { body: r.body || '', tag: r.id, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: './' } });
     }
+    const cut = localDay(new Date(now.getTime() - 30 * 864e5));
+    for (const k of Object.keys(shown)) if (k.slice(-10) < cut) delete shown[k];
     await idbSet('shown', shown);
   })());
 });

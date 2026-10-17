@@ -474,6 +474,7 @@ bioOn:['الفتح بالبصمة','Fingerprint unlock'],bioHint:['اكتب رق
 bioSetup:['فعّل البصمة','Set up fingerprint'],bioDone:['البصمة اشتغلت','Fingerprint unlock is on'],bioOffMsg:['البصمة اتقفلت','Fingerprint unlock is off'],bioUnlock:['افتح بالبصمة','Unlock with fingerprint'],
 bioFail:['معرفناش نستخدم البصمة، اكتب الرقم السري','Fingerprint failed; enter your PIN'],bioUnsupported:['الموبايل أو المتصفح ده مش بيدعم الفتح بالبصمة','This phone or browser does not support fingerprint unlock'],bioReset:['غيّرت الرقم السري، فعّل البصمة تاني من الإعدادات','PIN changed; turn fingerprint unlock on again in Settings'],
 foundBackup:['لقينا نسخ ليك على Google Drive، اختار اللي ترجّعها أو اقفل لو مش عايز','We found backups in your Google Drive. Pick one to restore, or close to skip'],
+linkedOk:['متربط ✓','Connected ✓'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1632,6 +1633,7 @@ function vSet(){
   <section class="sec"><div class="sec-h"><h2>${t('cats')} · ${t('income')}</h2><button class="link" data-act="addCat" data-ty="income">+ ${t('addCat')}</button></div><div class="list"><div class="chips">${chips('income')}</div></div></section>
   <section class="sec"><div class="sec-h"><h2>${t('account')}</h2></div><div class="list">
     <div class="setrow"><span>${REG?`<span dir="ltr">${esc(REG.email)}</span>`:t('notReg')}</span>${REG?`<button class="btn sm danger" data-act="unreg">${t('unreg')}</button>`:`<button class="btn sm pri" data-act="reg">${t('regBtn')}</button>`}</div>
+    ${driveConfigured()?`<div class="setrow"><span>Google Drive</span>${drv.linked?`<span class="pill ok">${t('linkedOk')}</span>`:`<button class="btn sm pri" data-act="driveLink">${t('driveLink')}</button>`}</div>`:''}
     ${REG&&REG.admin?`<div class="setrow"><span>${t('usersHint2')}</span><button class="btn sm pri" data-act="users">${t('users')}</button></div>`:''}
   </div></section>
   <section class="sec"><div class="sec-h"><h2>Google Drive</h2><span class="pill ${drv.linked?'ok':''}">${drv.linked?t('driveLinked'):t('driveOff')}</span></div>
@@ -1661,7 +1663,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.19 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.20 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -2214,7 +2216,9 @@ async function doRegister(){
   REG={email:j.email,name:j.name,admin:!!j.admin,at:new Date().toISOString()};try{localStorage.setItem(REG_KEY,JSON.stringify(REG))}catch(x){}
   return REG;
 }
-const acctHTML=()=>REG?`<div class="acct"><span class="g">G</span><span class="em" dir="ltr">${esc(REG.email)}</span><span class="ok">✓</span></div>`:`<button type="button" class="btn block gbtn" id="gbtn"><span class="g">G</span>${t('regBtn')}</button>`;
+const DRVASK='daftari-drvask';const drvAsked=()=>{try{return !!localStorage.getItem(DRVASK)}catch(e){return true}};
+const needDriveAtSignIn=()=>!!(REG&&useWorker()&&!drv.linked&&!drvAsked());
+const acctHTML=()=>REG&&!needDriveAtSignIn()?`<div class="acct"><span class="g">G</span><span class="em" dir="ltr">${esc(REG.email)}</span><span class="ok">✓</span></div>`:`<button type="button" class="btn block gbtn" id="gbtn"><span class="g">G</span>${t('regBtn')}</button>`;
 function regGate(done){
   const box=$('#lock');box.hidden=false;
   $('#lkT').textContent=t('regTitle');$('#lkH').textContent=t('regHint');$('#lkE').textContent='';$('#lkForgot').hidden=true;
@@ -2447,9 +2451,11 @@ function showLock(){
     if(setup){const p2=$('#lp2').value;if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}}
     else if(Date.now()<blockedUntil){err(t('waitTry'));return}
     /* sign in with Google first if this phone has not yet (skipped when offline) */
-    if(needReg&&!REG&&navigator.onLine){
+    if(needReg&&(!REG||(needDriveAtSignIn()&&driveReady()))&&navigator.onLine){
       if(!driveReady()){err(t('regLoading'));return}
-      err(t('working'));try{await doRegister();$('#acctW').innerHTML=acctHTML()}catch(x){err(t('regFail'));return}
+      const had=!!REG;err(t('working'));
+      try{await doRegister();$('#acctW').innerHTML=acctHTML();bindG()}
+      catch(x){if(!had){err(t('regFail'));return}try{localStorage.setItem(DRVASK,'1')}catch(e){}}
     }
     err(t('working'));
     if(setup){
