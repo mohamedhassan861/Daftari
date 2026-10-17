@@ -11,8 +11,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="دفتري">
-<script src="config.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <title>دفتري</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -292,22 +290,17 @@ autoLockHint:['البيانات متشفرة على الجهاز، والبرن�
 pinChangeHint:['النسخ الاحتياطية القديمة هتفضل تتفتح بالرقم السري القديم.','Older backups still open with the old PIN.'],
 encHint:['كل نسخة متشفرة بالرقم السري، ومحدش يقدر يقراها من غيره.','Every backup is encrypted with your PIN; nobody can read it without it.'],
 autoDl:['نزّل نسخة على الموبايل بعد كل تعديل','Save a copy to the phone after every change'],
-autoDlHint:['الموبايل هيطلب منك تأكيد التنزيل كل مرة.','Your phone will ask you to confirm each save.'],
+autoDlHint:['الملف بيتحفظ في فولدر التنزيلات (Downloads).','The file is saved to your Downloads folder.'],
 dlNow:['نزّل نسخة دلوقتي','Save a copy now'],copyText:['انسخ النسخة كنص','Copy backup as text'],
 lastBackup:['آخر نسخة','Last backup'],never:['لسه','Not yet'],
 backupPin:['الرقم السري وقت عمل النسخة','PIN used when the backup was made'],
 dlUnavailable:['التنزيل مش متاح هنا، استخدم "انسخ النسخة كنص".','Saving files isn\'t available here; use Copy instead.'],
 working:['لحظة...','One moment...'],
-driveLink:['اربط Google Drive','Connect Google Drive'],driveUnlink:['افصل Google Drive','Disconnect Google Drive'],
-driveHint:['بعد كل تعديل، نسخة متشفرة بتتحفظ في فولدر "Pocket Ledger" على الـ Drive بتاعك. البرنامج مش بيشوف أي ملفات تانية عندك.','After every change, an encrypted copy is saved to a "Pocket Ledger" folder in your Drive. The app cannot see any of your other files.'],
-driveLinked:['متربط','Connected'],driveOff:['مش متربط','Not connected'],driveLast:['آخر رفع','Last upload'],
-driveNeedAuth:['Google Drive محتاج موافقتك علشان نكمل الحفظ.','Google Drive needs your OK to keep saving.'],driveResume:['كمّل','Continue'],
-driveRestore:['استرجع من Drive','Restore from Drive'],driveSaved:['اتحفظت على Drive','Saved to Drive'],
-driveErr:['معرفناش نحفظ على Drive، هنحاول تاني مع التعديل الجاي.','Could not save to Drive; will retry with the next change.'],
-driveNotSetup:['ربط Google Drive لسه متجهزش في النسخة دي.','Google Drive is not set up in this build yet.'],
-driveNone:['مفيش نسخ على Drive لسه.','No backups on Drive yet.'],driveSyncNow:['احفظ على Drive دلوقتي','Save to Drive now'],
-driveKeep:['بنحتفظ بآخر 100 نسخة، والأقدم بتروح سلة المهملات في الـ Drive.','The latest 100 copies are kept; older ones move to Drive trash.'],
-install:['ثبّت البرنامج على الموبايل','Install on this phone'],loading:['بيحمّل...','Loading...'],lockNow:['اقفل البرنامج دلوقتي','Lock now'],
+install:['ثبّت البرنامج على الموبايل','Install on this phone'],
+shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
+shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
+remindBk:['عدّى أكتر من يوم على آخر نسخة احتياطية.','It has been over a day since your last backup.'],
+shareUnsupported:['المتصفح ده مش بيدعم المشاركة، هننزّل الملف بدالها.','This browser cannot share files, so the file will download instead.'],loading:['بيحمّل...','Loading...'],lockNow:['اقفل البرنامج دلوقتي','Lock now'],
 };
 let LANG='ar';try{LANG=localStorage.getItem('daftar-elbeit-lang')||'ar'}catch(e){}
 const lng=()=>(S&&S.lang)||LANG;
@@ -555,7 +548,7 @@ function vHome(){
   const alerts=budgetState(cur).filter(b=>b.p>=.8);
   const recent=[...tx].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
   const dueTotal=due.filter(d=>d.k!=='gamr').reduce((a,d)=>a+d.amount*(1+d.late),0);
-  return `${drv.linked&&drv.needAuth?`<div class="banner"><span>${t('driveNeedAuth')}</span><button class="btn sm pri" data-act="driveResume">${t('driveResume')}</button></div>`:''}${S.sample?`<div class="banner"><span>${t('sampleBanner')}</span><button class="btn sm" data-act="clearSample">${t('clearSample')}</button></div>`:''}
+  return `${!S.sample&&backupDue()?`<div class="banner"><span>${t('remindBk')}</span><button class="btn sm pri" data-act="shareDrive">${t('shareDrive')}</button></div>`:''}${S.sample?`<div class="banner"><span>${t('sampleBanner')}</span><button class="btn sm" data-act="clearSample">${t('clearSample')}</button></div>`:''}
   <section class="slip">
     <div class="net"><span class="label">${t('net')}</span><span class="big ${net<0?'neg':''}">${money(net)}<small>${esc(S.currency)}</small></span></div>
     <div class="perf"></div>
@@ -636,11 +629,6 @@ function vSet(){
   </div></section>
   <section class="sec"><div class="sec-h"><h2>${t('cats')} · ${t('expense')}</h2><button class="link" data-act="addCat" data-ty="expense">+ ${t('addCat')}</button></div><div class="list"><div class="chips">${chips('expense')}</div></div></section>
   <section class="sec"><div class="sec-h"><h2>${t('cats')} · ${t('income')}</h2><button class="link" data-act="addCat" data-ty="income">+ ${t('addCat')}</button></div><div class="list"><div class="chips">${chips('income')}</div></div></section>
-  <section class="sec"><div class="sec-h"><h2>Google Drive</h2><span class="pill ${drv.linked?'ok':''}">${drv.linked?t('driveLinked'):t('driveOff')}</span></div>
-    <p class="hint">${driveConfigured()?t('driveHint'):t('driveNotSetup')}</p>
-    ${driveConfigured()?(drv.linked?`<div class="acts"><button class="btn pri" data-act="driveSync">${t('driveSyncNow')}</button><button class="btn" data-act="driveRestore">${t('driveRestore')}</button><button class="btn danger" data-act="driveUnlink">${t('driveUnlink')}</button></div>
-      <p class="hint">${t('driveLast')}: ${esc(driveLastLbl())} · ${t('driveKeep')}</p>`:`<div class="acts"><button class="btn pri" data-act="driveLink">${t('driveLink')}</button></div>`):''}
-  </section>
   ${installEvt?`<section class="sec"><button class="btn pri block" data-act="install">${t('install')}</button></section>`:''}
   <section class="sec"><div class="sec-h"><h2>${t('security')}</h2></div><p class="hint">${t('autoLockHint')}</p>
     <div class="acts"><button class="btn" data-act="changePin">${t('changePin')}</button><button class="btn" data-act="lockNow">${t('lockNow')}</button></div></section>
@@ -649,7 +637,9 @@ function vSet(){
     <div class="list">
       <label class="setrow chk" style="justify-content:space-between"><span>${t('autoDl')}<br><span class="hint">${t('autoDlHint')}</span></span><input type="checkbox" id="autoDl" ${S.autoDl?'checked':''}></label>
     </div>
-    <div class="acts"><button class="btn pri" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
+    <button class="btn pri block" data-act="shareDrive">${t('shareDrive')}</button>
+    <p class="hint">${t('shareHint')}</p>
+    <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>`;
 }
 
@@ -687,8 +677,8 @@ $('#view').addEventListener('click',e=>{
       r.querySelector('#f').onsubmit=ev=>{ev.preventDefault();const nm=val(r,'nm');if(!nm){toast(t('needName'));return}S.cats[ty].splice(S.cats[ty].length-(ty==='expense'?3:2),0,{id:'c'+uid(),ar:nm,en:nm,sys:false});closeSheet();commit(t('saved'))}})},
     delCat:()=>{const ty=b.dataset.ty,used=S.tx.some(x=>x.cat===id);confirmSheet(used?t('catInUse'):t('confirmDel'),t('del'),()=>{
       S.cats[ty]=S.cats[ty].filter(c=>c.id!==id);S.tx.forEach(x=>{if(x.cat===id)x.cat=ty==='expense'?'other':'iother'});delete S.budgets[id];commit(t('deleted'))})},
-    export:()=>saveToPhone(false).then(ok=>{if(ok)render()}),import:doImport,copyBackup:copyBackup,driveLink:driveConnect,driveSync:()=>{if(hasToken())syncDrive(true);else driveResume()},driveRestore:driveRestore,driveUnlink:driveUnlink,
-    driveResume:driveResume,install:()=>{if(installEvt){installEvt.prompt();installEvt=null;render()}},changePin:changePinForm,lockNow:lockNow,
+    export:()=>saveToPhone(false).then(ok=>{if(ok)render()}),import:doImport,copyBackup:copyBackup,shareDrive:shareBackup,
+    install:()=>{if(installEvt){installEvt.prompt();installEvt=null;render()}},changePin:changePinForm,lockNow:lockNow,
     reset:()=>confirmSheet(t('resetConfirm'),t('del'),()=>{const l=S.lang;S=blank();S.lang=l;commit(t('deleted'))}),
   };
   if(A[a])A[a]();
@@ -716,7 +706,7 @@ let bkTimer;
 function afterChange(){
   clearTimeout(bkTimer);
   if(S&&S.autoDl)bkTimer=setTimeout(()=>{saveToPhone(true).then(ok=>{if(ok&&tab==='set')render()})},4000);
-  scheduleDrive();
+  markChange();
 }
 async function copyBackup(){
   const data=await makeBackup();
@@ -725,7 +715,7 @@ async function copyBackup(){
   try{navigator.clipboard.writeText(data).then(ok,fb)}catch(e){fb()}
 }
 function doImport(prefill){
-  openSheet(t('importB'),`<div class="form"><label class="fld"><span>${t('chooseFile')}</span><input class="in-f" type="file" id="fl" accept=".json,application/json,text/plain"></label>
+  openSheet(t('importB'),`<div class="form"><label class="fld"><span>${t('chooseFile')}</span><input class="in-f" type="file" id="fl" accept=".json,.txt,application/json,text/plain"></label>
     <label class="fld"><span>${t('pasteHere')}</span><textarea class="in-f" id="ps"></textarea></label>
     <label class="fld"><span>${t('backupPin')}</span><input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="bp"></label>
     <p class="err" id="ie"></p>
@@ -764,90 +754,26 @@ function changePinForm(){
   });
 }
 
-/* ---------- Google Drive (drive.file scope: the app sees only files it created) ---------- */
-const CFG=window.POCKET_LEDGER_CONFIG||{};
-const DRV_KEY='pocket-ledger-drive', DKEEP=100, GAPI='https://www.googleapis.com';
-let drv={linked:false,folderId:null,lastUp:null,needAuth:false,busy:false};
-try{Object.assign(drv,JSON.parse(localStorage.getItem(DRV_KEY)||'{}'))}catch(e){}
-const drvSave=()=>{try{localStorage.setItem(DRV_KEY,JSON.stringify({linked:drv.linked,folderId:drv.folderId,lastUp:drv.lastUp}))}catch(e){}};
-let gToken=null,gExp=0,gClient=null,drvTimer=null;
-const driveConfigured=()=>!!CFG.googleClientId;
-const driveReady=()=>driveConfigured()&&!!(window.google&&google.accounts&&google.accounts.oauth2);
-const hasToken=()=>!!gToken&&Date.now()<gExp;
-function requestToken(prompt){
-  return new Promise((res,rej)=>{
-    if(!driveReady()){rej(new Error('notready'));return}
-    if(!gClient)gClient=google.accounts.oauth2.initTokenClient({client_id:CFG.googleClientId,scope:'https://www.googleapis.com/auth/drive.file',callback:()=>{}});
-    gClient.callback=r=>{if(r&&r.access_token){gToken=r.access_token;gExp=Date.now()+((+r.expires_in||3600)-120)*1000;drv.needAuth=false;res(gToken)}else rej(r)};
-    gClient.error_callback=e=>rej(e);
-    gClient.requestAccessToken({prompt});
-  });
+/* ---------- share to Google Drive (system share sheet, no Google Cloud needed) ---------- */
+const LASTCHG='pocket-ledger-lastchange';
+function markChange(){try{localStorage.setItem(LASTCHG,new Date().toISOString())}catch(e){}}
+function backupDue(){
+  let lc=null,lb=null;try{lc=localStorage.getItem(LASTCHG);lb=localStorage.getItem('daftar-elbeit-lastbackup')}catch(e){}
+  if(!lc)return false;if(!lb)return Date.now()-new Date(lc).getTime()>3600e3;
+  return new Date(lc)>new Date(lb)&&Date.now()-new Date(lb).getTime()>864e5;
 }
-async function gfetch(path,opt){
-  opt=opt||{};opt.headers=Object.assign({Authorization:'Bearer '+gToken},opt.headers||{});
-  const r=await fetch(path.startsWith('http')?path:GAPI+path,opt);
-  if(r.status===401||r.status===403&&!gToken){gToken=null;throw new Error('auth')}
-  if(r.status===401){gToken=null;throw new Error('auth')}
-  if(!r.ok)throw new Error('http '+r.status);
-  return r;
-}
-async function ensureFolder(){
-  if(drv.folderId){
-    try{const j=await (await gfetch('/drive/v3/files/'+drv.folderId+'?fields=id,trashed')).json();if(!j.trashed)return drv.folderId}
-    catch(e){if(e.message==='auth')throw e}
+async function shareBackup(){
+  if(!KEYOBJ)return;
+  const data=await makeBackup(),name=backupName().replace(/\.json$/,'.txt');
+  let file=null;try{file=new File([data],name,{type:'text/plain'})}catch(e){}
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:name});markBackup();toast(t('saved'));render()}
+    catch(e){if(e&&e.name!=='AbortError')toast(t('shareUnsupported'))}
+    return;
   }
-  const q=encodeURIComponent("name='Pocket Ledger' and mimeType='application/vnd.google-apps.folder' and trashed=false");
-  const j=await (await gfetch('/drive/v3/files?q='+q+'&fields=files(id)&spaces=drive')).json();
-  if(j.files&&j.files.length)drv.folderId=j.files[0].id;
-  else{const c=await (await gfetch('/drive/v3/files?fields=id',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Pocket Ledger',mimeType:'application/vnd.google-apps.folder'})})).json();drv.folderId=c.id}
-  drvSave();return drv.folderId;
+  toast(t('shareUnsupported'));
+  if(await saveToPhone(true))render();
 }
-async function driveList(folder,n){
-  const q=encodeURIComponent("'"+folder+"' in parents and trashed=false");
-  const j=await (await gfetch('/drive/v3/files?q='+q+'&orderBy='+encodeURIComponent('createdTime desc')+'&pageSize='+n+'&fields='+encodeURIComponent('files(id,name,createdTime)')+'&spaces=drive')).json();
-  return j.files||[];
-}
-async function pruneOld(folder){
-  const all=await driveList(folder,DKEEP+50);
-  for(const f of all.slice(DKEEP)){await gfetch('/drive/v3/files/'+f.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:true})})}
-}
-async function driveUpload(){
-  const data=await makeBackup(),folder=await ensureFolder(),bd='pl'+uid();
-  const meta=JSON.stringify({name:backupName(),parents:[folder],mimeType:'application/json'});
-  const body='--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+data+'\r\n--'+bd+'--';
-  await gfetch(GAPI+'/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body});
-  drv.lastUp=new Date().toISOString();drvSave();markBackup();
-  pruneOld(folder).catch(()=>{});
-}
-async function syncDrive(manual){
-  if(!drv.linked||!S||!KEYOBJ||drv.busy)return;
-  if(!hasToken()){drv.needAuth=true;render();return}
-  drv.busy=true;
-  try{await driveUpload();if(manual)toast(t('driveSaved'))}
-  catch(e){if(e.message==='auth'){drv.needAuth=true}else if(manual)toast(t('driveErr'))}
-  finally{drv.busy=false;if(tab==='set'||drv.needAuth)render()}
-}
-function scheduleDrive(){if(!drv.linked)return;clearTimeout(drvTimer);drvTimer=setTimeout(()=>syncDrive(false),5000)}
-async function driveConnect(){
-  if(!driveReady()){toast(driveConfigured()?t('loading'):t('driveNotSetup'));return}
-  try{await requestToken('consent');await ensureFolder();drv.linked=true;drvSave();await syncDrive(true)}catch(e){}
-  render();
-}
-async function driveResume(){try{await requestToken('');await syncDrive(true)}catch(e){render()}}
-function driveUnlink(){
-  confirmSheet(t('driveUnlink')+'?',t('driveUnlink'),()=>{
-    try{if(gToken&&driveReady())google.accounts.oauth2.revoke(gToken,()=>{})}catch(e){}
-    gToken=null;drv={linked:false,folderId:null,lastUp:null,needAuth:false,busy:false};drvSave();render();
-  });
-}
-async function driveRestore(){
-  try{if(!hasToken())await requestToken('');const folder=await ensureFolder();const files=await driveList(folder,30);
-    openSheet(t('driveRestore'),files.length?`<div class="list">${files.map(f=>`<div class="row tap" data-f="${esc(f.id)}"><div class="main"><span class="t num">${esc(f.name)}</span><span class="s">${esc(new Intl.DateTimeFormat(L(),{dateStyle:'medium',timeStyle:'short'}).format(new Date(f.createdTime)))}</span></div></div>`).join('')}</div>`:`<div class="empty">${t('driveNone')}</div>`,r=>{
-      r.querySelectorAll('[data-f]').forEach(el=>el.onclick=async()=>{const txt=await (await gfetch('/drive/v3/files/'+el.dataset.f+'?alt=media')).text();closeSheet();doImport(txt)});
-    });
-  }catch(e){toast(t('driveErr'))}
-}
-const driveLastLbl=()=>drv.lastUp?new Intl.DateTimeFormat(L(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}).format(new Date(drv.lastUp)):t('never');
 
 /* ---------- install (PWA) ---------- */
 let installEvt=null;
@@ -870,7 +796,6 @@ function showLock(){
   $('#lock').hidden=false;
   setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
   $('#lkF').onsubmit=async e=>{e.preventDefault();const err=m=>$('#lkE').textContent=m;
-    if(!setup&&drv.linked&&driveReady()&&!hasToken())requestToken('').catch(()=>{drv.needAuth=true});
     const p1=$('#lp1').value;
     if(setup){const p2=$('#lp2').value;if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}
       err(t('working'));SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);
