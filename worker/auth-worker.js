@@ -1,6 +1,8 @@
 // Daftari auth helper — a Cloudflare Worker.
 // 1) Swaps a Google sign-in code or a refresh token for a short access token (stores nothing).
 // 2) Keeps a list of who signed up (email, name, dates) in the D1 database bound as DB.
+// 3) Sends a daily wake-up push (no content) so the app can show its own reminders.
+//    Needs a Cron Trigger on this Worker (e.g. "0 6 * * *" = 9:00 Cairo time).
 // The Google client secret lives in the Worker's encrypted secret GOOGLE_CLIENT_SECRET.
 
 const ALLOWED_ORIGIN = 'https://mohamedhassan861.github.io';
@@ -37,7 +39,36 @@ async function whoIs(accessToken) {
   return { email: String(p.email).toLowerCase(), name: String(p.name || '').slice(0, 120) };
 }
 
+// ---- Web Push (VAPID) without payload: the phone decides what to show ----
+const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+async function vapidKeys(env) {
+  const row = await env.DB.prepare("SELECT v FROM kv WHERE k = 'vapid'").first();
+  if (row) return JSON.parse(row.v);
+  const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const keys = { priv: await crypto.subtle.exportKey('jwk', kp.privateKey), pub: b64u(await crypto.subtle.exportKey('raw', kp.publicKey)) };
+  await env.DB.prepare("INSERT OR IGNORE INTO kv (k, v) VALUES ('vapid', ?1)").bind(JSON.stringify(keys)).run();
+  return JSON.parse((await env.DB.prepare("SELECT v FROM kv WHERE k = 'vapid'").first()).v);
+}
+async function vapidHeader(endpoint, keys) {
+  const enc = (o) => b64u(new TextEncoder().encode(JSON.stringify(o)));
+  const unsigned = enc({ typ: 'JWT', alg: 'ES256' }) + '.' + enc({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: 'mailto:' + ADMINS[0] });
+  const key = await crypto.subtle.importKey('jwk', keys.priv, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(unsigned));
+  return 'vapid t=' + unsigned + '.' + b64u(sig) + ', k=' + keys.pub;
+}
+async function sendAll(env) {
+  const keys = await vapidKeys(env);
+  const { results } = await env.DB.prepare('SELECT endpoint FROM push_subs').all();
+  for (const { endpoint } of results) {
+    try {
+      const r = await fetch(endpoint, { method: 'POST', headers: { TTL: '43200', Urgency: 'normal', Authorization: await vapidHeader(endpoint, keys), 'Content-Length': '0' } });
+      if (r.status === 404 || r.status === 410) await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?1').bind(endpoint).run();
+    } catch (e) { /* try again tomorrow */ }
+  }
+}
+
 export default {
+  async scheduled(event, env, ctx) { if (env.DB) ctx.waitUntil(sendAll(env)); },
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (request.headers.get('Origin') !== ALLOWED_ORIGIN) return reply({ error: 'forbidden_origin' }, 403);
@@ -46,6 +77,29 @@ export default {
     let body;
     try { body = await request.json(); } catch { return reply({ error: 'bad_json' }, 400); }
     const path = new URL(request.url).pathname;
+
+    // ---- reminders ----
+    if (path.startsWith('/push/')) {
+      if (!env.DB) return reply({ error: 'db_not_configured' }, 500);
+      if (path === '/push/key') return reply({ key: (await vapidKeys(env)).pub }, 200);
+      const sub = body.sub || {};
+      if (typeof sub.endpoint !== 'string' || !/^https:\/\//.test(sub.endpoint) || sub.endpoint.length > 1000) return reply({ error: 'bad_sub' }, 400);
+      if (path === '/push/subscribe') {
+        await env.DB.prepare('INSERT INTO push_subs (endpoint, sub, created) VALUES (?1, ?2, ?3) ON CONFLICT(endpoint) DO UPDATE SET sub = excluded.sub')
+          .bind(sub.endpoint, JSON.stringify(sub).slice(0, 4000), new Date().toISOString()).run();
+        return reply({ ok: true }, 200);
+      }
+      if (path === '/push/unsubscribe') {
+        await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?1').bind(sub.endpoint).run();
+        return reply({ ok: true }, 200);
+      }
+      if (path === '/push/test') {
+        const keys = await vapidKeys(env);
+        const r = await fetch(sub.endpoint, { method: 'POST', headers: { TTL: '600', Authorization: await vapidHeader(sub.endpoint, keys), 'Content-Length': '0' } });
+        return reply({ ok: r.ok, status: r.status }, 200);
+      }
+      return reply({ error: 'not_found' }, 404);
+    }
 
     // ---- sign-up list ----
     if (path === '/register' || path === '/users' || path === '/unregister') {

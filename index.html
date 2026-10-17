@@ -459,6 +459,19 @@ goalLinked:['مربوط بـ','Linked to'],goalPerMonth:['محتاج تحوّش 
 gamCalc:['حاسبة الجمعية','Gam\'eya calculator'],altRate:['عائد الشهادة أو الادخار البديل (% سنوي)','Alternative savings return (% a year)'],turnCol:['الدور','Turn'],payoutMonth:['تقبض','Payout'],monthN:['شهر','Month'],vsSaving:['مكسبك مقارنة بالشهادة','Gain vs saving'],
 gamTotal:['هتدفع وتقبض','You pay and receive'],gamBest:['أحسن دور لك:','best turn for you:'],
 gamCalcHint:['الأدوار الأولى زي قرض من غير فوايد، والأخيرة زي ادخار من غير عائد. الأرقام بتقارن قيمة كل دور بإنك تحط نفس الفلوس في شهادة بالعائد ده.','Early turns act like an interest-free loan; late turns like saving with no return. Figures compare each turn with putting the same money in a certificate at this rate.'],
+dueDay:['يوم الدفع في الشهر','Payment day of month'],remindersT:['التنبيهات','Reminders'],on:['شغّالة','On'],off:['مقفولة','Off'],turnOn:['شغّل','Turn on'],turnOff:['اقفل','Turn off'],
+remHint:['بنفكّرك بالأقساط والجمعيات والحركات المتكررة قبل ميعادها بيوم، الساعة 9 الصبح.','Reminders for installments, gam\'eyas and recurring entries a day before, at 9 am.'],
+pushUnsupported:['التنبيهات محتاجة تثبّت البرنامج على الشاشة الرئيسية (وعلى الآيفون iOS 16.4 أو أحدث).','Reminders need the app installed on the home screen (iPhone: iOS 16.4 or later).'],
+pushDenied:['التنبيهات مقفولة من إعدادات الموبايل','Notifications are blocked in phone settings'],pushOnMsg:['التنبيهات اشتغلت','Reminders are on'],pushFail:['معرفناش نشغّل التنبيهات','Could not turn on reminders'],
+pushTestBtn:['ابعت تنبيه تجربة','Send a test'],pushSent:['اتبعت، هيوصلك خلال ثواني','Sent; it should arrive in seconds'],
+importX:['استورد من Excel أو CSV','Import from Excel or CSV'],importXHint:['اختار ملف فيه حركاتك القديمة. البرنامج هيخمّن الأعمدة، وتقدر تعدّلها قبل الاستيراد.','Pick a file with past entries. Columns are guessed; adjust them before importing.'],
+noneCol:['مش موجود','None'],defAccImp:['الحساب لو مش محدد','Account if not set'],posIs:['المبلغ الموجب يبقى','A positive amount is'],makeCats:['اعمل البنود الجديدة لوحدها','Create missing categories'],
+skipDup:['تجاهل الحركات المكررة','Skip duplicates'],importNow:['استورد','Import'],needCols:['اختار عمود التاريخ وعمود المبلغ','Choose the date and amount columns'],imported:['اتسجلت','Imported'],skippedN:['اتجاهل','skipped'],
+splitTitle:['مين عليه كام','Who owes whom'],you:['انت','you'],shareOf:['نصيبه','share'],settleBtn:['سجّل تسوية','Record settlement'],fromWho:['مين دفع','From'],toWho:['لمين','To'],
+splitHint:['كل مصروف بيتقسم بالتساوي على أعضاء الدفتر، إلا لو اخترت "على حسابي لوحدي".','Each expense is split equally among members unless marked "just me".'],paidByL:['مين دفع','Paid by'],splitL:['التقسيم','Split'],splitAll:['بالتساوي على الكل','Equally'],splitSelf:['على حسابي لوحدي','Just me'],
+bioOn:['الفتح بالبصمة','Fingerprint unlock'],bioHint:['اكتب رقمك السري مرة أخيرة، وبعدها الموبايل هيطلب بصمتك علشان يحفظ مفتاح دفتري.','Enter your PIN once more; your phone will then ask for your fingerprint to save a Daftari key.'],
+bioSetup:['فعّل البصمة','Set up fingerprint'],bioDone:['البصمة اشتغلت','Fingerprint unlock is on'],bioOffMsg:['البصمة اتقفلت','Fingerprint unlock is off'],bioUnlock:['افتح بالبصمة','Unlock with fingerprint'],
+bioFail:['معرفناش نستخدم البصمة، اكتب الرقم السري','Fingerprint failed; enter your PIN'],bioUnsupported:['الموبايل أو المتصفح ده مش بيدعم الفتح بالبصمة','This phone or browser does not support fingerprint unlock'],bioReset:['غيّرت الرقم السري، فعّل البصمة تاني من الإعدادات','PIN changed; turn fingerprint unlock on again in Settings'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -536,7 +549,7 @@ function save(){
   }
   if(!KEYOBJ||!S)return;
   if(typeof ACT!=='undefined'&&ACT!=='me'){sharedSave();return}
-  vaultSave(S);afterChange();
+  vaultSave(S);afterChange();writeReminders();
 }
 function vaultSave(obj){
   if(!KEYOBJ||!obj)return;const snap=JSON.parse(JSON.stringify(obj));const key=KEYOBJ,salt=SALT;
@@ -597,7 +610,7 @@ function usedCurrencies(){const set=new Set(['G21']);S.accounts.forEach(a=>set.a
 function migrate(){
   if(!S.base)S.base='EGP';
   if(!Array.isArray(S.recur))S.recur=[];
-  if(!Array.isArray(S.goals))S.goals=[];if(!Array.isArray(S.quick))S.quick=[];
+  if(!Array.isArray(S.goals))S.goals=[];if(!Array.isArray(S.settles))S.settles=[];if(!Array.isArray(S.quick))S.quick=[];
   if(ACT==='me'&&!Array.isArray(S.ledgers))S.ledgers=[];
   if(!S.rk)S.rk=toB64(crypto.getRandomValues(new Uint8Array(32)));
   if(!S.rates||typeof S.rates!=='object')S.rates={};
@@ -1182,6 +1195,8 @@ function txForm(tx,repeat,pre){
     <label class="fld" id="catW" ${type==='transfer'?'hidden':''}><span>${t('category')}</span><select class="in-f" id="cat">${type==='transfer'?'':catOpts(type)}</select></label>
     <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${tx.date}"></label>
     <label class="fld"><span>${t('note')}</span><input class="in-f" id="nt" value="${esc(tx.note)}" autocomplete="off"></label>
+    ${ACT!=='me'&&ledgerMembers().length>1?`<div class="two" id="spW"><label class="fld"><span>${t('paidByL')}</span><select class="in-f" id="pb">${ledgerMembers().map(m=>`<option value="${esc(m)}" ${(tx.paidBy||tx.by||myEmail())===m?'selected':''}>${esc(shortName(m))}</option>`).join('')}</select></label>
+      <label class="fld"><span>${t('splitL')}</span><select class="in-f" id="spl"><option value="">${t('splitAll')}</option><option value="self" ${tx.split==='self'?'selected':''}>${t('splitSelf')}</option></select></label></div>`:''}
     <label class="fld"><span>${t('tags')}</span><input class="in-f" id="tg" list="dl-tags" value="${esc((tx.tags||[]).join('، '))}" placeholder="${t('tagsHint')}" autocomplete="off">${datalist('dl-tags',allTags())}</label>
     <label class="fld"><span>${t('receipt')}</span><input class="in-f" type="file" accept="image/*" id="rf"></label>
     ${isNew?`<label class="chk"><input type="checkbox" id="qk"> ${t('saveQuick')}</label>`:''}
@@ -1204,6 +1219,7 @@ function txForm(tx,repeat,pre){
     if(!isNew)$r('#del').onclick=()=>confirmSheet(t('confirmDel'),t('del'),()=>{delTx(tx.id);commit(t('deleted'))});
     $r('#f').onsubmit=e=>{e.preventDefault();const a=numv(r,'amt');if(a<=0){toast(t('needAmt'));return}
       let o={type,acc:val(r,'acc'),amount:a,date:val(r,'dt')||TODAY,note:val(r,'nt'),tags:parseTags(val(r,'tg'))};if(!o.tags.length)delete o.tags;
+      if($r('#pb')){o.paidBy=$r('#pb').value;o.split=$r('#spl').value||undefined}
       if(type==='transfer'){
         const to=val(r,'to');if(to===o.acc){toast(t('sameAcc'));return}
         const diff=accOf(o.acc).currency!==accOf(to).currency,ta=diff?numv(r,'toAmt'):a;
@@ -1283,6 +1299,7 @@ function instForm(it){
     <label class="fld"><span>${t('currency')}</span><select class="in-f" id="oc">${curOpts(it.currency||BASE())}</select></label></div>
     <div class="two"><label class="fld"><span>${t('count')}</span><input class="in-f num" id="ct" inputmode="numeric" value="${it.count}"></label>
     <label class="fld"><span>${t('startMonth')}</span><input class="in-f" type="month" id="st" value="${it.start}"></label></div>
+    <label class="fld"><span>${t('dueDay')}</span><input class="in-f num" id="dd" inputmode="numeric" value="${it.dueDay||1}"></label>
     ${isNew?`<label class="fld"><span>${t('paidSoFar')}</span><input class="in-f num" id="pd" inputmode="numeric" value="0"></label>`:''}
     <div class="foot">${isNew?'':`<button type="button" class="btn danger" id="del">${t('del')}</button>`}<button class="btn pri grow">${t('save')}</button></div>
     ${!isNew&&it.paid.length?`<button type="button" class="btn block" id="undo">${t('undoLast')}</button>`:''}
@@ -1291,8 +1308,8 @@ function instForm(it){
       const u=r.querySelector('#undo');if(u)u.onclick=()=>{closeSheet();undoLast('inst',it.id)}}
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const nm=val(r,'nm'),mo=numv(r,'mo'),ct=Math.max(1,parseInt(val(r,'ct'))||1),st=val(r,'st')||TODAY_YM;
       if(!nm){toast(t('needName'));return}if(mo<=0){toast(t('needAmt'));return}
-      if(isNew){const n=Math.min(ct,Math.max(0,parseInt(val(r,'pd'))||0));const o={id:uid(),name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),count:ct,start:st,paid:[]};o.paid=instMonths(o).slice(0,n);S.inst.push(o)}
-      else{const o=S.inst.find(x=>x.id===it.id);Object.assign(o,{name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),count:ct,start:st});const ms=instMonths(o);o.paid=o.paid.filter(m=>ms.includes(m))}
+      if(isNew){const n=Math.min(ct,Math.max(0,parseInt(val(r,'pd'))||0));const o={id:uid(),name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),count:ct,start:st,paid:[]};o.paid=instMonths(o).slice(0,n);S.inst.push(o)}
+      else{const o=S.inst.find(x=>x.id===it.id);Object.assign(o,{name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),count:ct,start:st});const ms=instMonths(o);o.paid=o.paid.filter(m=>ms.includes(m))}
       closeSheet();commit(t('saved'))};
   });
 }
@@ -1305,7 +1322,8 @@ function gamForm(g){
     <label class="fld"><span>${t('currency')}</span><select class="in-f" id="oc">${curOpts(g.currency||BASE())}</select></label></div>
     <div class="two"><label class="fld"><span>${t('members')}</span><input class="in-f num" id="mb" inputmode="numeric" value="${g.members}"></label>
     <label class="fld"><span>${t('myTurn')}</span><input class="in-f num" id="tn" inputmode="numeric" value="${g.myTurn}"></label></div>
-    <label class="fld"><span>${t('startMonth')}</span><input class="in-f" type="month" id="st" value="${g.start}"></label>
+    <div class="two"><label class="fld"><span>${t('startMonth')}</span><input class="in-f" type="month" id="st" value="${g.start}"></label>
+    <label class="fld"><span>${t('dueDay')}</span><input class="in-f num" id="dd" inputmode="numeric" value="${g.dueDay||1}"></label></div>
     ${isNew?`<label class="fld"><span>${t('paidSoFar')}</span><input class="in-f num" id="pd" inputmode="numeric" value="0"></label><label class="chk"><input type="checkbox" id="rc"> ${t('received')}</label>`:''}
     <div class="foot">${isNew?'':`<button type="button" class="btn danger" id="del">${t('del')}</button>`}<button class="btn pri grow">${t('save')}</button></div>
     ${!isNew&&g.paid.length?`<button type="button" class="btn block" id="undo">${t('undoLast')}</button>`:''}
@@ -1314,8 +1332,8 @@ function gamForm(g){
       const u=r.querySelector('#undo');if(u)u.onclick=()=>{closeSheet();undoLast('gam',g.id)}}
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const nm=val(r,'nm'),sh=numv(r,'sh'),mb=Math.max(1,parseInt(val(r,'mb'))||1),tn=Math.min(mb,Math.max(1,parseInt(val(r,'tn'))||1)),st=val(r,'st')||TODAY_YM;
       if(!nm){toast(t('needName'));return}if(sh<=0){toast(t('needAmt'));return}
-      if(isNew){const n=Math.min(mb,Math.max(0,parseInt(val(r,'pd'))||0));const o={id:uid(),name:nm,share:sh,currency:val(r,'oc'),group:val(r,'gp'),members:mb,myTurn:tn,start:st,paid:[],received:r.querySelector('#rc').checked};o.paid=gamMonths(o).slice(0,n);S.gam.push(o)}
-      else{const o=S.gam.find(x=>x.id===g.id);Object.assign(o,{name:nm,share:sh,currency:val(r,'oc'),group:val(r,'gp'),members:mb,myTurn:tn,start:st});const ms=gamMonths(o);o.paid=o.paid.filter(m=>ms.includes(m))}
+      if(isNew){const n=Math.min(mb,Math.max(0,parseInt(val(r,'pd'))||0));const o={id:uid(),name:nm,share:sh,currency:val(r,'oc'),group:val(r,'gp'),dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),members:mb,myTurn:tn,start:st,paid:[],received:r.querySelector('#rc').checked};o.paid=gamMonths(o).slice(0,n);S.gam.push(o)}
+      else{const o=S.gam.find(x=>x.id===g.id);Object.assign(o,{name:nm,share:sh,currency:val(r,'oc'),group:val(r,'gp'),dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),members:mb,myTurn:tn,start:st});const ms=gamMonths(o);o.paid=o.paid.filter(m=>ms.includes(m))}
       closeSheet();commit(t('saved'))};
   });
 }
@@ -1437,7 +1455,7 @@ function vHome(){
       <button class="btn sm ${d.k==='gamr'?'':'pri'}" data-act="${d.k==='inst'?'payInst':d.k==='gam'?'payGam':'recvGam'}" data-id="${d.id}">${d.k==='gamr'?t('receive'):t('pay')}</button></div>`).join(''):`<div class="empty">${t('nothingDue')}</div>`}</div></section>
   ${alerts.length?`<section class="sec"><div class="sec-h"><h2>${t('budgetAlerts')}</h2></div><div class="list">${alerts.map(b=>`<div class="catbar"><div class="l"><span>${esc(catName(b.id))} <span class="pill ${b.p>=1?'neg':'warn'}">${b.p>=1?t('over'):t('near')}</span></span><span>${money(b.sp)} / ${money(b.lim)}</span></div><div class="bar"><i class="${b.p>=1?'neg':'warn'}" style="width:${Math.min(100,b.p*100)}%"></i></div></div>`).join('')}</div></section>`:''}
   <div class="slip tile" data-act="goNW"><div class="net"><span class="label">${t('netWorth')} ›</span><span class="mid ${netWorth().net<0?'neg':''}">${money(netWorth().net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div></div>
-  ${accountsHTML()}${catTotalsHTML('expense')}${catTotalsHTML('income')}${loansHTML()}${oblHTML()}${goalsHTML()}
+  ${splitHTML()}${accountsHTML()}${catTotalsHTML('expense')}${catTotalsHTML('income')}${loansHTML()}${oblHTML()}${goalsHTML()}
   <section class="sec"><div class="sec-h"><h2>${t('recent')}</h2><button class="link" data-act="goTx">${t('seeAll')}</button></div>
     <div class="list">${recent.length?recent.map(txRow).join(''):`<div class="empty">${t('noTx')}</div>`}</div></section>`;
 }
@@ -1612,7 +1630,13 @@ function vSet(){
   </section>
   <section class="sec"><button class="btn block" data-act="shareApp">${t('shareApp')}</button></section>
   ${installEvt?`<section class="sec"><button class="btn pri block" data-act="install">${t('install')}</button></section>`:''}
+  <section class="sec"><div class="sec-h"><h2>${t('remindersT')}</h2><span class="pill ${pushOn()?'ok':''}">${pushOn()?t('on'):t('off')}</span></div>
+    <p class="hint">${pushSupported()?t('remHint'):t('pushUnsupported')}</p>
+    ${pushSupported()?`<div class="acts">${pushOn()?`<button class="btn" data-act="pushTest">${t('pushTestBtn')}</button><button class="btn danger" data-act="pushOff">${t('turnOff')}</button>`:`<button class="btn pri" data-act="pushOn">${t('turnOn')}</button>`}</div>`:''}
+    ${(()=>{const u=upcomingReminders(PS).slice(0,4);return u.length?`<div class="list">${u.map(x=>`<div class="row"><div class="main"><span class="t">${esc(x.title)}</span><span class="s">${esc(shortDate(x.date))} · ${esc(x.body)}</span></div></div>`).join('')}</div>`:''})()}
+  </section>
   <section class="sec"><div class="sec-h"><h2>${t('security')}</h2></div><p class="hint">${t('autoLockHint')}</p>
+    <div class="list"><div class="setrow"><span>${t('bioOn')}</span>${bioInfo()?`<button class="btn sm danger" data-act="bioOff">${t('turnOff')}</button>`:`<button class="btn sm pri" data-act="bioOn">${t('turnOn')}</button>`}</div></div>
     <div class="acts"><button class="btn" data-act="changePin">${t('changePin')}</button><button class="btn" data-act="lockNow">${t('lockNow')}</button></div></section>
   <section class="sec"><div class="sec-h"><h2>${t('backup')}</h2><span class="muted">${t('lastBackup')}: ${esc(lastBackupLbl())}</span></div>
     <p class="hint">${t('storageHint')} ${t('encHint')}</p>
@@ -1621,9 +1645,9 @@ function vSet(){
     </div>
     <button class="btn block" data-act="shareDrive">${t('shareDrive')}</button>
     <p class="hint">${t('shareHint')}</p>
-    <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
+    <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.16 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.17 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -1667,6 +1691,8 @@ $('#view').addEventListener('click',e=>{
       if(ty==='net')stmtSheet({title,sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(list.filter(x=>x.type!=='transfer'))});
       else stmtSheet({title:(ty==='income'?t('income'):t('expense'))+' · '+title,sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(list.filter(x=>x.type===ty))})},
     users:usersSheet,unreg:unregister,reg:()=>{if(!driveReady()){toast(t('regLoading'));return}doRegister().then(()=>{toast(t('regDone')+' '+REG.email);render()},()=>toast(t('regFail')))},
+    pushOn:pushEnable,pushOff:pushDisable,pushTest:pushTest,bioOn:bioEnableForm,bioOff:bioOff,importX:importForm,
+    settle:()=>settleForm(b.dataset.from,b.dataset.to,b.dataset.v),
     goNW:()=>{tab='rep';render();setTimeout(()=>{const e=$('#nw');if(e)e.scrollIntoView({behavior:'smooth'})},50)},
     editRec:()=>{const r=S.recur.find(v=>v.id===id);if(r)recRuleForm(r)},
     stmtRec:()=>{const r=S.recur.find(v=>v.id===id);if(!r)return;stmtSheet({title:r.tpl.note||catPath(r.tpl.cat),sub:freqName(r.freq)+' · '+t('allTime'),cur:BASE(),kind:'flow',rows:flowRows(S.tx.filter(x=>x.rec===r.id&&x.type!=='transfer'))})},exportTx:()=>exportTx((()=>{let l=txIn();if(txFilter!=='all')l=l.filter(x=>x.type===txFilter);return l})(),t('tx')),
@@ -1756,7 +1782,7 @@ function changePinForm(){
       try{const vt=readVault();const k=await derive(p0,fromB64(vt.salt),vt.iter);await unseal(k,vt.iv,vt.ct)}catch(x){err(t('wrongPin'));return}
       const caches=[];for(const m of (PS&&PS.ledgers)||[])caches.push([m,await cacheLoad(m)]);
       await saving;SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);await saveRT();
-      for(const [m,D] of caches)if(D)await cacheSave(m,D);if(ACT!=='me'&&PS)vaultSave(PS);
+      for(const [m,D] of caches)if(D)await cacheSave(m,D);try{if(localStorage.getItem(BIO_KEY)){localStorage.removeItem(BIO_KEY);toast(t('bioReset'))}}catch(e){}if(ACT!=='me'&&PS)vaultSave(PS);
       closeSheet();commit(t('pinChanged'));
     };
   });
@@ -1941,7 +1967,7 @@ async function showReceipt(id){
 }
 
 /* ---------- shared ledgers (a Drive file, encrypted with the ledger's own key) ---------- */
-const SH_COLS=['tx','accounts','inst','gam','loans','recur','goals'],SETK=['base','rates','ratesAt','goldManual','zakat','rk','name'],LOCALK=['lang','defAcc','autoDl','sample'];
+const SH_COLS=['tx','accounts','inst','gam','loans','recur','goals','settles'],SETK=['base','rates','ratesAt','goldManual','zakat','rk','name','members'],LOCALK=['lang','defAcc','autoDl','sample'];
 let ACT='me',PS=null,SHM=null,shadow={},shTimer=null,shPoll=null,shBusy=false,shDirty=false,pendingJoin=null;
 const toB64u=b=>toB64(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const fromB64u=x=>fromB64(x.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-x.length%4)%4));
@@ -1973,7 +1999,7 @@ function mergeLedger(A,B){
   return R;
 }
 const stripLocal=D=>{const o=Object.assign({},D);LOCALK.forEach(k=>delete o[k]);return o};
-function prepShared(D){D.lang=(PS&&PS.lang)||LANG;D.sample=false;D.cats=D.cats||mkCats();['tx','accounts','inst','gam','loans','recur','goals'].forEach(k=>{if(!Array.isArray(D[k]))D[k]=[]});if(!D.budgets)D.budgets={};return D}
+function prepShared(D){D.lang=(PS&&PS.lang)||LANG;D.sample=false;D.cats=D.cats||mkCats();['tx','accounts','inst','gam','loans','recur','goals','settles'].forEach(k=>{if(!Array.isArray(D[k]))D[k]=[]});if(!D.budgets)D.budgets={};return D}
 async function cacheSave(m,D){try{localStorage.setItem('daftari-led-'+m.id,JSON.stringify(await seal(KEYOBJ,D)))}catch(e){}}
 async function cacheLoad(m){try{const o=JSON.parse(localStorage.getItem('daftari-led-'+m.id)||'null');return o?await unseal(KEYOBJ,o.iv,o.ct):null}catch(e){return null}}
 async function shDownload(m){const j=await (await gfetch('/drive/v3/files/'+m.fileId+'?alt=media')).json();if(j.app!=='daftari-shared')throw new Error('bad');return await unseal(await ledKey(m),j.iv,j.ct)}
@@ -2037,7 +2063,7 @@ async function createLedger(name){
   colsOf(D).forEach(([,a])=>a.forEach(r=>r.u=now));
   const m={id:'',name,key:toB64u(crypto.getRandomValues(new Uint8Array(32))),role:'writer',owner:true,ownerEmail:drv.email};
   try{m.fileId=await shCreateFile(m,D);m.id=m.fileId}catch(e){toast(t('shareSyncFail'));return}
-  PS.ledgers.push(m);vaultSave(PS);await cacheSave(m,D);
+  D.members=[myEmail()].filter(Boolean);PS.ledgers.push(m);vaultSave(PS);await cacheSave(m,D);
   await switchLedger(m.id);inviteForm(m);
 }
 const joinLink=m=>location.origin+location.pathname.replace(/index\.html$/,'')+'#join.'+m.fileId+'.'+m.key;
@@ -2094,6 +2120,7 @@ function joinSheet(){
         const m={id,fileId:id,key:j.key,role:'writer',owner:false,name:''};
         const D=await shDownload(m);m.name=D.name||t('sharedLedger');
         PS.ledgers.push(m);vaultSave(PS);await cacheSave(m,D);pendingJoin=null;await switchLedger(id);
+        if(myEmail()&&!(S.members||[]).includes(myEmail())){S.members=[...(S.members||[]),myEmail()];commit()}
       }catch(e){if(e&&e.message!=='cancel')toast(t('joinFail'))}
     };
   });
@@ -2194,6 +2221,162 @@ function unregister(){
   });
 }
 
+/* ---------- reminders: the app writes upcoming due items; a daily push wakes the phone to show them ---------- */
+const pIdb=()=>new Promise((res,rej)=>{const r=indexedDB.open('daftari-sw',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const pSet=async(k,v)=>{try{const db=await pIdb();await new Promise(res=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=res;tx.onerror=res})}catch(e){}};
+function upcomingReminders(D){
+  if(!D)return [];const out=[],end=iso(new Date(dOf(TODAY).getTime()+14*864e5)),sym=c=>curSym(c||BASE());
+  [['inst',D.inst||[]],['gam',D.gam||[]]].forEach(([k,l])=>l.forEach(o=>{
+    oblMonths(k,o).filter(m=>!o.paid.includes(m)&&m<=end.slice(0,7)).forEach(m=>{let d=m+'-'+pad(Math.min(28,o.dueDay||1));if(d<TODAY)d=TODAY;if(d>end)return;
+      out.push({id:k+o.id+m,date:d,title:(k==='inst'?t('installments'):t('gameyas'))+' · '+o.name,body:fmt(oblPer(k,o)-partOf(o,m))+' '+sym(o.currency)+' · '+monthLbl(m)})});
+    if(k==='gam'&&!o.received){const d=gamPayout(o)+'-'+pad(Math.min(28,o.dueDay||1));if(d>=TODAY&&d<=end)out.push({id:'gr'+o.id,date:d,title:t('payout')+' · '+o.name,body:fmt(o.share*o.members)+' '+sym(o.currency)})}
+  }));
+  (D.recur||[]).forEach(r=>{let d=r.next,g=0;while(d<=end&&g++<20){if(d>=TODAY&&(!r.end||d<=r.end))out.push({id:'r'+r.id+d,date:d,title:'↻ '+(r.tpl.note||catPath(r.tpl.cat)),body:fmt(r.tpl.amount)});d=advance(d,r.freq,r.day)}});
+  return out.sort((a,b)=>a.date.localeCompare(b.date)).slice(0,60);
+}
+function writeReminders(){if(!('indexedDB' in window)||!PS)return;pSet('reminders',upcomingReminders(PS));pSet('title',t('app'))}
+const pushOn=()=>{try{return localStorage.getItem('daftari-push')==='1'}catch(e){return false}};
+const pushSupported=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const keyBytes=k=>Uint8Array.from(atob(k.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-k.length%4)%4)),c=>c.charCodeAt(0));
+async function pushEnable(){
+  if(!pushSupported()){toast(t('pushUnsupported'));return}
+  try{
+    if(await Notification.requestPermission()!=='granted'){toast(t('pushDenied'));return}
+    const reg=await navigator.serviceWorker.ready,{key}=await workerPost('/push/key',{});
+    let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(key)});
+    await workerPost('/push/subscribe',{sub:sub.toJSON()});try{localStorage.setItem('daftari-push','1')}catch(e){}
+    writeReminders();toast(t('pushOnMsg'));render();
+  }catch(e){toast(t('pushFail'))}
+}
+async function pushDisable(){
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){await workerPost('/push/unsubscribe',{sub:sub.toJSON()}).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+  try{localStorage.removeItem('daftari-push')}catch(e){}render();
+}
+async function pushTest(){try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(!sub){toast(t('pushFail'));return}await pSet('test',1);await workerPost('/push/test',{sub:sub.toJSON()});toast(t('pushSent'))}catch(e){toast(t('pushFail'))}}
+
+/* ---------- import from Excel / CSV ---------- */
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');const first=text.split(/\r?\n/)[0]||'',delim=(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':(first.includes('\t')?'\t':',');
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===delim){row.push(f);f=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}else f+=c}
+  if(f||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.some(v=>String(v).trim()!==''));
+}
+function parseDateAny(v){
+  if(v==null||v==='')return null;if(typeof v==='number'&&v>20000&&v<80000)return iso(new Date(Date.UTC(1899,11,30)+v*864e5));
+  const x=normDigits(String(v)).trim();let m;
+  if((m=x.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/)))return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+  if((m=x.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/))){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+pad(+m[2])+'-'+pad(+m[1])}
+  const d=new Date(x);return isNaN(d)?null:iso(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())));
+}
+const numAny=v=>{if(typeof v==='number')return v;const x=normDigits(String(v||'')).replace(/[^\d.,\-()]/g,'').replace(/,/g,'');if(!x)return NaN;const neg=/^\(.*\)$/.test(x)||x.startsWith('-');return (neg?-1:1)*parseFloat(x.replace(/[()\-]/g,''))};
+function importForm(){
+  openSheet(t('importX'),`<div class="form"><p class="hint">${t('importXHint')}</p><label class="fld"><span>${t('chooseFile')}</span><input class="in-f" type="file" id="xf" accept=".csv,.txt,.xlsx,.xls"></label><div id="map"></div></div>`,r=>{
+    r.querySelector('#xf').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;let rows=[];
+      try{if(/\.xlsx?$/i.test(f.name)){const X=await loadXLSX();const wb=X.read(await f.arrayBuffer(),{type:'array'});rows=X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''})}
+        else rows=parseCSV(await f.text())}catch(e){toast(t('badFile'));return}
+      const hi=Math.max(0,rows.findIndex(rw=>rw.filter(v=>typeof v==='string'&&v.trim()&&isNaN(numAny(v))).length>=2));
+      const head=(rows[hi]||[]).map(v=>String(v).trim()),data=rows.slice(hi+1);
+      const guess=rx=>head.findIndex(h=>rx.test(h));
+      const cols={date:guess(/date|تاريخ/i),amount:guess(/amount|مبلغ|قيمة|قيمه|value/i),debit:guess(/debit|مدين|withdraw|سحب|out|مصروف/i),credit:guess(/credit|دائن|deposit|ايداع|إيداع|in$|إيراد|ايراد/i),
+        cat:guess(/category|بند|تصنيف|نوع المصروف/i),acc:guess(/account|حساب|بنك|wallet/i),note:guess(/note|desc|بيان|ملاحظ|وصف|details|تفاصيل/i),type:guess(/^type$|^النوع$/i)};
+      const sel=(k,label,opt)=>`<label class="fld"><span>${label}</span><select class="in-f" data-c="${k}"><option value="-1">${opt?t('noneCol'):'—'}</option>${head.map((h,i)=>`<option value="${i}" ${cols[k]===i?'selected':''}>${esc(h||('#'+(i+1)))}</option>`).join('')}</select></label>`;
+      r.querySelector('#map').innerHTML=`<p class="hint">${data.length} ${t('rowsWord')}</p>
+        <div class="two">${sel('date',t('date'))}${sel('amount',t('amount'),1)}</div>
+        <div class="two">${sel('debit',t('dr')+' / '+t('exp1'),1)}${sel('credit',t('cr')+' / '+t('inc1'),1)}</div>
+        <div class="two">${sel('cat',t('category'),1)}${sel('acc',t('account'),1)}</div>
+        <div class="two">${sel('note',t('note'),1)}${sel('type',t('typeCol'),1)}</div>
+        <div class="two"><label class="fld"><span>${t('defAccImp')}</span><select class="in-f" id="da">${accOpts(S.defAcc)}</select></label>
+        <label class="fld"><span>${t('posIs')}</span><select class="in-f" id="ps"><option value="expense">${t('exp1')}</option><option value="income">${t('inc1')}</option></select></label></div>
+        <label class="chk"><input type="checkbox" id="nc" checked> ${t('makeCats')}</label><label class="chk"><input type="checkbox" id="dp" checked> ${t('skipDup')}</label>
+        <button type="button" class="btn pri block" id="go">${t('importNow')}</button>`;
+      r.querySelector('#go').onclick=()=>{
+        const c={};r.querySelectorAll('[data-c]').forEach(x=>c[x.dataset.c]=+x.value);if(c.date<0||(c.amount<0&&c.debit<0&&c.credit<0)){toast(t('needCols'));return}
+        const posType=r.querySelector('#ps').value,defAcc=r.querySelector('#da').value,mk=r.querySelector('#nc').checked,dup=r.querySelector('#dp').checked;
+        const seen=new Set(S.tx.map(x=>x.date+'|'+x.amount+'|'+(x.note||'')));let n=0,skipped=0;
+        const findCat=(ty,name)=>{if(!name)return ty==='expense'?'other':'iother';const nm=String(name).trim(),low=nm.toLowerCase();let c2=S.cats[ty].find(k=>k.ar===nm||k.en.toLowerCase()===low);
+          if(!c2&&mk){c2={id:'c'+uid(),ar:nm,en:nm,sys:false};S.cats[ty].splice(Math.max(0,S.cats[ty].findIndex(k=>k.sys)),0,c2)}return c2?c2.id:(ty==='expense'?'other':'iother')};
+        const findAcc=name=>{if(!name)return defAcc;const low=String(name).trim().toLowerCase();const a=S.accounts.find(x=>x.name.toLowerCase()===low);return a?a.id:defAcc};
+        data.forEach(rw=>{const date=parseDateAny(rw[c.date]);if(!date){skipped++;return}
+          let amt=NaN,type=posType;
+          if(c.debit>=0&&numAny(rw[c.debit])>0){amt=numAny(rw[c.debit]);type='expense'}else if(c.credit>=0&&numAny(rw[c.credit])>0){amt=numAny(rw[c.credit]);type='income'}
+          else if(c.amount>=0){amt=numAny(rw[c.amount]);if(amt<0){type='expense';amt=-amt}}
+          if(c.type>=0){const tv=String(rw[c.type]).toLowerCase();if(/income|ايراد|إيراد|دخل|دائن/.test(tv))type='income';else if(/expense|مصروف|مدين|صرف/.test(tv))type='expense'}
+          if(!(amt>0)){skipped++;return}
+          const note=c.note>=0?String(rw[c.note]||'').trim():'';const key=date+'|'+amt+'|'+note;if(dup&&seen.has(key)){skipped++;return}seen.add(key);
+          S.tx.push({id:uid(),type,acc:c.acc>=0?findAcc(rw[c.acc]):defAcc,cat:findCat(type,c.cat>=0?rw[c.cat]:''),amount:Math.round(amt*100)/100,date,note});n++});
+        closeSheet();commit(t('imported')+' '+n+(skipped?' · '+t('skippedN')+' '+skipped:''));
+      };
+    };
+  });
+}
+
+/* ---------- who owes whom in a shared ledger ---------- */
+const myEmail=()=>(REG&&REG.email)||drv.email||'';
+const shortName=e=>String(e||'').split('@')[0];
+function ledgerMembers(){const set=new Set([...(S.members||[]),...S.tx.map(x=>x.paidBy||x.by).filter(Boolean)]);if(myEmail())set.add(myEmail());return [...set]}
+function splitBalances(){
+  const mem=ledgerMembers(),bal={};mem.forEach(m=>bal[m]={paid:0,share:0,net:0});
+  S.tx.filter(x=>x.type==='expense').forEach(x=>{const payer=x.paidBy||x.by;if(!payer||!bal[payer])return;const v=baseAmt(x);bal[payer].paid+=v;
+    if(x.split==='self')bal[payer].share+=v;else mem.forEach(m=>bal[m].share+=v/mem.length)});
+  (S.settles||[]).forEach(z=>{if(bal[z.from])bal[z.from].paid+=+z.amount;if(bal[z.to])bal[z.to].paid-=+z.amount});
+  mem.forEach(m=>bal[m].net=bal[m].paid-bal[m].share);
+  /* simplest set of payments to settle */
+  const debt=mem.filter(m=>bal[m].net<-0.5).map(m=>({m,v:-bal[m].net})),cred=mem.filter(m=>bal[m].net>0.5).map(m=>({m,v:bal[m].net})),plan=[];
+  let i=0,j=0;while(i<debt.length&&j<cred.length){const v=Math.min(debt[i].v,cred[j].v);plan.push({from:debt[i].m,to:cred[j].m,v});debt[i].v-=v;cred[j].v-=v;if(debt[i].v<0.5)i++;if(cred[j].v<0.5)j++}
+  return {mem,bal,plan};
+}
+function splitHTML(){
+  if(ACT==='me')return '';const {mem,bal,plan}=splitBalances();if(mem.length<2)return '';
+  return `<details class="box" open><summary><h2>${t('splitTitle')}</h2></summary><div class="list">
+    ${mem.map(m=>`<div class="row"><div class="glyph ${bal[m].net>0?'in':''}">${esc(initial(shortName(m)))}</div><div class="main"><span class="t">${esc(shortName(m))}${m===myEmail()?' ('+t('you')+')':''}</span><span class="s">${t('paidLbl')} ${fmt(bal[m].paid)} · ${t('shareOf')} ${fmt(bal[m].share)}</span></div><b class="amt ${bal[m].net<0?'neg':bal[m].net>0?'pos':''}">${bal[m].net>0?'+':''}${fmt(Math.round(bal[m].net))}</b></div>`).join('')}
+    ${plan.map(p=>`<div class="row sub"><div class="main"><span class="t">${esc(shortName(p.from))} ← ${esc(shortName(p.to))}</span></div><b class="amt">${fmt(Math.round(p.v))}</b><button class="btn sm" data-act="settle" data-from="${esc(p.from)}" data-to="${esc(p.to)}" data-v="${Math.round(p.v)}">${t('settleBtn')}</button></div>`).join('')}
+  </div><p class="hint">${t('splitHint')}</p></details>`;
+}
+function settleForm(from,to,v){
+  const mem=ledgerMembers(),o=m=>mem.map(x=>`<option value="${esc(x)}" ${x===m?'selected':''}>${esc(shortName(x))}</option>`).join('');
+  openSheet(t('settleBtn'),`<form class="form" id="f"><div class="two"><label class="fld"><span>${t('fromWho')}</span><select class="in-f" id="sf">${o(from)}</select></label><label class="fld"><span>${t('toWho')}</span><select class="in-f" id="st2">${o(to)}</select></label></div>
+    <label class="fld"><span>${t('amount')} (${esc(curName(BASE()))})</span><input class="in-f amt num" id="amt" inputmode="decimal" value="${v||''}"></label><div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
+    r.querySelector('#f').onsubmit=e=>{e.preventDefault();const a=numv(r,'amt');if(!a){toast(t('needAmt'));return}const f2=val(r,'sf'),t2=val(r,'st2');if(f2===t2){toast(t('sameAcc'));return}
+      S.settles=S.settles||[];S.settles.push({id:'z'+uid(),from:f2,to:t2,amount:a,date:TODAY,by:myEmail()});closeSheet();commit(t('saved'))};
+  });
+}
+
+/* ---------- fingerprint unlock (passkey + PRF): the PIN is kept encrypted by a key only the fingerprint can release ---------- */
+const BIO_KEY='daftari-bio';
+const bioInfo=()=>{try{return JSON.parse(localStorage.getItem(BIO_KEY)||'null')}catch(e){return null}};
+const bioSupported=()=>!!(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext);
+async function prfKey(bytes){const k=await crypto.subtle.importKey('raw',bytes,'HKDF',false,['deriveKey']);return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:new Uint8Array(32),info:te.encode('daftari-bio')},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function bioPrf(credId,salt){
+  const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:credId}],userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
+  const r=a.getClientExtensionResults();if(!r.prf||!r.prf.results||!r.prf.results.first)throw new Error('noprf');return new Uint8Array(r.prf.results.first);
+}
+function bioEnableForm(){
+  if(!bioSupported()){toast(t('bioUnsupported'));return}
+  openSheet(t('bioOn'),`<form class="form" id="f"><p class="hint">${t('bioHint')}</p><label class="fld"><span>${t('curPin')}</span><input class="in-f pin" type="password" inputmode="numeric" id="p0" autocomplete="off"></label><p class="err" id="be"></p><div class="foot"><button class="btn pri grow">${t('bioSetup')}</button></div></form>`,r=>{
+    const err=m=>r.querySelector('#be').textContent=m;setTimeout(()=>r.querySelector('#p0').focus(),60);
+    r.querySelector('#f').onsubmit=async e=>{e.preventDefault();const pin=r.querySelector('#p0').value;
+      try{err(t('working'));const vt=readVault();const k=await derive(pin,fromB64(vt.salt),vt.iter);await unseal(k,vt.iv,vt.ct)}catch(x){err(t('wrongPin'));return}
+      try{
+        const salt=crypto.getRandomValues(new Uint8Array(32));
+        const cred=await navigator.credentials.create({publicKey:{rp:{name:'Daftari',id:location.hostname},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:myEmail()||'daftari',displayName:t('app')},
+          challenge:crypto.getRandomValues(new Uint8Array(32)),pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+          authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
+        const ext=cred.getClientExtensionResults();if(ext.prf&&ext.prf.enabled===false)throw new Error('noprf');
+        const out=ext.prf&&ext.prf.results&&ext.prf.results.first?new Uint8Array(ext.prf.results.first):await bioPrf(cred.rawId,salt);
+        const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await prfKey(out),te.encode(pin));
+        localStorage.setItem(BIO_KEY,JSON.stringify({id:toB64(cred.rawId),salt:toB64(salt),iv:toB64(iv),ct:toB64(ct)}));
+        closeSheet();toast(t('bioDone'));render();
+      }catch(x){err(x&&x.message==='noprf'?t('bioUnsupported'):t('bioFail'))}
+    };
+  });
+}
+async function bioUnlockPin(){const b=bioInfo();if(!b)throw new Error('none');const out=await bioPrf(fromB64(b.id),fromB64(b.salt));
+  return td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(b.iv)},await prfKey(out),fromB64(b.ct)))}
+function bioOff(){try{localStorage.removeItem(BIO_KEY)}catch(e){}toast(t('bioOffMsg'));render()}
+
 /* ---------- install (PWA) ---------- */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(S&&tab==='set')render()});
@@ -2212,6 +2395,7 @@ function showLock(){
     <input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="lp1" aria-label="${t('pin1')}" placeholder="${t('pin1')}">
     ${setup?`<input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="lp2" aria-label="${t('pin2')}" placeholder="${t('pin2')}">`:''}
     <button class="btn pri block">${setup?t('create'):t('open')}</button>
+    ${!setup&&bioInfo()?`<button type="button" class="btn block" id="bioBtn">👆 ${t('bioUnlock')}</button>`:''}
     ${needReg?`<p class="hint" style="text-align:center;margin:0"><a href="privacy.html" target="_blank" rel="noopener" style="color:var(--muted)">${t('privacy')}</a></p>`:''}`;
   $('#lkForgot').hidden=setup;$('#lkForgot').textContent=t('forgot');
   $('#lock').hidden=false;
@@ -2219,6 +2403,7 @@ function showLock(){
   const bindG=()=>{const g=$('#gbtn');if(g)g.onclick=async()=>{if(!driveReady()){err(t('regLoading'));return}err(t('working'));
     try{await doRegister();$('#acctW').innerHTML=acctHTML();err('');$('#lp1').focus()}catch(x){err(t('regFail'))}}};
   bindG();
+  const bb=$('#bioBtn');if(bb)bb.onclick=async()=>{try{const pin=await bioUnlockPin();$('#lp1').value=pin;$('#lkF').requestSubmit()}catch(x){err(t('bioFail'))}};
   if(!needReg||REG)setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
   $('#lkF').onsubmit=async e=>{e.preventDefault();
     const p1=$('#lp1').value;
@@ -2240,7 +2425,7 @@ function showLock(){
     catch(x){fails++;$('#lp1').value='';if(fails>=5){blockedUntil=Date.now()+30000;fails=0;err(t('waitTry'))}else err(t('wrongPin'))}
   };
 }
-function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);if(pendingShare){const txt=pendingShare;pendingShare=null;setTimeout(()=>quickFromText(txt),350)}render();runRecurring();maybeUpdateRates();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
+function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);if(pendingShare){const txt=pendingShare;pendingShare=null;setTimeout(()=>quickFromText(txt),350)}render();runRecurring();maybeUpdateRates();writeReminders();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
 function lockNow(){clearTimeout(bkTimer);if(ACT!=='me'&&shDirty)shPush();stopPoll();ACT='me';SHM=null;PS=null;closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;$('#view').innerHTML='';showLock()}
 $('#lkForgot').onclick=()=>{
   $('#lkT').textContent=t('forgotConfirm');$('#lkH').textContent='';$('#lkE').textContent='';$('#lkForgot').hidden=true;
