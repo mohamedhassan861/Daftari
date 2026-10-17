@@ -511,6 +511,8 @@ closeTitle:['إقفال الشهر','Close the month'],closeBtn:['اعتمد','C
 closeHint:['دي الحاجات اللي كانت متوقعة في الشهر ده ولسه متدفعتش كلها. لكل واحدة اختار: المبلغ اللي اتدفع هو النهائي، ولا ترحّل الباقي لشهر تاني.','These were planned this month and are not fully paid. For each: is what was paid final, or move the rest to another month?'],
 closeNothing:['كل اللي كان متوقع في الشهر ده اتعمل. دوس اعتمد.','Everything planned this month was done. Tap Confirm.'],closedMsg:['الشهر اتقفل','Month closed'],carriedFrom:['مرحّل من','moved from'],
 extraPlan:['مبالغ متوقعة إضافية','Extra planned amounts'],addPlan:['مبلغ متوقع','Planned amount'],repeatFor:['لمدة','For'],thisMonthOnly:['الشهر ده بس','This month only'],monthsW:['شهور','months'],
+planLines:['المتوقع في الشهر ده','Planned this month'],planLinesHint:['دوس على أي سطر علشان تغيّر مبلغه في الشهر ده بس، أو من الشهر ده ولقدام. اكتب 0 لو مش هيحصل الشهر ده.','Tap a line to change its amount for this month only, or from this month on. Enter 0 if it will not happen this month.'],
+usually:['عادةً','Usually'],zeroSkip:['0 = مش هيحصل الشهر ده','0 = not this month'],applyTo:['يتطبق على','Apply to'],fromThisOn:['الشهر ده واللي بعده','This month and after'],resetPlan:['رجّعه زي الأصل','Back to usual'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -661,7 +663,7 @@ function usedCurrencies(){const set=new Set(['G21']);S.accounts.forEach(a=>set.a
 function migrate(){
   if(!S.base)S.base='EGP';
   if(!Array.isArray(S.recur))S.recur=[];
-  if(!Array.isArray(S.goals))S.goals=[];if(!Array.isArray(S.planAdj))S.planAdj=[];if(!S.closed)S.closed={};if(!S.closeFrom)S.closeFrom=TODAY_YM;if(!Array.isArray(S.settles))S.settles=[];if(!Array.isArray(S.quick))S.quick=[];
+  if(!Array.isArray(S.goals))S.goals=[];if(!Array.isArray(S.planAdj))S.planAdj=[];if(!S.closed)S.closed={};if(!S.planOver||typeof S.planOver!=='object')S.planOver={};if(!S.closeFrom)S.closeFrom=TODAY_YM;if(!Array.isArray(S.settles))S.settles=[];if(!Array.isArray(S.quick))S.quick=[];
   if(ACT==='me'&&!Array.isArray(S.ledgers))S.ledgers=[];
   if(!S.rk)S.rk=toB64(crypto.getRandomValues(new Uint8Array(32)));
   if(!S.rates||typeof S.rates!=='object')S.rates={};
@@ -748,7 +750,8 @@ function runRecurring(){
     while(r.next<=TODAY&&guard++<500){
       if(r.end&&r.next>r.end)break;
       if(!S.accounts.some(a=>a.id===r.tpl.acc))break;
-      const rid='R'+r.id+'_'+r.next;if(!S.tx.some(x=>x.id===rid)){S.tx.push(Object.assign({},r.tpl,{id:rid,date:r.next,rec:r.id}));n++}
+      const rid='R'+r.id+'_'+r.next,ovm=((S.planOver||{})[r.next.slice(0,7)]||{})['rec:'+r.id];
+      if(!S.tx.some(x=>x.id===rid)&&ovm!==0){S.tx.push(Object.assign({},r.tpl,{id:rid,date:r.next,rec:r.id},ovm>0?{amount:ovm}:{}));n++}
       r.next=advance(r.next,r.freq,r.day);
     }}
   if(n){save();render();toast(t('recAdded')+' '+n)}
@@ -1719,17 +1722,18 @@ function tagsHTML(){
 
 /* ---------- planned (expected) amounts per month, from everything the app already knows ---------- */
 function planItems(m){
-  const out=[],add=(type,cat,amount,o)=>{if(amount>0)out.push(Object.assign({type,cat,amount,date:m+'-01',acc:'',label:'',done:false},o||{}))};
+  const out=[],add=(type,cat,amount,o)=>{if(amount>0||(o&&o.src))out.push(Object.assign({type,cat,amount,date:m+'-01',acc:'',label:'',done:false},o||{}))};
   for(const r of S.recur||[]){const a=accOf(r.tpl.acc);if(!a||!['income','expense'].includes(r.tpl.type))continue;
     S.tx.filter(x=>x.rec===r.id&&x.date.slice(0,7)===m).forEach(x=>add(x.type,x.cat,baseAmt(x),{date:x.date,acc:x.acc,label:r.tpl.note,done:true}));
-    let d=r.next,g=0;while(d&&d.slice(0,7)<=m&&g++<400){if(r.end&&d>r.end)break;if(d.slice(0,7)===m)add(r.tpl.type,r.tpl.cat,toBase(+r.tpl.amount,a.currency),{date:d,acc:r.tpl.acc,label:r.tpl.note});d=advance(d,r.freq,r.day)}}
-  S.inst.forEach(o=>instMonths(o).filter(x=>effM(o,x)===m).forEach(x=>add('expense',o.cat||'inst',toBase(+o.monthly-partOf(o,x)*(x!==m?1:0),o.currency||BASE()),{date:m+'-'+pad(Math.min(28,o.dueDay||1)),acc:o.payWith||'',label:o.name,done:o.paid.includes(x)})));
-  S.gam.forEach(o=>{gamMonths(o).filter(x=>effM(o,x)===m).forEach(x=>add('expense','gam',toBase(+o.share,o.currency||BASE()),{date:m+'-'+pad(Math.min(28,o.dueDay||1)),label:o.name,done:o.paid.includes(x)}));if(gamPayout(o)===m)add('income','gamin',toBase(o.share*o.members,o.currency||BASE()),{label:o.name,done:!!o.received})});
-  S.loans.forEach(l=>{const x=loanSched(l).find(z=>z.m===m);if(x)add(l.dir==='borrowed'?'expense':'income',l.dir==='borrowed'?'loanpay':'loanback',toBase(x.amount,l.currency||BASE()),{label:l.person,done:loanOwedUpTo(l,m)===0})});
+    let d=r.next,g=0;while(d&&d.slice(0,7)<=m&&g++<400){if(r.end&&d>r.end)break;if(d.slice(0,7)===m)add(r.tpl.type,r.tpl.cat,toBase(+r.tpl.amount,a.currency),{date:d,acc:r.tpl.acc,label:r.tpl.note||catName(r.tpl.cat),src:'rec:'+r.id});d=advance(d,r.freq,r.day)}}
+  S.inst.forEach(o=>instMonths(o).filter(x=>effM(o,x)===m).forEach(x=>add('expense',o.cat||'inst',toBase(+o.monthly-partOf(o,x)*(x!==m?1:0),o.currency||BASE()),{date:m+'-'+pad(Math.min(28,o.dueDay||1)),acc:o.payWith||'',label:o.name,done:o.paid.includes(x),src:'inst:'+o.id})));
+  S.gam.forEach(o=>{gamMonths(o).filter(x=>effM(o,x)===m).forEach(x=>add('expense','gam',toBase(+o.share,o.currency||BASE()),{date:m+'-'+pad(Math.min(28,o.dueDay||1)),label:o.name,done:o.paid.includes(x),src:'gam:'+o.id}));if(gamPayout(o)===m)add('income','gamin',toBase(o.share*o.members,o.currency||BASE()),{label:o.name,done:!!o.received})});
+  S.loans.forEach(l=>{const x=loanSched(l).find(z=>z.m===m);if(x)add(l.dir==='borrowed'?'expense':'income',l.dir==='borrowed'?'loanpay':'loanback',toBase(x.amount,l.currency||BASE()),{label:l.person,done:loanOwedUpTo(l,m)===0,src:'loan:'+l.id})});
   const has=new Set(out.filter(x=>x.type==='expense').map(x=>x.cat));
-  Object.entries(S.budgets||{}).forEach(([c,v])=>{if(!has.has(c))add('expense',c,+v,{label:catName(c)})});
+  Object.entries(S.budgets||{}).forEach(([c,v])=>{if(!has.has(c))add('expense',c,+v,{label:catName(c),src:'bud:'+c})});
+  const ov=(S.planOver||{})[m]||{};out.forEach(x=>{if(x.src&&!x.done&&x.src in ov){x.base=x.amount;x.amount=+ov[x.src]}});
   (S.planAdj||[]).filter(a=>a.m===m).forEach(a=>add(a.type||'expense',a.cat,+a.amount,{label:a.label||catName(a.cat)}));
-  return out;
+  return out.filter(x=>x.amount>0||(x.src&&x.src in ov));
 }
 const byRoot=(list,type,amt)=>{const o={};list.filter(x=>x.type===type).forEach(x=>{const k=catRoot(x.cat);o[k]=(o[k]||0)+amt(x)});return o};
 function planVsActual(months){
@@ -1775,10 +1779,31 @@ function fcMonthSheet(m){
     <div class="grp"><span>${t('cashOut')}</span><span class="num">${money(r.e)}</span></div><div class="list">${part('out:')}</div>
     <div class="list">${row(t('gapW'),r.i-r.e,r.i-r.e<0?'neg':'pos')}</div>
     ${(()=>{const adj=(S.planAdj||[]).map((a,i)=>({a,i})).filter(z=>z.a.m===m);return adj.length?`<div class="grp"><span>${t('extraPlan')}</span></div><div class="list">${adj.map(({a,i})=>`<div class="row"><div class="main"><span class="t">${esc(a.label||catName(a.cat))}</span><span class="s">${a.type==='income'?t('inc1'):t('exp1')}</span></div><b class="amt ${a.type==='income'?'pos':''}">${money(a.amount)}</b><button type="button" class="btn sm danger" data-adj="${i}">${t('del')}</button></div>`).join('')}</div>`:''})()}
+    ${(()=>{const it=planItems(m).filter(x=>x.src&&!x.done);return it.length?`<div class="grp"><span>${t('planLines')}</span></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''}</span><span class="s">${x.type==='income'?t('inc1'):t('exp1')} · ${esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
     <button type="button" class="btn block" id="adjAdd">+ ${t('addPlan')}</button>
     <p class="hint">${t('fcMonthHint')}</p></div>`,rr=>{
     rr.querySelectorAll('[data-adj]').forEach(b=>b.onclick=()=>{S.planAdj.splice(+b.dataset.adj,1);commit(t('deleted'));fcMonthSheet(m)});
     rr.querySelector('#adjAdd').onclick=()=>planAdjForm(m);
+    rr.querySelectorAll('[data-pe]').forEach(el=>el.onclick=()=>planEditForm(m,el.dataset.pe,el.dataset.pl,+el.dataset.pv,+el.dataset.pb));
+  });
+}
+function planEditForm(m,src,label,amount,base){
+  const [kind,id]=src.split(/:(.+)/),canOn=kind==='rec'||kind==='bud',has=src in ((S.planOver||{})[m]||{});
+  openSheet(label+' · '+monthLbl(m),`<form class="form" id="f"><p class="hint">${t('usually')}: ${fmt(base)}</p>
+    <label class="fld"><span>${t('amount')} (${t('zeroSkip')})</span><input class="in-f amt num" id="ev" inputmode="decimal" value="${amount}"></label>
+    ${canOn?`<label class="fld"><span>${t('applyTo')}</span><select class="in-f" id="es"><option value="one">${t('thisMonthOnly')}</option><option value="on">${t('fromThisOn')}</option></select></label>`:''}
+    <div class="foot">${has?`<button type="button" class="btn grow" id="eReset">${t('resetPlan')}</button>`:''}<button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
+    const back=()=>{commit(t('saved'));fcMonthSheet(m)};
+    const rs=r.querySelector('#eReset');if(rs)rs.onclick=()=>{delete S.planOver[m][src];back()};
+    r.querySelector('#f').onsubmit=e=>{e.preventDefault();const raw=val(r,'ev'),v=raw===''?0:numv(r,'ev');if(v<0){toast(t('needAmt'));return}
+      const scope=canOn?val(r,'es'):'one';
+      if(scope==='on'&&kind==='rec'){const rc=S.recur.find(x=>x.id===id);if(rc){
+          if(rc.next.slice(0,7)>=m){rc.tpl.amount=v}
+          else{let d=rc.next;while(d.slice(0,7)<m)d=advance(d,rc.freq,rc.day);const nr=JSON.parse(JSON.stringify(rc));nr.id='r'+uid();nr.next=d;nr.tpl.amount=v;rc.end=dayBefore(d);S.recur.push(nr)}
+          Object.keys(S.planOver).forEach(k=>{if(k>=m)delete S.planOver[k][src]});if(v===0){const z=S.recur.find(x=>x.id===id);if(z&&z.next.slice(0,7)>=m)z.end=dayBefore(z.next)}}}
+      else if(scope==='on'&&kind==='bud'){for(let i=0;i<36;i++){const k=ymAdd(m,i);(S.planOver[k]=S.planOver[k]||{})[src]=v}}
+      else{(S.planOver[m]=S.planOver[m]||{})[src]=v}
+      back()};
   });
 }
 function planAdjForm(m){
@@ -1926,7 +1951,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.31 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.32 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
