@@ -382,7 +382,7 @@ driveRestore:['استرجع من Drive','Restore from Drive'],driveSaved:['ات�
 driveErr:['معرفناش نحفظ على Drive، هنحاول تاني مع التعديل الجاي.','Could not save to Drive; will retry with the next change.'],
 driveNotSetup:['ربط Google Drive لسه متجهزش في النسخة دي.','Google Drive is not set up in this build yet.'],
 driveNone:['مفيش نسخ على Drive لسه.','No backups on Drive yet.'],driveSyncNow:['احفظ على Drive دلوقتي','Save to Drive now'],
-driveKeep:['كل النسخ بتفضل محفوظة على الـ Drive، وتقدر ترجع لأي واحدة.','Every copy stays on Drive, and you can go back to any of them.'],
+driveKeep:['آخر 100 نسخة بتفضل محفوظة على الـ Drive، وتقدر ترجع لأي واحدة منهم.','The latest 100 copies stay on Drive, and you can go back to any of them.'],
 driveAccount:['الحساب المربوط','Linked account'],driveSwitch:['غيّر الحساب','Change account'],driveAccUnknown:['هيظهر بعد أول حفظ على Drive','Shown after the next save to Drive'],
 driveAgain:['اضغط "اربط Google Drive" مرة كمان علشان نكمّل الربط.','Tap "Connect Google Drive" once more to finish linking.'],
 driveNeedRT:['خطوة أخيرة علشان Google Drive يفضل مربوط على طول، من غير ما يسألك تاني.','One last step so Google Drive stays linked without asking again.'],driveFinish:['كمّل الربط','Finish linking'],
@@ -1807,11 +1807,11 @@ function vSet(){
     <div class="list">
       <label class="setrow chk" style="justify-content:space-between"><span>${t('autoDl')}<br><span class="hint">${t('autoDlHint')}</span></span><input type="checkbox" id="autoDl" ${S.autoDl?'checked':''}></label>
     </div>
-    <button class="btn block" data-act="shareDrive">${t('shareDrive')}</button>
-    <p class="hint">${t('shareHint')}</p>
+    ${drv.linked?'':`<button class="btn block" data-act="shareDrive">${t('shareDrive')}</button>
+    <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.25 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.26 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
