@@ -21,7 +21,7 @@
 /* Layout: single-column phone ledger, sticky month header, bottom tab bar, sheets slide up from the bottom */
 :root{
   --bg:#F2F4EF; --surface:#FFFFFF; --sunk:#E6EAE3; --ink:#17201C; --muted:#5B6962; --line:#D3DAD1;
-  --accent:#1D6A50; --accent-ink:#FFFFFF; --accent-soft:#DBEAE2;
+  --accent:#1D6A50; --accent-ink:#FFFFFF; --accent-soft:#DBEAE2; --plan:#2B5797; --plan-soft:#E2EAF6;
   --pos:#1F7A4A; --neg:#B2452D; --neg-soft:#F5E0D9; --warn:#9A6210; --warn-soft:#F5E7CC;
   --scrim:rgba(15,22,19,.45);
   --f-display:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif;
@@ -30,12 +30,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F1513; --surface:#18201D; --sunk:#212B27; --ink:#E6EEE9; --muted:#9AABA2; --line:#2C3833;
-  --accent:#5FBF98; --accent-ink:#0B1712; --accent-soft:#1C3229;
+  --accent:#5FBF98; --accent-ink:#0B1712; --accent-soft:#1C3229; --plan:#8DB2EC; --plan-soft:#1A2436;
   --pos:#62C890; --neg:#EF8A70; --neg-soft:#3A221B; --warn:#E3B05A; --warn-soft:#382C15;
   --scrim:rgba(0,0,0,.6); color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#0F1513; --surface:#18201D; --sunk:#212B27; --ink:#E6EEE9; --muted:#9AABA2; --line:#2C3833;
-  --accent:#5FBF98; --accent-ink:#0B1712; --accent-soft:#1C3229;
+  --accent:#5FBF98; --accent-ink:#0B1712; --accent-soft:#1C3229; --plan:#8DB2EC; --plan-soft:#1A2436;
   --pos:#62C890; --neg:#EF8A70; --neg-soft:#3A221B; --warn:#E3B05A; --warn-soft:#382C15;
   --scrim:rgba(0,0,0,.6); color-scheme:dark }
 
@@ -174,11 +174,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .in-f{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 12px;min-width:0}
 .in-f.amt{font-family:var(--f-display);font-size:22px;font-weight:600}
 textarea.in-f{min-height:90px;font-family:ui-monospace,monospace;font-size:12px;direction:ltr}
+.blk{border-radius:14px;padding:10px 0 2px;border:1px solid var(--line);margin:4px 0}.blk.act{background:var(--accent-soft);border-color:transparent}.blk.plan{background:var(--plan-soft);border-color:transparent}.blk-h{font-weight:600;font-size:15px;padding:0 14px 2px;display:flex;justify-content:space-between;gap:8px}.blk.act .blk-h{color:var(--accent)}.blk.plan .blk-h{color:var(--plan)}.blk .flowb{border-top:0}.flowb b{white-space:nowrap;unicode-bidi:plaintext}.blk .flowb b{color:var(--ink);font-size:17px}.blk .flowb b.pos{color:var(--accent)}.blk .flowb b.neg{color:var(--neg)}.blk.plan .flowb b:not(.neg){color:var(--plan)}.blk details{padding:0 14px 8px}.blk summary{cursor:pointer;font-size:13px;color:var(--muted);list-style:none}.blk .ln{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-top:1px solid var(--line)}.blk .ln span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.blk .list{margin:6px 10px 10px}
 .addrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.addrow .btn{padding-inline:6px;white-space:nowrap}
 .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .two>*{min-width:0}
 input[type=date].in-f,input[type=month].in-f,input[type=time].in-f{min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;min-height:44px;text-align:start}
-.flowb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:10px 14px;border-top:1px dashed var(--line)}.flowb span{display:block;font-size:12px;color:var(--muted)}.flowb b{font-size:15px;font-variant-numeric:tabular-nums}
+.flowb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:10px 14px;border-top:1px dashed var(--line)}.flowb>div>span{display:block;font-size:12px;color:var(--muted)}.flowb b{font-size:15px;font-variant-numeric:tabular-nums}
 .cmp.fc{grid-template-columns:minmax(0,.9fr) repeat(4,minmax(0,1fr));font-size:12px;padding-inline:10px}
 .cmp{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:4px 8px;padding:8px 14px;align-items:center;font-size:13px;border-bottom:1px solid var(--line)}.cmp.h{font-size:12px;color:var(--muted)}.cmp.t{font-weight:600}.cmp b,.cmp span:not(:first-child){text-align:end;font-variant-numeric:tabular-nums}.cmp>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chk{display:flex;align-items:center;gap:8px}
@@ -517,6 +518,7 @@ fcSheetHint:['الجدول بالفلوس الفعلية (كاش وبنوك). ا
 cardPayLine:['سداد الكارت المتوقع','Expected card payment'],cashOrBank:['كاش أو بنك','Cash or bank'],
 paidIn:['هيتسدد في','paid in'],
 curUsed:['في الرصيد المتوقع للشهر ده بنحسب الأكبر بين المتوقع والفعلي لكل سطر:','For this month the forecast uses the larger of planned and actual per line:'],
+showLines:['التفاصيل','Details'],notYet:['الشهر لسه مجاش','Not here yet'],cashBanks:['كاش وبنوك','cash & banks'],diffActPlan:['الفرق (الفعلي − المتوقع)','Difference (actual − planned)'],editPlan:['عدّل المتوقع','Edit the plan'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1767,6 +1769,7 @@ function cashPlan(m){const r={};const put=(k,l,v)=>{if(v<=0.004)return;if(!r[k])
   cards().forEach(a=>{const c=cardInfo(a);if(!c.owed)return;
     const parts=a.closeDay?[[c.due,c.dueDate],[c.cycle,cardDueFor(a,c.nextClose)]]:[[c.owed,cardDueFor(a,TODAY)]];
     parts.forEach(([v,d])=>{if(v>0&&d){const dm=d.slice(0,7)<TODAY_YM?TODAY_YM:d.slice(0,7);if(dm===m)put('out:card:'+a.id,t('cardPayNote')+' · '+a.name,toBase(v,a.currency))}})});
+  if(m<=TODAY_YM){const ac=cashActual(txOf(m));Object.entries(ac).filter(([k])=>k.startsWith('out:card:')).forEach(([k,x])=>put(k,x.label,x.v))}
   const ov=(S.planOver||{})[m]||{};cards().forEach(a=>{const k='out:card:'+a.id,src='card:'+a.id;if(src in ov){if(!r[k])r[k]={label:t('cardPayNote')+' · '+a.name,v:0};r[k].base=r[k].v;r[k].v=+ov[src]}});
   return r}
 /* past months = actual; this month = the larger of actual and plan per line (card payments add up); later months = plan */
@@ -1774,7 +1777,7 @@ function monthCash(m){
   const act=cashActual(txOf(m));const sum=(o,p)=>Object.entries(o).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
   if(m<TODAY_YM)return {i:sum(act,'in:'),e:sum(act,'out:'),kind:'act',lines:act};
   const pl=cashPlan(m);if(m>TODAY_YM)return {i:sum(pl,'in:'),e:sum(pl,'out:'),kind:'plan',lines:pl};
-  const lines={};new Set([...Object.keys(pl),...Object.keys(act)]).forEach(k=>{const p=pl[k]?pl[k].v:0,a=act[k]?act[k].v:0;lines[k]={label:(pl[k]||act[k]).label,v:k.includes(':card:')?p+a:Math.max(p,a),a}});
+  const lines={};new Set([...Object.keys(pl),...Object.keys(act)]).forEach(k=>{const p=pl[k]?pl[k].v:0,a=act[k]?act[k].v:0;lines[k]={label:(pl[k]||act[k]).label,v:Math.max(p,a),a}});
   return {i:sum(lines,'in:'),e:sum(lines,'out:'),kind:'cur',lines};
 }
 function fcMonthSheet(m){
@@ -1787,15 +1790,19 @@ function fcMonthSheet(m){
     const d=p==='in:'?ta-tp:tp-ta;
     return {html:`<div class="grp"><span>${p==='in:'?t('cashIn'):t('cashOut')}</span></div>${rows||`<div class="empty">${t('noItems')}</div>`}<div class="cmp t"><span>${t('total')}</span><span>${money(tp)}</span><span>${money(ta)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`,tp,ta}};
   const CI=cmpSec('in:'),CO=cmpSec('out:'),np=CI.tp-CO.tp,na=CI.ta-CO.ta;
-  openSheet(monthLbl(m),`<div class="form"><div class="list">
-    <div class="cmp h"><span></span><span>${t('planned')}</span><span>${t('actual')}</span><span>${t('variance')}</span></div>
-    ${CI.html}${CO.html}
-    <div class="cmp t"><span>${t('gapW')}</span><span class="${np<0?'neg':''}">${money(np)}</span><span class="${na<0?'neg':''}">${money(na)}</span><b class="${na-np<-0.5?'neg':na-np>0.5?'pos':''}">${na-np>0.5?'+':''}${money(na-np)}</b></div></div>
-    ${r.kind==='cur'?`<p class="hint">${t('curUsed')} ${t('cashIn')} ${money(r.i)} · ${t('cashOut')} ${money(r.e)}</p>`:''}
-    <p class="hint">${t('fcSheetHint')}</p>
+  const sumP=(o,p)=>Object.entries(o).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
+  const ai=sumP(A,'in:'),ao=sumP(A,'out:'),pi=sumP(P,'in:'),po=sumP(P,'out:');
+  const three=(i,o,cls)=>`<div class="flowb"><div><span>${t('cashIn')}</span><b class="${cls?'':'pos'}">${money(i)}</b></div><div><span>${t('cashOut')}</span><b>${money(o)}</b></div><div><span>${t('netShort')}</span><b class="${i-o<0?'neg':'pos'}">${money(i-o)}</b></div></div>`;
+  const lines=o=>{const L=Object.entries(o).sort((a,b)=>b[1].v-a[1].v);return L.length?`<details><summary>${t('showLines')} ›</summary>${L.map(([k,x])=>`<div class="ln"><span>${k.startsWith('in:')?'+':'−'} ${esc(x.label)}</span><b class="${k.startsWith('in:')?'pos':''}">${money(x.v)}</b></div>`).join('')}</details>`:''};
+  const sg=(v,goodUp)=>{const c=Math.abs(v)<0.5?'':(v>0)===goodUp?'pos':'neg';return `<b class="${c}">${v>0.5?'+':''}${money(v)}</b>`};
+  openSheet(monthLbl(m),`<div class="form">
+    <div class="blk act"><div class="blk-h"><span>● ${t('actual')}</span><small class="muted">${m>TODAY_YM?t('notYet'):t('cashBanks')}</small></div>${three(ai,ao)}${lines(A)}</div>
+    <div class="blk plan"><div class="blk-h"><span>● ${t('planned')}</span><small class="muted">${t('cashBanks')}</small></div>${three(pi,po)}${lines(P)}</div>
+    <div class="blk"><div class="blk-h"><span>${t('diffActPlan')}</span></div><div class="flowb"><div><span>${t('cashIn')}</span>${sg(ai-pi,true)}</div><div><span>${t('cashOut')}</span>${sg(ao-po,false)}</div><div><span>${t('netShort')}</span>${sg((ai-ao)-(pi-po),true)}</div></div></div>
+    <div class="blk plan" style="padding-bottom:8px"><div class="blk-h"><span>✎ ${t('editPlan')}</span></div>
     ${(()=>{const adj=(S.planAdj||[]).map((a,i)=>({a,i})).filter(z=>z.a.m===m);const tin=adj.filter(z=>z.a.type==='income').reduce((v,z)=>v+(+z.a.amount),0),tout=adj.filter(z=>z.a.type!=='income').reduce((v,z)=>v+(+z.a.amount),0);return adj.length?`<div class="grp"><span>${t('extraPlan')}</span></div><div class="flowb" style="border-top:0;padding:6px 12px"><div><span>${t('cashIn')}</span><b class="pos">${money(tin)}</b></div><div><span>${t('cashOut')}</span><b>${money(tout)}</b></div><div><span>${t('netShort')}</span><b class="${tin-tout<0?'neg':'pos'}">${money(tin-tout)}</b></div></div><div class="list">${adj.map(({a,i})=>`<div class="row tap" data-adje="${i}"><div class="main"><span class="t">${esc(a.label||catName(a.cat))} ›</span><span class="s">${a.type==='income'?t('inc1'):t('exp1')}</span></div><b class="amt ${a.type==='income'?'pos':''}">${money(a.amount)}</b><button type="button" class="btn sm danger" data-adj="${i}">${t('del')}</button></div>`).join('')}</div>`:''})()}
     ${(()=>{const cp=cashPlan(m),it=planItems(m).filter(x=>x.src&&!x.done).map(x=>{const a=accOf(x.acc);return a&&a.type==='card'?Object.assign(x,{onCard:a,payM:cardDueFor(a,x.date<TODAY?TODAY:x.date).slice(0,7)}):x}).concat(cards().filter(a=>cp['out:card:'+a.id]).map(a=>{const z=cp['out:card:'+a.id];return {type:'expense',cat:'other',amount:z.v,base:z.base,label:z.label,src:'card:'+a.id,card:1}}));const tin=it.filter(x=>x.type==='income').reduce((v,x)=>v+x.amount,0),tout=it.filter(x=>x.type!=='income'&&!x.onCard).reduce((v,x)=>v+x.amount,0);return it.length?`<div class="grp"><span>${t('planLines')}</span></div><div class="flowb" style="border-top:0;padding:6px 12px"><div><span>${t('cashIn')}</span><b class="pos">${money(tin)}</b></div><div><span>${t('cashOut')}</span><b>${money(tout)}</b></div><div><span>${t('netShort')}</span><b class="${tin-tout<0?'neg':'pos'}">${money(tin-tout)}</b></div></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''} ›</span><span class="s">${x.card?t('cardPayLine'):x.onCard?'💳 '+esc(x.onCard.name)+' · '+t('paidIn')+' '+esc(monthLbl(x.payM)):(x.type==='income'?t('inc1'):t('exp1'))+' · '+esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
-    <button type="button" class="btn block" id="adjAdd">+ ${t('addPlan')}</button>
+    <div style="padding:0 10px"><button type="button" class="btn block" id="adjAdd">+ ${t('addPlan')}</button></div></div>
     <p class="hint">${t('fcMonthHint')}</p></div>`,rr=>{
     rr.querySelectorAll('[data-adj]').forEach(b=>b.onclick=e=>{e.stopPropagation();S.planAdj.splice(+b.dataset.adj,1);commit(t('deleted'));fcMonthSheet(m)});
     rr.querySelectorAll('[data-adje]').forEach(el=>el.onclick=()=>planAdjForm(m,+el.dataset.adje));
@@ -1970,7 +1977,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.37 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.38 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
