@@ -505,6 +505,8 @@ regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Googl
 regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],
 cashIn:['دخل','In'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
 cardsOwe:['عليك للكروت','Owed on cards'],nextPay:['أقرب سداد','Next payment'],payWith:['بيتدفع من','Paid from'],anyAcc:['أي حساب','Any account'],
+loanPlan:['طريقة السداد','Repayment'],planOnce:['مرة واحدة','In one go'],planInst:['أقساط شهرية','Monthly installments'],instFrom:['أول قسط','First installment'],perMonthFrom:['في الشهر من','a month from'],
+instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -608,6 +610,13 @@ const initial=s=>(s||'?').trim().charAt(0);
 const sum=a=>a.reduce((x,y)=>x+(+y.amount||0),0);
 const txOf=ym=>S.tx.filter(x=>x.date.slice(0,7)===ym);
 const loanPaid=l=>sum(l.pays);
+/* a loan repaid in monthly installments: [{m, amount}] from the start month until the amount is covered */
+function loanSched(l){
+  if(l.plan==='inst'&&+l.instAmt>0&&l.instStart){const out=[];let left=+l.amount,m=l.instStart,g=0;while(left>0.004&&g++<600){const v=Math.min(+l.instAmt,left);out.push({m,amount:Math.round(v*100)/100});left-=v;m=ymAdd(m,1)}return out}
+  return l.due?[{m:l.due,amount:+l.amount}]:[];
+}
+/* still owed on the schedule up to month m (payments cover the earliest months first) */
+const loanOwedUpTo=(l,m)=>Math.max(0,Math.round((loanSched(l).filter(x=>x.m<=m).reduce((v,x)=>v+x.amount,0)-loanPaid(l))*100)/100);
 const loanLeft=l=>Math.max(0,l.amount-loanPaid(l));
 
 /* ---------- currencies & accounts ---------- */
@@ -997,12 +1006,13 @@ function safeToSpend(){
   const liquid=S.accounts.filter(a=>['cash','bank','wallet'].includes(a.type)).reduce((v,a)=>v+toBase(accBalance(a),a.currency),0);
   const end=TODAY_YM+'-31';
   const onCard=o=>{const a=accOf(o.payWith);return !!a&&a.type==='card'};
+  const loanDueNow=S.loans.filter(l=>l.dir==='borrowed').reduce((v,l)=>v+toBase(loanOwedUpTo(l,TODAY_YM),l.currency||BASE()),0);
   const obl=[['inst',S.inst],['gam',S.gam]].reduce((v,[k,l])=>v+l.filter(o=>!onCard(o)).reduce((w,o)=>w+toBase(owedUpTo(k,o,TODAY_YM),o.currency||BASE()),0),0)
     +cards().reduce((v,a)=>{const p=cashPlan(TODAY_YM)['out:card:'+a.id];return v+(p?p.v:0)},0);
   let recOut=0,recIn=0;
   S.recur.forEach(r=>{let d=r.next,g=0;const a=accOf(r.tpl.acc);if(!a||!isLiquid(a))return;while(d<=end&&g++<40){if(!r.end||d<=r.end){const v=toBase(r.tpl.amount,a.currency);if(r.tpl.type==='expense')recOut+=v;else if(r.tpl.type==='income')recIn+=v}d=advance(d,r.freq,r.day)}});
   const goals=S.goals.reduce((v,g)=>v+toBase(goalMonthly(g),g.currency||BASE()),0);
-  const safe=liquid-obl-recOut-goals;
+  const safe=liquid-obl-recOut-goals-loanDueNow;
   const last=new Date(+TODAY.slice(0,4),+TODAY.slice(5,7),0).getDate(),daysLeft=last-+TODAY.slice(8,10)+1;
   return {liquid,obl,recOut,recIn,goals,safe,daysLeft,perDay:safe>0?safe/daysLeft:0};
 }
@@ -1404,23 +1414,31 @@ function loanForm(l){
     <div class="two"><label class="fld"><span>${t('amount')}</span><input class="in-f amt num" id="amt" inputmode="decimal" value="${l.amount}"></label>
     <label class="fld"><span>${t('currency')}</span><select class="in-f" id="lc">${curOpts(l.currency||BASE())}</select></label></div>
     <div class="two"><label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${l.date}"></label>
-    <label class="fld"><span>${t('loanDue')}</span><input class="in-f" type="month" id="ld" value="${l.due||''}"></label></div>
+    <label class="fld" id="ldW" ${l.plan==='inst'?'hidden':''}><span>${t('loanDue')}</span><input class="in-f" type="month" id="ld" value="${l.due||''}"></label></div>
+    <div class="fld"><span>${t('loanPlan')}</span>${segHTML('lp',[['once',t('planOnce')],['inst',t('planInst')]],l.plan||'once')}</div>
+    <div class="two" id="liW" ${l.plan==='inst'?'':'hidden'}><label class="fld"><span>${t('monthly')}</span><input class="in-f amt num" id="lia" inputmode="decimal" value="${l.instAmt||''}"></label>
+    <label class="fld"><span>${t('instFrom')}</span><input class="in-f" type="month" id="lis" value="${l.instStart||ymAdd(TODAY_YM,1)}"></label></div>
+    <p class="hint" id="liH" ${l.plan==='inst'?'':'hidden'}></p>
     <label class="fld"><span>${t('note')}</span><input class="in-f" id="nt" value="${esc(l.note)}"></label>
     ${!isNew&&l.pays.length?`<div class="list">${l.pays.map(p=>`<div class="row"><div class="main"><span class="t">${moneyC(p.amount,l.currency)}</span><span class="s">${esc(dayLbl(p.date))}</span></div><button type="button" class="btn sm danger" data-pay="${p.id}">${t('del')}</button></div>`).join('')}</div>`:''}
     <div class="foot">${isNew?'':`<button type="button" class="btn danger" id="del">${t('del')}</button>`}<button class="btn pri grow">${t('save')}</button></div>
   </form>`,r=>{
-    bindSeg(r,'dr',v=>dir=v);
+    bindSeg(r,'dr',v=>dir=v);let plan=l.plan||'once';
+    const liHint=()=>{const a=numv(r,'amt'),q=numv(r,'lia');r.querySelector('#liH').textContent=a>0&&q>0?t('instCount').replace('%n',Math.ceil(a/q-1e-9)).replace('%m',monthLbl(ymAdd(val(r,'lis')||TODAY_YM,Math.ceil(a/q-1e-9)-1))):''};
+    bindSeg(r,'lp',v=>{plan=v;r.querySelector('#liW').hidden=v!=='inst';r.querySelector('#liH').hidden=v!=='inst';r.querySelector('#ldW').hidden=v==='inst';liHint()});
+    ['amt','lia','lis'].forEach(id=>r.querySelector('#'+id).addEventListener('input',liHint));liHint();
     r.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{const o=S.loans.find(x=>x.id===l.id);o.pays=o.pays.filter(p=>p.id!==b.dataset.pay);S.tx=S.tx.filter(x=>!(x.link&&x.link.k==='loan'&&x.link.pay===b.dataset.pay));save();render();loanForm(o)});
     if(!isNew)r.querySelector('#del').onclick=()=>confirmSheet(t('confirmDel'),t('del'),()=>{S.loans=S.loans.filter(x=>x.id!==l.id);commit(t('deleted'))});
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const pr=val(r,'pr'),a=numv(r,'amt');if(!pr){toast(t('needName'));return}if(a<=0){toast(t('needAmt'));return}
-      const o={dir,person:pr,group:val(r,'gp'),amount:a,currency:val(r,'lc'),date:val(r,'dt')||TODAY,due:val(r,'ld')||'',note:val(r,'nt')};
+      const o={dir,person:pr,group:val(r,'gp'),amount:a,currency:val(r,'lc'),date:val(r,'dt')||TODAY,due:plan==='once'?(val(r,'ld')||''):'',plan,instAmt:plan==='inst'?numv(r,'lia'):0,instStart:plan==='inst'?(val(r,'lis')||ymAdd(TODAY_YM,1)):'',note:val(r,'nt')};
+      if(plan==='inst'&&!(o.instAmt>0)){toast(t('needAmt'));return}
       if(isNew)S.loans.push(Object.assign({id:uid(),pays:[]},o));else Object.assign(S.loans.find(x=>x.id===l.id),o);
       closeSheet();commit(t('saved'))};
   });
 }
 function repayForm(l){
   openSheet(t('repay')+' · '+l.person,`<form class="form" id="f">
-    <label class="fld"><span>${t('amount')} (${t('remaining')}: ${fmt(loanLeft(l))} ${esc(curSym(l.currency||BASE()))})</span><input class="in-f amt num" id="amt" inputmode="decimal" value="${loanLeft(l)}"></label>
+    <label class="fld"><span>${t('amount')} (${t('remaining')}: ${fmt(loanLeft(l))} ${esc(curSym(l.currency||BASE()))})</span><input class="in-f amt num" id="amt" inputmode="decimal" value="${l.plan==='inst'?(Math.min(loanLeft(l),loanOwedUpTo(l,TODAY_YM)||+l.instAmt||loanLeft(l))):loanLeft(l)}"></label>
     <div class="two"><label class="fld"><span>${l.dir==='borrowed'?t('fromAcc'):t('toAcc')}</span><select class="in-f" id="ra"><option value="">${t('noAccount')}</option>${S.accounts.filter(a=>a.currency===(l.currency||BASE())).map(a=>`<option value="${a.id}" ${a.id===payAcc(l.currency||BASE())?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
     <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${TODAY}"></label></div>
     <p class="hint">${t('repayHint')}</p>
@@ -1523,8 +1541,9 @@ function vHome(){
       ${d.late?`<span class="pill neg">${t('overdue')} ${d.late}</span>`:''}${d.partial?`<span class="pill warn">${t('partial')}</span>`:''}
       <span class="amt ${d.k==='gamr'?'pos':''}">${moneyC(d.amount,d.cur)}</span>
       <button class="btn sm ${d.k==='gamr'?'':'pri'}" data-act="${d.k==='inst'?'payInst':d.k==='gam'?'payGam':'recvGam'}" data-id="${d.id}">${d.k==='gamr'?t('receive'):t('pay')}</button></div>`).join(''):''}
+      ${S.loans.map(l=>({l,v:loanOwedUpTo(l,per.mode==='month'?cur:TODAY_YM)})).filter(o=>o.v>0).map(({l,v})=>`<div class="row"><div class="glyph ${l.dir==='lent'?'in':''}">${esc(initial(l.person))}</div><div class="main"><span class="t">${esc(l.person)}</span><span class="s">${l.dir==='lent'?t('owedToMe'):t('loans')}${l.plan==='inst'?' · '+t('planInst'):''}</span></div><span class="amt ${l.dir==='lent'?'pos':''}">${moneyC(v,l.currency)}</span><button class="btn sm ${l.dir==='lent'?'':'pri'}" data-act="repay" data-id="${l.id}">${l.dir==='lent'?t('receive'):t('pay')}</button></div>`).join('')}
       ${cards().map(a=>({a,c:cardInfo(a)})).filter(o=>o.c.due>0&&o.c.dueDate&&o.c.dueDate.slice(0,7)<=(per.mode==='month'?cur:TODAY_YM)).map(({a,c})=>`<div class="row"><div class="glyph">💳</div><div class="main"><span class="t">${esc(a.name)}</span><span class="s">${t('cardDue')} · ${esc(shortDate(c.dueDate))}</span></div>${c.dueDate<TODAY?`<span class="pill neg">${t('overdue')}</span>`:''}<span class="amt">${moneyC(c.due,a.currency)}</span><button class="btn sm pri" data-act="payCard" data-id="${a.id}">${t('pay')}</button></div>`).join('')}
-      ${!due.length&&!cards().some(a=>{const c=cardInfo(a);return c.due>0&&c.dueDate&&c.dueDate.slice(0,7)<=(per.mode==='month'?cur:TODAY_YM)})?`<div class="empty">${t('nothingDue')}</div>`:''}</div></section>
+      ${!due.length&&!S.loans.some(l=>loanOwedUpTo(l,per.mode==='month'?cur:TODAY_YM)>0)&&!cards().some(a=>{const c=cardInfo(a);return c.due>0&&c.dueDate&&c.dueDate.slice(0,7)<=(per.mode==='month'?cur:TODAY_YM)})?`<div class="empty">${t('nothingDue')}</div>`:''}</div></section>
   ${alerts.length?`<section class="sec"><div class="sec-h"><h2>${t('budgetAlerts')}</h2></div><div class="list">${alerts.map(b=>`<div class="catbar"><div class="l"><span>${esc(catName(b.id))} <span class="pill ${b.p>=1?'neg':'warn'}">${b.p>=1?t('over'):t('near')}</span></span><span>${money(b.sp)} / ${money(b.lim)}</span></div><div class="bar"><i class="${b.p>=1?'neg':'warn'}" style="width:${Math.min(100,b.p*100)}%"></i></div></div>`).join('')}</div></section>`:''}
   <div class="slip tile" data-act="goNW"><div class="net"><span class="label">${t('netWorth')} ›</span><span class="mid ${netWorth().net<0?'neg':''}">${money(netWorth().net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div></div>
   ${splitHTML()}${accountsHTML()}${catTotalsHTML('expense')}${catTotalsHTML('income')}${loansHTML()}${oblHTML()}${goalsHTML()}
@@ -1625,7 +1644,7 @@ function vObl(){
       <div class="acts">${nx?`<button class="btn sm pri" data-act="payGam" data-id="${g.id}">${t('pay')}</button>`:''}${!g.received?`<button class="btn sm" data-act="recvGam" data-id="${g.id}">${t('collectPay')}</button>`:''}<button class="btn sm" data-act="stmtObl" data-k="gam" data-id="${g.id}">${t('statement')}</button><button class="btn sm" data-act="editGam" data-id="${g.id}">${t('edit')}</button></div></div>`}).join(''):`<div class="list"><div class="empty">${t('noItems')}</div></div>`;
   }else{
     body=`<p class="hint">${t('loansHint')}</p>`+(S.loans.length?[...S.loans].sort((a,b)=>(loanLeft(a)===0)-(loanLeft(b)===0)).map(l=>{const left=loanLeft(l),pd=loanPaid(l);
-      return `<div class="card"><div class="hd tap" data-act="stmtPerson" data-name="${esc(l.person)}"><div><h3>${esc(l.person)} ›</h3><span class="muted">${l.dir==='lent'?t('lent'):t('borrowed')} · ${esc(dayLbl(l.date))}${l.due&&left?' · '+t('loanDue')+': '+esc(monthLbl(l.due)):''}</span></div>${left===0?`<span class="pill ok">${t('settled')}</span>`:`<span class="pill ${l.dir==='lent'?'ok':'warn'}">${l.dir==='lent'?t('owedToMe'):t('iOwe')}</span>`}</div>
+      return `<div class="card"><div class="hd tap" data-act="stmtPerson" data-name="${esc(l.person)}"><div><h3>${esc(l.person)} ›</h3><span class="muted">${l.dir==='lent'?t('lent'):t('borrowed')} · ${esc(dayLbl(l.date))}${left&&l.plan==='inst'&&l.instAmt?' · '+fmt(l.instAmt)+' '+t('perMonthFrom')+' '+esc(monthLbl(l.instStart)):l.due&&left?' · '+t('loanDue')+': '+esc(monthLbl(l.due)):''}</span></div>${left===0?`<span class="pill ok">${t('settled')}</span>`:`<span class="pill ${l.dir==='lent'?'ok':'warn'}">${l.dir==='lent'?t('owedToMe'):t('iOwe')}</span>`}</div>
       <div class="kv"><div><span class="label">${t('amount')}</span><b>${moneyC(l.amount,l.currency)}</b></div><div><span class="label">${t('paidLbl')}</span><b>${moneyC(pd,l.currency)}</b></div><div><span class="label">${t('remaining')}</span><b class="${left&&l.dir==='borrowed'?'neg':''}">${moneyC(left,l.currency)}</b></div></div>
       <div class="bar"><i style="width:${Math.min(100,pd/l.amount*100)}%"></i></div>
       ${l.note?`<span class="muted">${esc(l.note)}</span>`:''}
@@ -1701,7 +1720,7 @@ function planItems(m){
     let d=r.next,g=0;while(d&&d.slice(0,7)<=m&&g++<400){if(r.end&&d>r.end)break;if(d.slice(0,7)===m)add(r.tpl.type,r.tpl.cat,toBase(+r.tpl.amount,a.currency),{date:d,acc:r.tpl.acc,label:r.tpl.note});d=advance(d,r.freq,r.day)}}
   S.inst.forEach(o=>{if(instMonths(o).includes(m))add('expense',o.cat||'inst',toBase(+o.monthly,o.currency||BASE()),{date:m+'-'+pad(Math.min(28,o.dueDay||1)),acc:o.payWith||'',label:o.name,done:o.paid.includes(m)})});
   S.gam.forEach(o=>{if(gamMonths(o).includes(m))add('expense','gam',toBase(+o.share,o.currency||BASE()),{date:m+'-'+pad(Math.min(28,o.dueDay||1)),label:o.name,done:o.paid.includes(m)});if(gamPayout(o)===m)add('income','gamin',toBase(o.share*o.members,o.currency||BASE()),{label:o.name,done:!!o.received})});
-  S.loans.forEach(l=>{if(l.due===m)add(l.dir==='borrowed'?'expense':'income',l.dir==='borrowed'?'loanpay':'loanback',toBase(+l.amount,l.currency||BASE()),{label:l.person,done:loanLeft(l)===0})});
+  S.loans.forEach(l=>{const x=loanSched(l).find(z=>z.m===m);if(x)add(l.dir==='borrowed'?'expense':'income',l.dir==='borrowed'?'loanpay':'loanback',toBase(x.amount,l.currency||BASE()),{label:l.person,done:loanOwedUpTo(l,m)===0})});
   const has=new Set(out.filter(x=>x.type==='expense').map(x=>x.cat));
   Object.entries(S.budgets||{}).forEach(([c,v])=>{if(!has.has(c))add('expense',c,+v,{label:catName(c)})});
   return out;
@@ -1840,7 +1859,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.28 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.29 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
