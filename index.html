@@ -237,11 +237,17 @@ details.box>.list{margin-top:8px}
 .lockbox{width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;text-align:center}
 .lockmark{width:64px;height:64px;margin:0 auto;border-radius:20px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
 .lockmark svg{width:30px;height:30px}
-.lockbox .brand{font-size:24px}
+.lockbox .brand{font-size:24px;max-width:none;cursor:default}
+.lockbox .brand::after{content:none}
 .lockbox h3{margin:0;font-family:var(--f-display);font-size:17px;font-weight:600}
 .pin{font-family:var(--f-display);font-size:24px;letter-spacing:.3em;text-align:center}
 .err{color:var(--neg);font-size:14px;min-height:21px;margin:0}
 .lockbox .form{text-align:start}
+.acct{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.acct .em{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;text-align:start}
+.acct .ok{color:var(--accent);font-weight:700}
+.g{width:24px;height:24px;border-radius:999px;display:inline-grid;place-items:center;font:700 14px/1 Arial,sans-serif;color:#fff;background:conic-gradient(#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0);flex:none}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px}
 </style>
 </head>
 <body>
@@ -408,7 +414,7 @@ zkNote:['الزكاة بتجب لما المال يوصل النصاب ويعد�
 receipt:['صورة الفاتورة','Receipt photo'],showReceipt:['اعرض الفاتورة','Show receipt'],back:['رجوع','Back'],rcptSaved:['اتحفظت صورة الفاتورة على Drive','Receipt saved to Drive'],
 rcptFail:['معرفناش نحفظ أو نفتح الصورة','Could not save or open the photo'],rcptNeedDrive:['اربط Google Drive من الإعدادات علشان تحفظ صور الفواتير','Connect Google Drive in Settings to keep receipt photos'],
 countWord:['العدد','Count'],netShort:['الصافي','Net'],allCats:['كل البنود','All categories'],allAccs:['كل الحسابات','All accounts'],clearFilters:['امسح الفلاتر','Clear filters'],statement:['كشف حساب','Statement'],
-ledgers:['الدفاتر','Ledgers'],myLedger:['دفتري الشخصي','My ledger'],onlyMe:['ليا أنا بس','Only me'],newShared:['دفتر مشترك جديد','New shared ledger'],newSharedHint:['مثلاً: دفتر البيت','e.g. Household'],create:['اعمل الدفتر','Create'],
+ledgers:['الدفاتر','Ledgers'],myLedger:['دفتري الشخصي','My ledger'],onlyMe:['ليا أنا بس','Only me'],newShared:['دفتر مشترك جديد','New shared ledger'],newSharedHint:['مثلاً: دفتر البيت','e.g. Household'],createLedger:['اعمل الدفتر','Create'],
 ledgersHint:['الدفتر المشترك بيتحفظ متشفر على الـ Drive بتاعك، وبيتزامن مع الأعضاء كل ما حد يسجّل. دوس على اسم البرنامج فوق علشان تتنقل بين الدفاتر.','A shared ledger is stored encrypted in your Drive and syncs whenever someone records. Tap the app name at the top to switch ledgers.'],
 nowIn:['انت دلوقتي في','You are now in'],readOnly:['صلاحيتك في الدفتر ده مشاهدة بس','You can only view this ledger'],shareSyncFail:['معرفناش نزامن الدفتر المشترك، هنحاول تاني','Could not sync the shared ledger; will retry'],
 ledgerGone:['الدفتر ده اتمسح أو اتشالت صلاحيتك عليه','This ledger was deleted or your access was removed'],needDriveShare:['اربط Google Drive الأول من الإعدادات','Connect Google Drive in Settings first'],
@@ -429,6 +435,7 @@ regFail:['معرفناش نسجّل، اتأكد من الإنترنت وجرّ�
 account:['الحساب','Account'],notReg:['مش مسجّل','Not signed in'],unreg:['امسح تسجيلي','Remove my sign-up'],unregQ:['إيميلك هيتمسح من قايمة المستخدمين. نكمل؟','Your email will be removed from the user list. Continue?'],unregDone:['اتمسح تسجيلك','Sign-up removed'],
 users:['المستخدمين','Users'],usersHint2:['قايمة اللي سجّلوا في البرنامج','People who signed up'],usersHint:['الرقم جنب كل واحد: عدد مرات التسجيل (أول مرة + أي جهاز جديد).','The number is how many times they signed in (first time and each new device).'],
 joined:['سجّل','Joined'],lastOpen:['آخر مرة','Last'],regCount:['مرات التسجيل','Sign-ins'],lang:['اللغة','Language'],notAdmin:['القايمة دي لصاحب البرنامج بس','Only the app owner can see this list'],
+pinMin:['الرقم السري 6 أرقام على الأقل','PIN: at least 6 digits'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1436,7 +1443,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.14 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.15 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -1475,7 +1482,7 @@ $('#view').addEventListener('click',e=>{
     stmtFilt:()=>{const ty=b.dataset.ty,list=txFiltered(),title=[txCat?catPath(txCat):'',txAcc?accOf(txAcc).name+' '+accOf(txAcc).currency:'',txQuery?'"'+txQuery+'"':''].filter(Boolean).join(' · ')||t('tx');
       if(ty==='net')stmtSheet({title,sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(list.filter(x=>x.type!=='transfer'))});
       else stmtSheet({title:(ty==='income'?t('income'):t('expense'))+' · '+title,sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(list.filter(x=>x.type===ty))})},
-    users:usersSheet,unreg:unregister,reg:()=>regGate(()=>render()),
+    users:usersSheet,unreg:unregister,reg:()=>{if(!driveReady()){toast(t('regLoading'));return}doRegister().then(()=>{toast(t('regDone')+' '+REG.email);render()},()=>toast(t('regFail')))},
     goNW:()=>{tab='rep';render();setTimeout(()=>{const e=$('#nw');if(e)e.scrollIntoView({behavior:'smooth'})},50)},
     editRec:()=>{const r=S.recur.find(v=>v.id===id);if(r)recRuleForm(r)},
     stmtRec:()=>{const r=S.recur.find(v=>v.id===id);if(!r)return;stmtSheet({title:r.tpl.note||catPath(r.tpl.cat),sub:freqName(r.freq)+' · '+t('allTime'),cur:BASE(),kind:'flow',rows:flowRows(S.tx.filter(x=>x.rec===r.id&&x.type!=='transfer'))})},exportTx:()=>exportTx((()=>{let l=txIn();if(txFilter!=='all')l=l.filter(x=>x.type===txFilter);return l})(),t('tx')),
@@ -1914,7 +1921,7 @@ function ledgersSheet(){
     ${L2.map(l=>row(l.id,l.name,(l.owner?t('roleOwner'):l.role==='reader'?t('roleReader'):t('roleWriter'))+(l.ownerEmail&&!l.owner?' · '+esc(l.ownerEmail):''),ACT===l.id)).join('')}
   </div>
   ${ACT!=='me'?`<div class="acts"><button type="button" class="btn" data-sact="ledInvite">${SHM.owner?t('membersInvite'):t('membersShow')}</button><button type="button" class="btn danger" data-sact="ledLeave">${SHM.owner?t('deleteLedger'):t('leaveLedger')}</button></div>`:''}
-  <form class="form" id="nf"><label class="fld"><span>${t('newShared')}</span><input class="in-f" id="nn" placeholder="${t('newSharedHint')}"></label><button class="btn pri block">${t('create')}</button></form>
+  <form class="form" id="nf"><label class="fld"><span>${t('newShared')}</span><input class="in-f" id="nn" placeholder="${t('newSharedHint')}"></label><button class="btn pri block">${t('createLedger')}</button></form>
   <p class="hint">${t('ledgersHint')}</p></div>`,r=>{
     r.querySelector('#nf').onsubmit=e=>{e.preventDefault();const n=val(r,'nn');if(!n){toast(t('needName'));return}closeSheet();createLedger(n)};
   });
@@ -1963,6 +1970,13 @@ function idToken(prompt,hint){
   });
 }
 const workerPost=async(path,body)=>{const r=await fetch(CFG.authWorker.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error(j.error||'http '+r.status);return j};
+async function doRegister(){
+  const tok=await idToken(REG?'':'select_account',REG&&REG.email);
+  const j=await workerPost('/register',{access_token:tok,lang:lng()});
+  REG={email:j.email,name:j.name,admin:!!j.admin,at:new Date().toISOString()};try{localStorage.setItem(REG_KEY,JSON.stringify(REG))}catch(x){}
+  return REG;
+}
+const acctHTML=()=>REG?`<div class="acct"><span class="g">G</span><span class="em" dir="ltr">${esc(REG.email)}</span><span class="ok">✓</span></div>`:`<button type="button" class="btn block gbtn" id="gbtn"><span class="g">G</span>${t('regBtn')}</button>`;
 function regGate(done){
   const box=$('#lock');box.hidden=false;
   $('#lkT').textContent=t('regTitle');$('#lkH').textContent=t('regHint');$('#lkE').textContent='';$('#lkForgot').hidden=true;
@@ -2004,33 +2018,45 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventLi
 /* ---------- lock ---------- */
 let fails=0,blockedUntil=0,hiddenAt=0;
 function showLock(){
-  const vt=readVault(),setup=!vt;
+  const vt=readVault(),setup=!vt,needReg=!!CFG.authWorker;
   const de=document.documentElement;de.lang=LANG;de.dir=LANG==='en'?'ltr':'rtl';
   $('#lkBrand').textContent=t('app');
   $('#lkT').textContent=setup?t('setupTitle'):t('lockTitle');
-  $('#lkH').textContent=setup?t('setupHint'):'';
+  $('#lkH').textContent=setup?t('pinMin'):'';
   $('#lkE').textContent='';
-  $('#lkF').innerHTML=`<input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="lp1" aria-label="${t('pin1')}" placeholder="${t('pin1')}">
+  $('#lkF').innerHTML=`${needReg?`<div id="acctW">${acctHTML()}</div>`:''}
+    <input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="lp1" aria-label="${t('pin1')}" placeholder="${t('pin1')}">
     ${setup?`<input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="lp2" aria-label="${t('pin2')}" placeholder="${t('pin2')}">`:''}
-    <button class="btn pri block">${setup?t('create'):t('open')}</button>`;
+    <button class="btn pri block">${setup?t('create'):t('open')}</button>
+    ${needReg?`<p class="hint" style="text-align:center;margin:0"><a href="privacy.html" target="_blank" rel="noopener" style="color:var(--muted)">${t('privacy')}</a></p>`:''}`;
   $('#lkForgot').hidden=setup;$('#lkForgot').textContent=t('forgot');
   $('#lock').hidden=false;
-  setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
-  $('#lkF').onsubmit=async e=>{e.preventDefault();const err=m=>$('#lkE').textContent=m;
+  const err=m=>$('#lkE').textContent=m;
+  const bindG=()=>{const g=$('#gbtn');if(g)g.onclick=async()=>{if(!driveReady()){err(t('regLoading'));return}err(t('working'));
+    try{await doRegister();$('#acctW').innerHTML=acctHTML();err('');$('#lp1').focus()}catch(x){err(t('regFail'))}}};
+  bindG();
+  if(!needReg||REG)setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
+  $('#lkF').onsubmit=async e=>{e.preventDefault();
     const p1=$('#lp1').value;
-    if(setup){const p2=$('#lp2').value;if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}
-      err(t('working'));SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);
+    if(setup){const p2=$('#lp2').value;if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}}
+    else if(Date.now()<blockedUntil){err(t('waitTry'));return}
+    /* sign in with Google first if this phone has not yet (skipped when offline) */
+    if(needReg&&!REG&&navigator.onLine){
+      if(!driveReady()){err(t('regLoading'));return}
+      err(t('working'));try{await doRegister();$('#acctW').innerHTML=acctHTML()}catch(x){err(t('regFail'));return}
+    }
+    err(t('working'));
+    if(setup){
+      SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);
       let legacy=null;try{const r=localStorage.getItem(KEY);if(r)legacy=JSON.parse(r)}catch(x){}
       S=legacy&&legacy.v?Object.assign(blank(),legacy):seed();S.lang=S.lang||LANG;
       save();await saving;try{localStorage.removeItem(KEY)}catch(x){}
       unlocked();return}
-    if(Date.now()<blockedUntil){err(t('waitTry'));return}
-    err(t('working'));
     try{const k=await derive(p1,fromB64(vt.salt),vt.iter||ITER);const o=await unseal(k,vt.iv,vt.ct);KEYOBJ=k;SALT=fromB64(vt.salt);S=Object.assign(blank(),o);fails=0;unlocked()}
     catch(x){fails++;$('#lp1').value='';if(fails>=5){blockedUntil=Date.now()+30000;fails=0;err(t('waitTry'))}else err(t('wrongPin'))}
   };
 }
-function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';if(!REG&&CFG.authWorker)setTimeout(()=>{if(S&&!REG)regGate(()=>render())},50);LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);render();runRecurring();maybeUpdateRates();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
+function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);render();runRecurring();maybeUpdateRates();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
 function lockNow(){clearTimeout(bkTimer);if(ACT!=='me'&&shDirty)shPush();stopPoll();ACT='me';SHM=null;PS=null;closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;$('#view').innerHTML='';showLock()}
 $('#lkForgot').onclick=()=>{
   $('#lkT').textContent=t('forgotConfirm');$('#lkH').textContent='';$('#lkE').textContent='';$('#lkForgot').hidden=true;
