@@ -8,6 +8,6 @@ window.DAFTARI_CONFIG = {
   authWorker: "https://daftari-auth.mohamed-hassan861.workers.dev",
   // pickerKey: a Google Cloud API key restricted to this site and the Google Picker API.
   // Needed only to join a shared ledger someone else created.
-  pickerKey: "",
+  pickerKey: "AIzaSyAFx72A4C3K1233WauQrpSaHk1DttlywSc",
   appId: "309872061893"
 };
