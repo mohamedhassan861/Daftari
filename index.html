@@ -783,6 +783,9 @@ let drv={linked:false,folderId:null,lastUp:null,email:'',needAuth:false,busy:fal
 try{Object.assign(drv,JSON.parse(localStorage.getItem(DRV_KEY)||'{}'))}catch(e){}
 const drvSave=()=>{try{localStorage.setItem(DRV_KEY,JSON.stringify({linked:drv.linked,folderId:drv.folderId,lastUp:drv.lastUp,email:drv.email}))}catch(e){}};
 let gToken=null,gExp=0,gClient=null,drvTimer=null;
+const TOK_KEY='daftari-gtoken';
+try{const o=JSON.parse(localStorage.getItem(TOK_KEY)||'null');if(o&&o.exp>Date.now()){gToken=o.t;gExp=o.exp}}catch(e){}
+const keepToken=()=>{try{gToken?localStorage.setItem(TOK_KEY,JSON.stringify({t:gToken,exp:gExp})):localStorage.removeItem(TOK_KEY)}catch(e){}};
 const driveConfigured=()=>!!CFG.googleClientId;
 const driveReady=()=>driveConfigured()&&!!(window.google&&google.accounts&&google.accounts.oauth2);
 const hasToken=()=>!!gToken&&Date.now()<gExp;
@@ -790,7 +793,7 @@ function requestToken(prompt){
   return new Promise((res,rej)=>{
     if(!driveReady()){rej(new Error('notready'));return}
     if(!gClient)gClient=google.accounts.oauth2.initTokenClient({client_id:CFG.googleClientId,scope:'https://www.googleapis.com/auth/drive.file',callback:()=>{}});
-    gClient.callback=r=>{if(r&&r.access_token){gToken=r.access_token;gExp=Date.now()+((+r.expires_in||3600)-120)*1000;drv.needAuth=false;res(gToken)}else rej(r)};
+    gClient.callback=r=>{if(r&&r.access_token){gToken=r.access_token;gExp=Date.now()+((+r.expires_in||3600)-120)*1000;keepToken();drv.needAuth=false;res(gToken)}else rej(r)};
     gClient.error_callback=e=>rej(e);
     const o={prompt};if(drv.email)o.login_hint=drv.email;gClient.requestAccessToken(o);
   });
@@ -798,8 +801,8 @@ function requestToken(prompt){
 async function gfetch(path,opt){
   opt=opt||{};opt.headers=Object.assign({Authorization:'Bearer '+gToken},opt.headers||{});
   const r=await fetch(path.startsWith('http')?path:GAPI+path,opt);
-  if(r.status===401||r.status===403&&!gToken){gToken=null;throw new Error('auth')}
-  if(r.status===401){gToken=null;throw new Error('auth')}
+  if(r.status===401||r.status===403&&!gToken){gToken=null;keepToken();throw new Error('auth')}
+  if(r.status===401){gToken=null;keepToken();throw new Error('auth')}
   if(!r.ok)throw new Error('http '+r.status);
   return r;
 }
@@ -850,7 +853,7 @@ async function driveResume(){try{await requestToken('');await syncDrive(true)}ca
 function driveUnlink(){
   confirmSheet(t('driveUnlink')+'?',t('driveUnlink'),()=>{
     try{if(gToken&&driveReady())google.accounts.oauth2.revoke(gToken,()=>{})}catch(e){}
-    gToken=null;drv={linked:false,folderId:null,lastUp:null,email:'',needAuth:false,busy:false};drvSave();render();
+    gToken=null;keepToken();drv={linked:false,folderId:null,lastUp:null,email:'',needAuth:false,busy:false};drvSave();render();
   });
 }
 async function driveRestore(){
