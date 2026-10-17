@@ -475,6 +475,9 @@ bioSetup:['فعّل البصمة','Set up fingerprint'],bioDone:['البصمة �
 bioFail:['معرفناش نستخدم البصمة، اكتب الرقم السري','Fingerprint failed; enter your PIN'],bioUnsupported:['الموبايل أو المتصفح ده مش بيدعم الفتح بالبصمة','This phone or browser does not support fingerprint unlock'],bioReset:['غيّرت الرقم السري، فعّل البصمة تاني من الإعدادات','PIN changed; turn fingerprint unlock on again in Settings'],
 foundBackup:['لقينا نسخ ليك على Google Drive، اختار اللي ترجّعها أو اقفل لو مش عايز','We found backups in your Google Drive. Pick one to restore, or close to skip'],
 linkedOk:['متربط ✓','Connected ✓'],
+recTitle:['نسيت الرقم السري؟','Forgot your PIN?'],recHint:['ادخل بنفس حساب جوجل المربوط بالبرنامج، وبعدها اختار رقم سري جديد. بياناتك هتفضل زي ما هي.','Sign in with the Google account linked to the app, then choose a new PIN. Your data stays as it is.'],
+recBtn:['استرجع بحساب جوجل','Recover with Google'],recWipe:['مش قادر، امسح كل البيانات','I can\'t, erase all data'],recSetNew:['اختار رقم سري جديد لدفتري.','Choose a new PIN for Daftari.'],
+recFail:['معرفناش نسترجع. اتأكد إنك اخترت نفس حساب جوجل','Could not recover. Make sure you chose the same Google account'],recNoKey:['مفتاح الاسترجاع مش موجود على Drive بتاعك','The recovery key was not found in your Drive'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1663,7 +1666,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.20 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.21 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -1784,14 +1787,14 @@ function doImport(prefill){
     };
   });
 }
-function changePinForm(){
+function changePinForm(known){
   openSheet(t('changePin'),`<form class="form" id="f">
-    <label class="fld"><span>${t('curPin')}</span><input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="p0"></label>
+    ${known?`<p class="hint">${t('recSetNew')}</p><input type="hidden" id="p0">`:`<label class="fld"><span>${t('curPin')}</span><input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="p0"></label>`}
     <label class="fld"><span>${t('newPin')}</span><input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="p1"></label>
     <label class="fld"><span>${t('pin2')}</span><input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="p2"></label>
     <p class="hint">${t('pinChangeHint')}</p><p class="err" id="pe"></p>
     <div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
-    const err=m=>r.querySelector('#pe').textContent=m;
+    const err=m=>r.querySelector('#pe').textContent=m;if(known)r.querySelector('#p0').value=known;
     r.querySelector('#f').onsubmit=async e=>{e.preventDefault();
       const p0=r.querySelector('#p0').value,p1=r.querySelector('#p1').value,p2=r.querySelector('#p2').value;
       if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}
@@ -1800,7 +1803,7 @@ function changePinForm(){
       const caches=[];for(const m of (PS&&PS.ledgers)||[])caches.push([m,await cacheLoad(m)]);
       await saving;SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);await saveRT();
       for(const [m,D] of caches)if(D)await cacheSave(m,D);try{if(localStorage.getItem(BIO_KEY)){localStorage.removeItem(BIO_KEY);toast(t('bioReset'))}}catch(e){}if(ACT!=='me'&&PS)vaultSave(PS);
-      closeSheet();commit(t('pinChanged'));
+      PINMEM=p1;recSetup(true);closeSheet();commit(t('pinChanged'));if(known)setTimeout(()=>syncDrive(true),500);
     };
   });
 }
@@ -1892,7 +1895,7 @@ async function driveList(folder,n){
   return j.files||[];
 }
 async function pruneOld(folder){
-  const all=await driveList(folder,DKEEP+50);
+  const all=(await driveList(folder,DKEEP+50)).filter(f=>!isSysFile(f.name));
   for(const f of all.slice(DKEEP)){await gfetch('/drive/v3/files/'+f.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:true})})}
 }
 async function driveUpload(){
@@ -1918,7 +1921,7 @@ function scheduleDrive(){if(!drv.linked||ACT!=='me')return;clearTimeout(drvTimer
 async function driveConnect(){
   if(!driveReady()){toast(driveConfigured()?t('loading'):t('driveNotSetup'));return}
   try{await authorize(false);try{const a=await (await gfetch('/drive/v3/about?fields=user(emailAddress)')).json();drv.email=(a.user&&a.user.emailAddress)||''}catch(x){}
-    await ensureFolder();drv.linked=true;drvSave();await syncDrive(true)}catch(e){}
+    await ensureFolder();drv.linked=true;drvSave();await syncDrive(true);recSetup(true)}catch(e){}
   render();
 }
 async function fetchDriveEmail(){
@@ -1941,7 +1944,7 @@ function driveUnlink(){
   });
 }
 async function driveRestore(){
-  try{if(!(await ensureAccess())){if(useWorker())await authorize(false);else await requestToken('')}const folder=await ensureFolder();const files=(await driveList(folder,1000)).filter(f=>!f.name.startsWith('receipt_'));
+  try{if(!(await ensureAccess())){if(useWorker())await authorize(false);else await requestToken('')}const folder=await ensureFolder();const files=(await driveList(folder,1000)).filter(f=>!isSysFile(f.name));
     openSheet(t('driveRestore'),files.length?`<p class="hint">${t('restorePick')}</p><div class="list" style="overflow:hidden">${(()=>{let last='',h='';const dF={format:dateOf},tF=new Intl.DateTimeFormat(L(),{hour:'numeric',minute:'2-digit',second:'2-digit'});
       files.forEach(f=>{const d=new Date(f.createdTime),k=d.toDateString();if(k!==last){last=k;h+=`<div class="daylbl">${esc(dF.format(d))}</div>`}
         h+=`<div class="row tap" data-f="${esc(f.id)}"><div class="glyph">⟲</div><div class="main"><span class="t num">${esc(tF.format(d))}</span></div></div>`});return h})()}</div>`:`<div class="empty">${t('driveNone')}</div>`,r=>{
@@ -2418,6 +2421,42 @@ async function bioUnlockPin(){const b=bioInfo();if(!b)throw new Error('none');co
   return td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(b.iv)},await prfKey(out),fromB64(b.ct)))}
 function bioOff(){try{localStorage.removeItem(BIO_KEY)}catch(e){}toast(t('bioOffMsg'));render()}
 
+
+/* ---------- forgotten PIN: recover with the Google account instead of erasing ----------
+   A random recovery key lives in the user's own Drive (Daftari folder). The phone keeps the PIN
+   encrypted with that key, so signing in to the same Google account can open the vault again. */
+const REC_KEY='daftari-rec',REC_FILE='daftari-recovery.json';
+let PINMEM=null;
+const recInfo=()=>{try{return JSON.parse(localStorage.getItem(REC_KEY)||'null')}catch(e){return null}};
+const isSysFile=n=>n.startsWith('receipt_')||n===REC_FILE;
+async function recKeyFrom(b64){const k=await crypto.subtle.importKey('raw',fromB64(b64),'HKDF',false,['deriveKey']);return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:new Uint8Array(32),info:te.encode('daftari-recovery')},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function recFetch(create){
+  const folder=await ensureFolder(),q=encodeURIComponent("'"+folder+"' in parents and name='"+REC_FILE+"' and trashed=false");
+  const j=await (await gfetch('/drive/v3/files?q='+q+'&fields=files(id)&spaces=drive')).json();
+  if(j.files&&j.files.length){const o=await (await gfetch('/drive/v3/files/'+j.files[0].id+'?alt=media')).json();if(o&&o.r)return o.r}
+  if(!create)return null;
+  const r=toB64(crypto.getRandomValues(new Uint8Array(32))),bd='rc'+uid();
+  const meta=JSON.stringify({name:REC_FILE,parents:[folder],mimeType:'application/json',description:'Daftari recovery key. Do not delete.'});
+  const body='--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({app:'daftari-recovery',r})+'\r\n--'+bd+'--';
+  await gfetch(GAPI+'/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body});
+  return r;
+}
+async function recSetup(force){
+  if(!PINMEM||!drv.linked||!KEYOBJ)return;
+  const cur=recInfo();if(cur&&!force&&cur.email===drv.email)return;
+  try{if(!(await ensureAccess()))return;
+    const r=await recFetch(true),iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await recKeyFrom(r),te.encode(PINMEM));
+    localStorage.setItem(REC_KEY,JSON.stringify({email:drv.email,iv:toB64(iv),ct:toB64(ct)}));
+  }catch(e){}
+}
+async function recRecoverPin(){
+  const rc=recInfo();if(!rc)throw new Error('none');
+  if(!hasToken()){if(useWorker()){const j=await workerCall('/exchange',{code:await requestCode(false,false,rc.email)});setAccess(j)}else await requestToken('')}
+  const r=await recFetch(false);if(!r)throw new Error('nokey');
+  return td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(rc.iv)},await recKeyFrom(r),fromB64(rc.ct)));
+}
+
 /* ---------- install (PWA) ---------- */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(S&&tab==='set')render()});
@@ -2459,25 +2498,39 @@ function showLock(){
     }
     err(t('working'));
     if(setup){
-      SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);
+      SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);PINMEM=p1;
       let legacy=null;try{const r=localStorage.getItem(KEY);if(r)legacy=JSON.parse(r)}catch(x){}
       S=legacy&&legacy.v?Object.assign(blank(),legacy):seed();S.lang=S.lang||LANG;
       save();await saving;try{localStorage.removeItem(KEY)}catch(x){}
       unlocked();return}
-    try{const k=await derive(p1,fromB64(vt.salt),vt.iter||ITER);const o=await unseal(k,vt.iv,vt.ct);KEYOBJ=k;SALT=fromB64(vt.salt);S=Object.assign(blank(),o);fails=0;unlocked()}
+    try{const k=await derive(p1,fromB64(vt.salt),vt.iter||ITER);const o=await unseal(k,vt.iv,vt.ct);KEYOBJ=k;PINMEM=p1;SALT=fromB64(vt.salt);S=Object.assign(blank(),o);fails=0;unlocked()}
     catch(x){fails++;$('#lp1').value='';if(fails>=5){blockedUntil=Date.now()+30000;fails=0;err(t('waitTry'))}else err(t('wrongPin'))}
   };
 }
-function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);if(pendingShare){const txt=pendingShare;pendingShare=null;setTimeout(()=>quickFromText(txt),350)}render();runRecurring();maybeUpdateRates();writeReminders();loadRT().then(async()=>{if(PENDING_RT&&KEYOBJ){RT=PENDING_RT;PENDING_RT=null;await saveRT()}
-    if(FRESH_DRIVE&&drv.linked){FRESH_DRIVE=false;try{const f=await ensureFolder();const has=(await driveList(f,5)).some(x=>!x.name.startsWith('receipt_'));if(has){toast(t('foundBackup'));driveRestore()}else syncDrive(true)}catch(e){}}
-    if(drv.linked&&useWorker()&&!RT&&!hasToken()&&S){drv.needAuth=true;render()}})}
-function lockNow(){clearTimeout(bkTimer);if(ACT!=='me'&&shDirty)shPush();stopPoll();ACT='me';SHM=null;PS=null;closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;$('#view').innerHTML='';showLock()}
+function unlocked(){if(RECOVERED){const k=RECOVERED;RECOVERED=null;setTimeout(()=>changePinForm(k),400)}$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);if(pendingShare){const txt=pendingShare;pendingShare=null;setTimeout(()=>quickFromText(txt),350)}render();runRecurring();maybeUpdateRates();writeReminders();loadRT().then(async()=>{if(PENDING_RT&&KEYOBJ){RT=PENDING_RT;PENDING_RT=null;await saveRT()}
+    if(FRESH_DRIVE&&drv.linked){FRESH_DRIVE=false;try{const f=await ensureFolder();const has=(await driveList(f,10)).some(x=>!isSysFile(x.name));if(has){toast(t('foundBackup'));driveRestore()}else syncDrive(true)}catch(e){}}
+    if(drv.linked&&useWorker()&&!RT&&!hasToken()&&S){drv.needAuth=true;render()}
+    setTimeout(()=>recSetup(false),1500)})}
+function lockNow(){clearTimeout(bkTimer);if(ACT!=='me'&&shDirty)shPush();stopPoll();ACT='me';SHM=null;PS=null;closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;PINMEM=null;$('#view').innerHTML='';showLock()}
+let RECOVERED=null;
 $('#lkForgot').onclick=()=>{
+  if(recInfo()&&driveConfigured()){
+    $('#lkT').textContent=t('recTitle');$('#lkH').textContent=t('recHint');$('#lkE').textContent='';$('#lkForgot').hidden=true;
+    $('#lkF').innerHTML=`<button type="button" class="btn pri block gbtn" id="rGo"><span class="g">G</span>${t('recBtn')}</button><button type="button" class="btn block" id="rBack">${t('cancel')}</button><button type="button" class="link" id="rWipe" style="color:var(--neg);margin-top:6px">${t('recWipe')}</button>`;
+    $('#rBack').onclick=showLock;$('#rWipe').onclick=forgotWipe;
+    $('#rGo').onclick=async()=>{const err=m=>$('#lkE').textContent=m;if(!driveReady()){err(t('regLoading'));return}err(t('working'));
+      try{const pin=await recRecoverPin();RECOVERED=pin;showLock();$('#lp1').value=pin;$('#lkF').requestSubmit()}
+      catch(x){err(x&&x.message==='nokey'?t('recNoKey'):t('recFail'))}};
+    return;
+  }
+  forgotWipe();
+};
+function forgotWipe(){
   $('#lkT').textContent=t('forgotConfirm');$('#lkH').textContent='';$('#lkE').textContent='';$('#lkForgot').hidden=true;
   $('#lkF').innerHTML=`<div class="foot"><button type="button" class="btn grow" id="fNo">${t('cancel')}</button><button type="button" class="btn grow" id="fYes" style="background:var(--neg);border-color:var(--neg);color:#fff">${t('del')}</button></div>`;
   $('#fNo').onclick=showLock;
-  $('#fYes').onclick=()=>{try{localStorage.removeItem(VAULT);localStorage.removeItem(KEY);localStorage.removeItem('daftari-rt');localStorage.removeItem('daftari-gtoken')}catch(e){}showLock()};
-};
+  $('#fYes').onclick=()=>{try{localStorage.removeItem(VAULT);localStorage.removeItem(KEY);localStorage.removeItem('daftari-rt');localStorage.removeItem('daftari-gtoken');localStorage.removeItem(REC_KEY);localStorage.removeItem(BIO_KEY)}catch(e){}showLock()};
+}
 $('#lockBtn').onclick=()=>{if(S)lockNow()};
 $('#brand').onclick=()=>{if(S&&PS)ledgersSheet()};
 document.addEventListener('visibilitychange',()=>{
