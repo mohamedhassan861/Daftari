@@ -491,7 +491,7 @@ payCat:['بند المصروف','Expense category'],
 balOpen:['رصيد أول الفترة','Opening balance'],balClose:['رصيد آخر الفترة','Closing balance'],asOf:['في','as of'],fxDiff:['فرق أسعار العملات:','Currency difference:'],
 loanDue:['ميعاد السداد المتوقع','Expected repayment'],noAccount:['من غير حساب','No account'],repayHint:['لو اخترت حساب، المبلغ هيتسجل حركة عليه علشان رصيده يتظبط.','If you pick an account, the amount is recorded on it so its balance stays right.'],
 planVsAct:['المتوقع مقابل الفعلي','Planned vs actual'],planned:['المتوقع','Planned'],actual:['الفعلي','Actual'],variance:['الفرق','Variance'],category:['البند','Category'],total:['الإجمالي','Total'],monthW:['الشهر','Month'],
-planHint:['المتوقع جاي من الحركات المتكررة والأقساط والجمعيات ومواعيد سداد السلف والحد الشهري للبنود. الفرق الموجب يعني أحسن من المتوقع.','Planned comes from recurring entries, installments, gam\'eyas, loan due dates and category budgets. A positive variance is better than planned.'],
+planHint:['بالفلوس الفعلية (كاش وبنوك)، زي الرصيد المتوقع: اللي بالكارت بيتحسب في سداد الكارت. الفرق الموجب يعني أحسن من المتوقع.','Planned comes from recurring entries, installments, gam\'eyas, loan due dates and category budgets. A positive variance is better than planned.'],
 forecastT:['الرصيد المتوقع','Balance forecast'],forecastHint:['ده حساب الفلوس الفعلية (كاش وبنوك): اللي بتشتريه بالكارت بيتحسب خرج في يوم سداد الكارت مش يوم الشرا. الشهور اللي فاتت فعلي، والشهر الحالي (•) الأكبر بين الفعلي والمتوقع لكل بند، والشهور الجاية متوقع.','Past months are actual, this month (•) takes the larger of actual and plan per category, later months are planned. Balance = all accounts together, cards as negative.'],
 balEndMonth:['رصيدك آخر الشهر','Balance at month end'],carried:['من اللي فات','Carried over'],
 cardsT:['الكروت','Cards'],addCard:['كارت جديد','New card'],closeDay:['يوم قفل الكشف','Statement day'],payDay:['يوم السداد','Payment day'],cardLimit:['الحد الائتماني','Credit limit'],cardAvail:['المتاح','Available'],
@@ -524,6 +524,7 @@ willLast:['هل الفلوس هتكفي؟','Will the money last?'],enough:['ال
 nowHave:['معاك دلوقتي','You have now'],warnBefore:['نبهني قبلها بـ','Warn me'],daysW:['يوم','days'],notCovered:['من هنا الفلوس مش مكفية','Not covered from here'],balAfter:['المتبقي بعدها','left after'],details:['التفاصيل','Details'],
 shortMsg:['يوم %d الفلوس مش هتكفي (%l). محتاج %n زيادة أو تأجّل حاجات.','On %d money runs short (%l). You need %n more, or postpone something.'],
 willLastHint:['بنبدأ من الكاش والبنوك اللي معاك دلوقتي، ونمشي يوم بيوم على الدخل والمصاريف المتوقعة اللي لسه محصلتش. الحد الشهري للبنود بيتوزع على باقي أيام الشهر. سداد الكارت في يومه.','Starts from your cash and banks now and walks day by day through planned income and spending still to come. Category budgets are spread over the remaining days; card bills land on their due day.'],
+inCardPay:['بيتحسب في سداد الكارت','counted in the card payment'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1748,11 +1749,10 @@ function planItems(m){
 }
 const byRoot=(list,type,amt)=>{const o={};list.filter(x=>x.type===type).forEach(x=>{const k=catRoot(x.cat);o[k]=(o[k]||0)+amt(x)});return o};
 function planVsActual(months){
-  const P={income:{},expense:{}},A={income:{},expense:{}};
-  months.forEach(m=>{const it=planItems(m),tx=txOf(m);
-    ['income','expense'].forEach(ty=>{const p=byRoot(it,ty,x=>x.amount),a=byRoot(tx,ty,baseAmt);
-      Object.entries(p).forEach(([k,v])=>P[ty][k]=(P[ty][k]||0)+v);Object.entries(a).forEach(([k,v])=>A[ty][k]=(A[ty][k]||0)+v)})});
-  return {P,A};
+  const P={income:{},expense:{}},A={income:{},expense:{}},L={};
+  months.forEach(m=>{const cp=cashPlan(m),ca=cashActual(txOf(m));
+    [[cp,P],[ca,A]].forEach(([src,dst])=>Object.entries(src).forEach(([k,x])=>{const ty=k.startsWith('in:')?'income':'expense',id=k.slice(k.indexOf(':')+1);dst[ty][id]=(dst[ty][id]||0)+x.v;L[id]=x.label}))});
+  return {P,A,L};
 }
 const isLiquid=a=>!!a&&['cash','bank','wallet'].includes(a.type);
 const liqAll=date=>S.accounts.filter(isLiquid).reduce((v,a)=>v+toBase(accBalanceAt(a,date),a.currency),0);
@@ -1893,14 +1893,14 @@ function maybeAskClose(){
 
 /* one category in plan vs actual: where the planned amount comes from, and what actually happened */
 function planCatSheet(root,ty){
-  const months=perMonths(),pl=[],ac=[];
+  const months=perMonths(),pl=[],ac=[],onCard=id=>{const a=accOf(id);return a&&a.type==='card'?a:null};
   months.forEach(m=>{planItems(m).filter(x=>x.type===ty&&catRoot(x.cat)===root).forEach(x=>pl.push(Object.assign({m},x)));
     txOf(m).filter(x=>x.type===ty&&catRoot(x.cat)===root).forEach(x=>ac.push(x))});
-  const tp=pl.reduce((v,x)=>v+x.amount,0),ta=ac.reduce((v,x)=>v+baseAmt(x),0),d=ty==='income'?ta-tp:tp-ta;
-  const multi=months.length>1;
+  const tp=pl.filter(x=>!onCard(x.acc)).reduce((v,x)=>v+x.amount,0),ta=ac.filter(x=>isLiquid(accOf(x.acc))).reduce((v,x)=>v+baseAmt(x),0),d=ty==='income'?ta-tp:tp-ta;
+  const multi=months.length>1,cardNote=`<small class="muted"> · ${t('inCardPay')}</small>`;
   openSheet(catName(root)+' · '+perLabel(),`<div class="form">
-    <div class="blk plan"><div class="blk-h"><span>● ${t('planned')}</span><b>${money(tp)}</b></div><div style="padding:0 14px 8px">${pl.length?pl.map(x=>{const a=accOf(x.acc);return `<div class="ln"><span>${esc(x.label||catName(x.cat))}${multi?' · '+esc(monthShort(x.m)):''}${x.done?' ✓':''}${a&&a.type==='card'?' 💳':''}</span><b>${money(x.amount)}</b></div>`}).join(''):`<div class="ln"><span>${t('noItems')}</span></div>`}</div></div>
-    <div class="blk act"><div class="blk-h"><span>● ${t('actual')}</span><b>${money(ta)}</b></div><div style="padding:0 14px 8px">${ac.length?ac.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>{const a=accOf(x.acc);return `<div class="ln"><span>${esc(shortDate(x.date))} · ${esc(x.note||catName(x.cat))}${a?' · '+esc(a.name):''}</span><b>${money(baseAmt(x))}</b></div>`}).join(''):`<div class="ln"><span>${t('noItems')}</span></div>`}</div></div>
+    <div class="blk plan"><div class="blk-h"><span>● ${t('planned')}</span><b>${money(tp)}</b></div><div style="padding:0 14px 8px">${pl.length?pl.map(x=>{const c=onCard(x.acc);return `<div class="ln" style="${c?'opacity:.6':''}"><span>${esc(x.label||catName(x.cat))}${multi?' · '+esc(monthShort(x.m)):''}${x.done?' ✓':''}${c?' 💳'+cardNote:''}</span><b>${money(x.amount)}</b></div>`}).join(''):`<div class="ln"><span>${t('noItems')}</span></div>`}</div></div>
+    <div class="blk act"><div class="blk-h"><span>● ${t('actual')}</span><b>${money(ta)}</b></div><div style="padding:0 14px 8px">${ac.length?ac.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>{const a=accOf(x.acc),c=a&&a.type==='card';return `<div class="ln" style="${c?'opacity:.6':''}"><span>${esc(shortDate(x.date))} · ${esc(x.note||catName(x.cat))}${a?' · '+esc(a.name):''}${c?' 💳'+cardNote:''}</span><b>${money(baseAmt(x))}</b></div>`}).join(''):`<div class="ln"><span>${t('noItems')}</span></div>`}</div></div>
     <div class="blk"><div class="blk-h"><span>${t('variance')}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div><p class="hint" style="padding:0 14px">${t('planCatHint')}</p></div>
     <button type="button" class="btn block" id="pcStmt">${t('statement')} ›</button></div>`,r=>{r.querySelector('#pcStmt').onclick=()=>catStmt(root)});
 }
@@ -1946,10 +1946,10 @@ function cashSheet(){
 }
 
 function planHTML(){
-  const months=perMonths(),{P,A}=planVsActual(months);
+  const months=perMonths(),{P,A,L}=planVsActual(months);
   const sec=ty=>{const keys=[...new Set([...Object.keys(P[ty]),...Object.keys(A[ty])])].sort((a,b)=>Math.max(P[ty][b]||0,A[ty][b]||0)-Math.max(P[ty][a]||0,A[ty][a]||0));
     let tp=0,ta=0;const rows=keys.map(k=>{const p=P[ty][k]||0,a=A[ty][k]||0;tp+=p;ta+=a;const d=ty==='income'?a-p:p-a;
-      return `<div class="cmp tap" data-act="planCat" data-id="${k}" data-ty="${ty}"><span>${esc(catName(k))} ›</span><span>${money(p)}</span><span>${money(a)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`}).join('');
+      return `<div class="cmp tap" data-act="${k.startsWith('card:')?'stmtAcc':k==='xfer'?'':'planCat'}" data-id="${k.startsWith('card:')?k.slice(5):k}" data-ty="${ty}"><span>${esc(L[k]||catName(k))} ›</span><span>${money(p)}</span><span>${money(a)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`}).join('');
     const d=ty==='income'?ta-tp:tp-ta;
     return {html:`<div class="grp"><span>${ty==='income'?t('income'):t('expense')}</span></div>${rows||`<div class="empty">${t('noItems')}</div>`}<div class="cmp t"><span>${t('total')}</span><span>${money(tp)}</span><span>${money(ta)}</span><b class="${d<-0.5?'neg':d>0.5?'pos':''}">${d>0.5?'+':''}${money(d)}</b></div>`,tp,ta}};
   const I=sec('income'),E=sec('expense'),np=I.tp-E.tp,na=I.ta-E.ta;
@@ -2037,7 +2037,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.40 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.41 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
