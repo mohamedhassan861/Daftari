@@ -306,10 +306,11 @@ driveRestore:['استرجع من Drive','Restore from Drive'],driveSaved:['ات�
 driveErr:['معرفناش نحفظ على Drive، هنحاول تاني مع التعديل الجاي.','Could not save to Drive; will retry with the next change.'],
 driveNotSetup:['ربط Google Drive لسه متجهزش في النسخة دي.','Google Drive is not set up in this build yet.'],
 driveNone:['مفيش نسخ على Drive لسه.','No backups on Drive yet.'],driveSyncNow:['احفظ على Drive دلوقتي','Save to Drive now'],
-driveKeep:['بنحتفظ بآخر 100 نسخة، والأقدم بتروح سلة المهملات في الـ Drive.','The latest 100 copies are kept; older ones move to Drive trash.'],
+driveKeep:['كل النسخ بتفضل محفوظة على الـ Drive، وتقدر ترجع لأي واحدة.','Every copy stays on Drive, and you can go back to any of them.'],
 driveAccount:['الحساب المربوط','Linked account'],driveSwitch:['غيّر الحساب','Change account'],driveAccUnknown:['هيظهر بعد أول حفظ على Drive','Shown after the next save to Drive'],
 driveAgain:['اضغط "اربط Google Drive" مرة كمان علشان نكمّل الربط.','Tap "Connect Google Drive" once more to finish linking.'],
 driveNeedRT:['خطوة أخيرة علشان Google Drive يفضل مربوط على طول، من غير ما يسألك تاني.','One last step so Google Drive stays linked without asking again.'],driveFinish:['كمّل الربط','Finish linking'],
+restorePick:['اختار النسخة اللي عايز ترجعلها. هيطلب منك الرقم السري اللي كان وقتها.','Pick the copy to go back to. You will be asked for the PIN used at that time.'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -665,7 +666,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v1.6 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v1.7 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -878,7 +879,6 @@ async function driveUpload(){
   const body='--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+bd+'\r\nContent-Type: application/json\r\n\r\n'+data+'\r\n--'+bd+'--';
   await gfetch(GAPI+'/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body});
   drv.lastUp=new Date().toISOString();drvSave();markBackup();
-  pruneOld(folder).catch(()=>{});
 }
 async function syncDrive(manual){
   if(!drv.linked||!S||!KEYOBJ||drv.busy)return;
@@ -918,8 +918,10 @@ function driveUnlink(){
   });
 }
 async function driveRestore(){
-  try{if(!(await ensureAccess())){if(useWorker())await authorize(false);else await requestToken('')}const folder=await ensureFolder();const files=await driveList(folder,30);
-    openSheet(t('driveRestore'),files.length?`<div class="list">${files.map(f=>`<div class="row tap" data-f="${esc(f.id)}"><div class="main"><span class="t num">${esc(f.name)}</span><span class="s">${esc(new Intl.DateTimeFormat(L(),{dateStyle:'medium',timeStyle:'short'}).format(new Date(f.createdTime)))}</span></div></div>`).join('')}</div>`:`<div class="empty">${t('driveNone')}</div>`,r=>{
+  try{if(!(await ensureAccess())){if(useWorker())await authorize(false);else await requestToken('')}const folder=await ensureFolder();const files=await driveList(folder,1000);
+    openSheet(t('driveRestore'),files.length?`<p class="hint">${t('restorePick')}</p><div class="list" style="overflow:hidden">${(()=>{let last='',h='';const dF=new Intl.DateTimeFormat(L(),{weekday:'long',day:'numeric',month:'long',year:'numeric'}),tF=new Intl.DateTimeFormat(L(),{hour:'numeric',minute:'2-digit',second:'2-digit'});
+      files.forEach(f=>{const d=new Date(f.createdTime),k=d.toDateString();if(k!==last){last=k;h+=`<div class="daylbl">${esc(dF.format(d))}</div>`}
+        h+=`<div class="row tap" data-f="${esc(f.id)}"><div class="glyph">⟲</div><div class="main"><span class="t num">${esc(tF.format(d))}</span></div></div>`});return h})()}</div>`:`<div class="empty">${t('driveNone')}</div>`,r=>{
       r.querySelectorAll('[data-f]').forEach(el=>el.onclick=async()=>{const txt=await (await gfetch('/drive/v3/files/'+el.dataset.f+'?alt=media')).text();closeSheet();doImport(txt)});
     });
   }catch(e){toast(t('driveErr'))}
