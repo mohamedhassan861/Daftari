@@ -500,6 +500,9 @@ cardOpenHint:['الرصيد الافتتاحي للكارت يتكتب بالس�
 recUntil:['لحد','until'],gapW:['فائض/عجز','Surplus/gap'],lowestBal:['أقل رصيد','Lowest balance'],firstGap:['أول عجز','First shortfall'],noGap:['مفيش عجز','No shortfall'],endBal:['آخر المدة','End balance'],
 fcMonthHint:['المتوقع من المرتب والحركات المتكررة والأقساط والجمعيات والسلف والحد الشهري للبنود. لو مبلغ مش مظبوط، عدّل مصدره (الحركة المتكررة أو القسط أو الحد الشهري).','Planned from salary and recurring entries, installments, gam\'eyas, loans and category budgets. To change a number, edit its source.'],
 netMonthOnly:['صافي الشهر لوحده','This month only'],
+needOnline:['أول مرة محتاج إنترنت علشان تسجّل بجوجل وتربط Drive.','The first time you need internet to sign in with Google and link Drive.'],
+regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Google Drive علشان تكمّل.','Sign in with Google and allow Google Drive to continue.'],
+regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1811,7 +1814,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.26 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.27 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -1861,6 +1864,7 @@ $('#view').addEventListener('click',e=>{
     settle:()=>settleForm(b.dataset.from,b.dataset.to,b.dataset.v),
     payCard:()=>payCard(id),goAcc:()=>{const e=document.querySelector('#view details.box');if(e){e.open=true;e.scrollIntoView({behavior:'smooth'})}},
     addTxT:()=>txForm(null,'',{type:b.dataset.ty}),addRecT:()=>txForm(null,'monthly'),
+    appUpdate:async()=>{toast(t('working'),0);try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()},
     goNW:()=>{tab='rep';render();setTimeout(()=>{const e=$('#nw');if(e)e.scrollIntoView({behavior:'smooth'})},50)},
     editRec:()=>{const r=S.recur.find(v=>v.id===id);if(r)recRuleForm(r)},
     stmtRec:()=>{const r=S.recur.find(v=>v.id===id);if(!r)return;stmtSheet({title:r.tpl.note||catPath(r.tpl.cat),sub:freqName(r.freq)+' · '+t('allTime'),cur:BASE(),kind:'flow',rows:flowRows(S.tx.filter(x=>x.rec===r.id&&x.type!=='transfer'))})},exportTx:()=>exportTx((()=>{let l=txIn();if(txFilter!=='all')l=l.filter(x=>x.type===txFilter);return l})(),t('tx')),
@@ -2370,7 +2374,8 @@ async function doRegister(){
 }
 const DRVASK='daftari-drvask';const drvAsked=()=>{try{return !!localStorage.getItem(DRVASK)}catch(e){return true}};
 const needDriveAtSignIn=()=>!!(REG&&useWorker()&&!drv.linked&&!drvAsked());
-const acctHTML=()=>REG&&!needDriveAtSignIn()?`<div class="acct"><span class="g">G</span><span class="em" dir="ltr">${esc(REG.email)}</span><span class="ok">✓</span></div>`:`<button type="button" class="btn block gbtn" id="gbtn"><span class="g">G</span>${t('regBtn')}</button>`;
+let LOCKSETUP=false;
+const acctHTML=()=>REG&&!needDriveAtSignIn()&&!(LOCKSETUP&&useWorker()&&!drv.linked)?`<div class="acct"><span class="g">G</span><span class="em" dir="ltr">${esc(REG.email)}</span><span class="ok">✓</span></div>`:`<button type="button" class="btn block gbtn" id="gbtn"><span class="g">G</span>${LOCKSETUP?t('regDriveBtn'):t('regBtn')}</button>`;
 function regGate(done){
   const box=$('#lock');box.hidden=false;
   $('#lkT').textContent=t('regTitle');$('#lkH').textContent=t('regHint');$('#lkE').textContent='';$('#lkForgot').hidden=true;
@@ -2614,7 +2619,7 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventLi
 /* ---------- lock ---------- */
 let fails=0,blockedUntil=0,hiddenAt=0;
 function showLock(){
-  const vt=readVault(),setup=!vt,needReg=!!CFG.authWorker;
+  const vt=readVault(),setup=!vt,needReg=!!CFG.authWorker;LOCKSETUP=setup;
   const de=document.documentElement;de.lang=LANG;de.dir=LANG==='en'?'ltr':'rtl';
   $('#lkBrand').textContent=t('app');
   $('#lkT').textContent=setup?t('setupTitle'):t('lockTitle');
@@ -2639,7 +2644,15 @@ function showLock(){
     if(setup){const p2=$('#lp2').value;if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}}
     else if(Date.now()<blockedUntil){err(t('waitTry'));return}
     /* sign in with Google first if this phone has not yet (skipped when offline) */
-    if(needReg&&(!REG||(needDriveAtSignIn()&&driveReady()))&&navigator.onLine){
+    /* first time on this phone: Google sign-in and Drive link are required before the PIN is created */
+    if(setup&&needReg&&(!REG||(useWorker()&&!drv.linked))){
+      if(!navigator.onLine){err(t('needOnline'));return}
+      if(!driveReady()){err(t('regLoading'));return}
+      {err(t('working'));
+        try{if(useWorker())await signUpWithDrive();else await doRegister();$('#acctW').innerHTML=acctHTML();bindG()}
+        catch(x){err(t('regDriveFail'));return}}
+    }
+    else if(needReg&&(!REG||(needDriveAtSignIn()&&driveReady()))&&navigator.onLine){
       if(!driveReady()){err(t('regLoading'));return}
       const had=!!REG;err(t('working'));
       try{await doRegister();$('#acctW').innerHTML=acctHTML();bindG()}
