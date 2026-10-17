@@ -423,6 +423,12 @@ joinTitle:['دعوة لدفتر مشترك','Shared ledger invite'],joinHint:['�
 joinNeedDrive:['محتاج تربط Google Drive الأول.','Connect Google Drive first.'],joinOpen:['افتح الدفتر','Open the ledger'],joinFail:['معرفناش نفتح الدفتر. اتأكد إن الدعوة وصلتك على نفس الإيميل المربوط.','Could not open the ledger. Make sure the invite went to the linked email.'],
 pickTitle:['اختار الدفتر المشترك','Choose the shared ledger'],pickerMissing:['خاصية الانضمام لسه محتاجة مفتاح من Google Cloud','Joining still needs a Google Cloud key'],sharedLedger:['دفتر مشترك','Shared ledger'],
 restorePersonal:['الاسترجاع بيبقى في دفترك الشخصي بس. ارجعله الأول.','Restore works in your personal ledger only; switch to it first.'],
+regTitle:['سجّل دخول بحساب جوجل','Sign in with Google'],regHint:['مرة واحدة بس، علشان نعرف مين بيستخدم البرنامج. بنحفظ إيميلك واسمك وتاريخ التسجيل بس، وبياناتك المالية بتفضل على موبايلك ومتشفرة.','Just once, so we know who uses the app. We keep your email, name and sign-up date only; your financial data stays encrypted on your phone.'],
+regBtn:['سجّل بجوجل','Sign in with Google'],regLater:['مش دلوقتي (مفيش إنترنت)','Later (offline)'],regLoading:['لحظة، جوجل لسه بيحمّل، جرّب تاني','Google is still loading; try again'],
+regFail:['معرفناش نسجّل، اتأكد من الإنترنت وجرّب تاني','Could not sign in; check the connection and try again'],regDone:['اتسجلت بـ','Signed in as'],privacy:['سياسة الخصوصية','Privacy policy'],
+account:['الحساب','Account'],notReg:['مش مسجّل','Not signed in'],unreg:['امسح تسجيلي','Remove my sign-up'],unregQ:['إيميلك هيتمسح من قايمة المستخدمين. نكمل؟','Your email will be removed from the user list. Continue?'],unregDone:['اتمسح تسجيلك','Sign-up removed'],
+users:['المستخدمين','Users'],usersHint2:['قايمة اللي سجّلوا في البرنامج','People who signed up'],usersHint:['الرقم جنب كل واحد: عدد مرات التسجيل (أول مرة + أي جهاز جديد).','The number is how many times they signed in (first time and each new device).'],
+joined:['سجّل','Joined'],lastOpen:['آخر مرة','Last'],regCount:['مرات التسجيل','Sign-ins'],lang:['اللغة','Language'],notAdmin:['القايمة دي لصاحب البرنامج بس','Only the app owner can see this list'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1407,6 +1413,10 @@ function vSet(){
   </div></section>
   <section class="sec"><div class="sec-h"><h2>${t('cats')} · ${t('expense')}</h2><button class="link" data-act="addCat" data-ty="expense">+ ${t('addCat')}</button></div><div class="list"><div class="chips">${chips('expense')}</div></div></section>
   <section class="sec"><div class="sec-h"><h2>${t('cats')} · ${t('income')}</h2><button class="link" data-act="addCat" data-ty="income">+ ${t('addCat')}</button></div><div class="list"><div class="chips">${chips('income')}</div></div></section>
+  <section class="sec"><div class="sec-h"><h2>${t('account')}</h2></div><div class="list">
+    <div class="setrow"><span>${REG?`<span dir="ltr">${esc(REG.email)}</span>`:t('notReg')}</span>${REG?`<button class="btn sm danger" data-act="unreg">${t('unreg')}</button>`:`<button class="btn sm pri" data-act="reg">${t('regBtn')}</button>`}</div>
+    ${REG&&REG.admin?`<div class="setrow"><span>${t('usersHint2')}</span><button class="btn sm pri" data-act="users">${t('users')}</button></div>`:''}
+  </div></section>
   <section class="sec"><div class="sec-h"><h2>Google Drive</h2><span class="pill ${drv.linked?'ok':''}">${drv.linked?t('driveLinked'):t('driveOff')}</span></div>
     <p class="hint">${driveConfigured()?t('driveHint'):t('driveNotSetup')}</p>
     ${driveConfigured()?(drv.linked?`<div class="list"><div class="setrow"><span class="label">${t('driveAccount')}</span><b class="num" style="overflow-wrap:anywhere">${drv.email?esc(drv.email):`<span class="muted" style="font-weight:400">${t('loading')}</span>`}</b></div></div>
@@ -1426,7 +1436,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.13 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.14 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -1465,6 +1475,7 @@ $('#view').addEventListener('click',e=>{
     stmtFilt:()=>{const ty=b.dataset.ty,list=txFiltered(),title=[txCat?catPath(txCat):'',txAcc?accOf(txAcc).name+' '+accOf(txAcc).currency:'',txQuery?'"'+txQuery+'"':''].filter(Boolean).join(' · ')||t('tx');
       if(ty==='net')stmtSheet({title,sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(list.filter(x=>x.type!=='transfer'))});
       else stmtSheet({title:(ty==='income'?t('income'):t('expense'))+' · '+title,sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(list.filter(x=>x.type===ty))})},
+    users:usersSheet,unreg:unregister,reg:()=>regGate(()=>render()),
     goNW:()=>{tab='rep';render();setTimeout(()=>{const e=$('#nw');if(e)e.scrollIntoView({behavior:'smooth'})},50)},
     editRec:()=>{const r=S.recur.find(v=>v.id===id);if(r)recRuleForm(r)},
     stmtRec:()=>{const r=S.recur.find(v=>v.id===id);if(!r)return;stmtSheet({title:r.tpl.note||catPath(r.tpl.cat),sub:freqName(r.freq)+' · '+t('allTime'),cur:BASE(),kind:'flow',rows:flowRows(S.tx.filter(x=>x.rec===r.id&&x.type!=='transfer'))})},exportTx:()=>exportTx((()=>{let l=txIn();if(txFilter!=='all')l=l.filter(x=>x.type===txFilter);return l})(),t('tx')),
@@ -1939,6 +1950,52 @@ async function shareBackup(){
   if(await saveToPhone(true))render();
 }
 
+/* ---------- sign-up with Google, once: the email goes to the owner's list ---------- */
+const REG_KEY='daftari-reg';
+let REG=null;try{REG=JSON.parse(localStorage.getItem(REG_KEY)||'null')}catch(e){}
+let idClient=null;
+function idToken(prompt,hint){
+  return new Promise((res,rej)=>{
+    if(!driveReady()){rej(new Error('notready'));return}
+    if(!idClient)idClient=google.accounts.oauth2.initTokenClient({client_id:CFG.googleClientId,scope:'openid email profile',callback:()=>{}});
+    idClient.callback=r=>r&&r.access_token?res(r.access_token):rej(r);idClient.error_callback=e=>rej(e);
+    const o={prompt};if(hint)o.login_hint=hint;idClient.requestAccessToken(o);
+  });
+}
+const workerPost=async(path,body)=>{const r=await fetch(CFG.authWorker.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error(j.error||'http '+r.status);return j};
+function regGate(done){
+  const box=$('#lock');box.hidden=false;
+  $('#lkT').textContent=t('regTitle');$('#lkH').textContent=t('regHint');$('#lkE').textContent='';$('#lkForgot').hidden=true;
+  $('#lkF').innerHTML=`<button class="btn pri block" type="submit">${t('regBtn')}</button>${navigator.onLine?'':`<button class="btn block" type="button" id="regSkip">${t('regLater')}</button>`}<p class="hint" style="text-align:center"><a href="privacy.html" target="_blank" rel="noopener" style="color:var(--accent)">${t('privacy')}</a></p>`;
+  const sk=$('#regSkip');if(sk)sk.onclick=()=>{box.hidden=true;$('#lkF').innerHTML='';done&&done()};
+  $('#lkF').onsubmit=async e=>{e.preventDefault();const err=m=>$('#lkE').textContent=m;
+    if(!driveReady()){err(t('regLoading'));return}
+    try{err(t('working'));const tok=await idToken('select_account');
+      const j=await workerPost('/register',{access_token:tok,lang:lng()});
+      REG={email:j.email,name:j.name,admin:!!j.admin,at:new Date().toISOString()};try{localStorage.setItem(REG_KEY,JSON.stringify(REG))}catch(x){}
+      box.hidden=true;$('#lkF').innerHTML='';toast(t('regDone')+' '+j.email);done&&done();
+    }catch(x){err(t('regFail'))}};
+}
+async function usersSheet(){
+  try{
+    const tok=await idToken('',REG&&REG.email);
+    const j=await workerPost('/users',{access_token:tok});const list=j.users||[];
+    const df=new Intl.DateTimeFormat(L(),{dateStyle:'medium'}),dd=v=>v?df.format(new Date(v)):'';
+    openSheet(t('users')+' · '+list.length,`<div class="form">
+      <div class="acts"><button type="button" class="btn sm" id="ux">⤓ ${t('export')}</button></div>
+      <div class="list">${list.map(u=>`<div class="row"><div class="glyph">${esc(initial(u.name||u.email))}</div><div class="main"><span class="t" dir="ltr" style="text-align:start">${esc(u.email)}</span><span class="s">${esc(u.name||'')} · ${t('joined')} ${esc(dd(u.first_seen))} · ${t('lastOpen')} ${esc(dd(u.last_seen))}</span></div><b class="amt">${u.opens}</b></div>`).join('')||`<div class="empty">${t('noItems')}</div>`}</div>
+      <p class="hint">${t('usersHint')}</p></div>`,r=>{
+      r.querySelector('#ux').onclick=()=>exportSheet({title:t('users'),sub:new Date().toISOString().slice(0,10),cols:['Email',t('name'),t('joined'),t('lastOpen'),t('regCount'),t('lang')],num:[4],rows:list.map(u=>[u.email,u.name||'',(u.first_seen||'').slice(0,10),(u.last_seen||'').slice(0,10),u.opens,u.lang])});
+    });
+  }catch(e){toast(e.message==='not_admin'?t('notAdmin'):t('regFail'))}
+}
+function unregister(){
+  confirmSheet(t('unregQ'),t('unreg'),async()=>{
+    try{const tok=await idToken('',REG&&REG.email);await workerPost('/unregister',{access_token:tok});REG=null;try{localStorage.removeItem(REG_KEY)}catch(e){}toast(t('unregDone'));render()}
+    catch(e){toast(t('regFail'))}
+  });
+}
+
 /* ---------- install (PWA) ---------- */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(S&&tab==='set')render()});
@@ -1973,7 +2030,7 @@ function showLock(){
     catch(x){fails++;$('#lp1').value='';if(fails>=5){blockedUntil=Date.now()+30000;fails=0;err(t('waitTry'))}else err(t('wrongPin'))}
   };
 }
-function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);render();runRecurring();maybeUpdateRates();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
+function unlocked(){$('#lock').hidden=true;$('#lkF').innerHTML='';if(!REG&&CFG.authWorker)setTimeout(()=>{if(S&&!REG)regGate(()=>render())},50);LANG=S.lang;ACT='me';SHM=null;migrate();PS=S;if(pendingJoin)setTimeout(joinSheet,300);render();runRecurring();maybeUpdateRates();loadRT().then(()=>{if(drv.linked&&useWorker()&&!RT&&S){drv.needAuth=true;render()}})}
 function lockNow(){clearTimeout(bkTimer);if(ACT!=='me'&&shDirty)shPush();stopPoll();ACT='me';SHM=null;PS=null;closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;$('#view').innerHTML='';showLock()}
 $('#lkForgot').onclick=()=>{
   $('#lkT').textContent=t('forgotConfirm');$('#lkH').textContent='';$('#lkE').textContent='';$('#lkForgot').hidden=true;

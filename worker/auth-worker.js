@@ -1,11 +1,12 @@
 // Daftari auth helper — a Cloudflare Worker.
-// It only swaps a Google sign-in code or a refresh token for a short access token.
-// It stores nothing and logs nothing. The Google client secret lives in the
-// Worker's encrypted secret GOOGLE_CLIENT_SECRET, never in this file.
+// 1) Swaps a Google sign-in code or a refresh token for a short access token (stores nothing).
+// 2) Keeps a list of who signed up (email, name, dates) in the D1 database bound as DB.
+// The Google client secret lives in the Worker's encrypted secret GOOGLE_CLIENT_SECRET.
 
 const ALLOWED_ORIGIN = 'https://mohamedhassan861.github.io';
 const GOOGLE_CLIENT_ID = '309872061893-l5h4g0ldu1m7do7cqpih8b1jokk0pce0.apps.googleusercontent.com';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const ADMINS = ['mohamed.hassan861@gmail.com', 'icomic.eg@gmail.com'];
 
 const cors = {
   'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
@@ -22,19 +23,56 @@ function reply(obj, status) {
   });
 }
 
+// Who is this token for? Checks it was issued to Daftari, then reads the verified email.
+async function whoIs(accessToken) {
+  if (typeof accessToken !== 'string' || !accessToken) return null;
+  const info = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(accessToken));
+  if (!info.ok) return null;
+  const ti = await info.json();
+  if (ti.aud !== GOOGLE_CLIENT_ID && ti.azp !== GOOGLE_CLIENT_ID) return null;
+  const u = await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (!u.ok) return null;
+  const p = await u.json();
+  if (!p.email || p.email_verified === false) return null;
+  return { email: String(p.email).toLowerCase(), name: String(p.name || '').slice(0, 120) };
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     if (request.headers.get('Origin') !== ALLOWED_ORIGIN) return reply({ error: 'forbidden_origin' }, 403);
     if (request.method !== 'POST') return reply({ error: 'method_not_allowed' }, 405);
-    if (!env.GOOGLE_CLIENT_SECRET) return reply({ error: 'server_not_configured' }, 500);
 
     let body;
     try { body = await request.json(); } catch { return reply({ error: 'bad_json' }, 400); }
-
-    const params = new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET });
     const path = new URL(request.url).pathname;
 
+    // ---- sign-up list ----
+    if (path === '/register' || path === '/users' || path === '/unregister') {
+      if (!env.DB) return reply({ error: 'db_not_configured' }, 500);
+      const who = await whoIs(body.access_token);
+      if (!who) return reply({ error: 'invalid_token' }, 401);
+      const now = new Date().toISOString();
+      if (path === '/register') {
+        const lang = body.lang === 'en' ? 'en' : 'ar';
+        await env.DB.prepare(
+          'INSERT INTO users (email, name, lang, first_seen, last_seen, opens) VALUES (?1, ?2, ?3, ?4, ?4, 1) ' +
+          'ON CONFLICT(email) DO UPDATE SET name = excluded.name, lang = excluded.lang, last_seen = excluded.last_seen, opens = users.opens + 1'
+        ).bind(who.email, who.name, lang, now).run();
+        return reply({ ok: true, email: who.email, name: who.name, admin: ADMINS.includes(who.email) }, 200);
+      }
+      if (path === '/unregister') {
+        await env.DB.prepare('DELETE FROM users WHERE email = ?1').bind(who.email).run();
+        return reply({ ok: true }, 200);
+      }
+      if (!ADMINS.includes(who.email)) return reply({ error: 'not_admin' }, 403);
+      const { results } = await env.DB.prepare('SELECT email, name, lang, first_seen, last_seen, opens FROM users ORDER BY first_seen DESC').all();
+      return reply({ users: results }, 200);
+    }
+
+    // ---- Google token exchange ----
+    if (!env.GOOGLE_CLIENT_SECRET) return reply({ error: 'server_not_configured' }, 500);
+    const params = new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, client_secret: env.GOOGLE_CLIENT_SECRET });
     if (path === '/exchange' && typeof body.code === 'string') {
       params.set('grant_type', 'authorization_code');
       params.set('code', body.code);
@@ -45,7 +83,6 @@ export default {
     } else {
       return reply({ error: 'not_found' }, 404);
     }
-
     const r = await fetch(TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
