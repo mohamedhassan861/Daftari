@@ -526,6 +526,8 @@ shortMsg:['يوم %d الفلوس مش هتكفي (%l). محتاج %n زيادة
 willLastHint:['بنبدأ من الكاش والبنوك اللي معاك دلوقتي، ونمشي يوم بيوم على الدخل والمصاريف المتوقعة اللي لسه محصلتش. الحد الشهري للبنود بيتوزع على باقي أيام الشهر. سداد الكارت في يومه.','Starts from your cash and banks now and walks day by day through planned income and spending still to come. Category budgets are spread over the remaining days; card bills land on their due day.'],
 inCardPay:['بيتحسب في سداد الكارت','counted in the card payment'],
 overPlan:['الفعلي عدّى المتوقع ومحسوب في الرصيد','Actual went past the plan, included in the balance'],
+cardEx:['لو اشتريت %b تسدد %p','Bought %b → pay %p'],cardDaysNeed:['اكتب يوم قفل الكشف ويوم السداد علشان مواعيد سداد الكارت تتحسب صح.','Enter the statement and payment days so card payments land on the right date.'],
+cardSetDays:['⚠️ حدد يوم قفل الكشف ويوم السداد للكارت، وإلا السداد بيتحسب تقريبي الشهر اللي بعد الشرا.','⚠️ Set the card statement and payment days; until then payment is assumed the month after purchase.'],budLeft:['الباقي من','Left of'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -655,6 +657,8 @@ const BASE=()=>(S&&S.base)||'EGP';
 const rateOf=c=>c===BASE()?1:(+((S.rates||{})[c])||0);
 const ACC_TYPES=['cash','bank','wallet','card','gold','cert'];
 const accOf=id=>S.accounts.find(a=>a.id===id)||S.accounts[0];
+/* no fallback: an empty or unknown id means "no particular account" */
+const accById=id=>id?S.accounts.find(a=>a.id===id)||null:null;
 const curOfTx=x=>(accOf(x.acc)||{}).currency||BASE();
 const toBase=(n,c)=>(+n||0)*rateOf(c);
 const baseAmt=x=>toBase(x.amount,curOfTx(x));
@@ -1023,16 +1027,10 @@ function quickFromText(text){const p=parseEntry(text);if(!p||!p.amount){toast(t(
 
 /* ---------- safe to spend this month ---------- */
 function safeToSpend(){
-  const liquid=S.accounts.filter(a=>['cash','bank','wallet'].includes(a.type)).reduce((v,a)=>v+toBase(accBalance(a),a.currency),0);
-  const end=TODAY_YM+'-31';
-  const onCard=o=>{const a=accOf(o.payWith);return !!a&&a.type==='card'};
-  const loanDueNow=S.loans.filter(l=>l.dir==='borrowed').reduce((v,l)=>v+toBase(loanOwedUpTo(l,TODAY_YM),l.currency||BASE()),0);
-  const obl=[['inst',S.inst],['gam',S.gam]].reduce((v,[k,l])=>v+l.filter(o=>!onCard(o)).reduce((w,o)=>w+toBase(owedUpTo(k,o,TODAY_YM),o.currency||BASE()),0),0)
-    +(()=>{const cp=cashPlan(TODAY_YM),ca=cashActual(txOf(TODAY_YM));return cards().reduce((v,a)=>{const k='out:card:'+a.id;return v+Math.max(0,((cp[k]||{}).v||0)-((ca[k]||{}).v||0))},0)})();
-  let recOut=0,recIn=0;
-  S.recur.forEach(r=>{let d=r.next,g=0;const a=accOf(r.tpl.acc);if(!a||!isLiquid(a))return;while(d<=end&&g++<40){if(!r.end||d<=r.end){const v=toBase(r.tpl.amount,a.currency);if(r.tpl.type==='expense')recOut+=v;else if(r.tpl.type==='income')recIn+=v}d=advance(d,r.freq,r.day)}});
+  const liquid=liqAll(TODAY),ev=remainingPlan(TODAY_YM),sm=f=>ev.filter(f).reduce((v,e)=>v+e.amt,0);
+  const obl=sm(e=>e.dir==='out'&&['inst','gam','loan','card','adj','tx'].includes(e.kind)),recOut=sm(e=>e.dir==='out'&&e.kind==='rec'),recIn=sm(e=>e.dir==='in');
   const goals=S.goals.reduce((v,g)=>v+toBase(goalMonthly(g),g.currency||BASE()),0);
-  const safe=liquid-obl-recOut-goals-loanDueNow;
+  const safe=liquid-obl-recOut-goals;
   const last=new Date(+TODAY.slice(0,4),+TODAY.slice(5,7),0).getDate(),daysLeft=last-+TODAY.slice(8,10)+1;
   return {liquid,obl,recOut,recIn,goals,safe,daysLeft,perDay:safe>0?safe/daysLeft:0};
 }
@@ -1102,7 +1100,7 @@ let cur=TODAY_YM, tab='home', oblTab='inst', txFilter='all', txQuery='', txCat='
 const PMODES={month:1,quarter:3,half:6,year:12};
 let per={mode:'month',from:TODAY_YM+'-01',to:TODAY};
 const perStart=()=>{const [y,m]=cur.split('-').map(Number),n=PMODES[per.mode]||1;return y+'-'+pad(Math.floor((m-1)/n)*n+1)};
-function perRange(){if(per.mode==='custom')return per.from<=per.to?[per.from,per.to]:[per.to,per.from];const s=perStart();return [s+'-01',ymAdd(s,PMODES[per.mode]-1)+'-31']}
+function perRange(){if(per.mode==='custom')return per.from<=per.to?[per.from,per.to]:[per.to,per.from];const s=perStart();return [s+'-01',monthEnd(ymAdd(s,PMODES[per.mode]-1))]}
 function perMonths(){const [a,b]=perRange();const out=[];let m=a.slice(0,7);while(m<=b.slice(0,7)&&out.length<240){out.push(m);m=ymAdd(m,1)}return out}
 const txIn=()=>{const [a,b]=perRange();return S.tx.filter(x=>x.date>=a&&x.date<=b)};
 const dOf=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d))};
@@ -1189,7 +1187,7 @@ function dueFor(ym){
 /* spread a payment over the oldest unpaid months */
 function allocate(k,o,amt){
   const per=oblPer(k,o),alloc={};o.part=o.part||{};
-  for(const m of oblMonths(k,o)){
+  for(const m of oblMonths(k,o).slice().sort((a,b)=>effM(o,a).localeCompare(effM(o,b))||a.localeCompare(b))){
     if(amt<=0.004)break;if(o.paid.includes(m))continue;
     const take=Math.min(per-partOf(o,m),amt);if(take<=0)continue;
     alloc[m]=Math.round(take*100)/100;o.part[m]=partOf(o,m)+take;amt-=take;
@@ -1224,6 +1222,12 @@ function payForm(k,id,recv){
 function payInst(id){payForm('inst',id)}
 function payGam(id){payForm('gam',id)}
 function recvGam(id){const g=S.gam.find(x=>x.id===id);if(!g||g.received)return;payForm('gam',id,true)}
+function relink(tx,lk){
+  unlink(Object.assign({},tx,{link:lk}));
+  if(lk.k==='inst'||lk.k==='gam'){const o=(lk.k==='inst'?S.inst:S.gam).find(x=>x.id===lk.id);if(!o||tx.type!=='expense'){delete tx.link;return}tx.link={k:lk.k,id:lk.id,alloc:allocate(lk.k,o,+tx.amount)}}
+  else if(lk.k==='loan'){const l=S.loans.find(x=>x.id===lk.id);if(!l||tx.type==='transfer'){delete tx.link;return}const p={id:lk.pay||uid(),amount:+tx.amount,date:tx.date};l.pays.push(p);tx.link={k:'loan',id:l.id,pay:p.id}}
+  else if(lk.k==='gamr'){const g=S.gam.find(x=>x.id===lk.id);if(g&&tx.type==='income')g.received=true;else delete tx.link}
+}
 function unlink(tx){if(!tx.link)return;const l=tx.link;
   if(l.k==='loan'){const o=S.loans.find(x=>x.id===l.id);if(o)o.pays=o.pays.filter(p=>p.id!==l.pay);return}
   if(l.k==='gamr'){const g=S.gam.find(x=>x.id===l.id);if(g)g.received=false;return}
@@ -1307,11 +1311,14 @@ function txForm(tx,repeat,pre){
         Object.assign(o,{toAcc:to,toAmount:ta,cat:'transfer'});
       }else Object.assign(o,{cat:val(r,'cat'),toAcc:undefined,toAmount:undefined});
       const rp=$r('#rp')?$r('#rp').value:'';let saved;
-      if(isNew){saved=Object.assign({id:uid()},o);S.tx.push(saved)}else{saved=S.tx.find(x=>x.id===tx.id);Object.assign(saved,o);if(!o.tags)delete saved.tags;if(type!=='transfer'){delete saved.toAcc;delete saved.toAmount}}
+      if(isNew){saved=Object.assign({id:uid()},o);S.tx.push(saved)}else{saved=S.tx.find(x=>x.id===tx.id);
+        const lk=saved.link,changed=lk&&(+saved.amount!==+o.amount||saved.date!==o.date||saved.type!==o.type);
+        Object.assign(saved,o);if(!o.tags)delete saved.tags;if(type!=='transfer'){delete saved.toAcc;delete saved.toAmount}
+        if(changed)relink(saved,lk)}
       if(isNew&&$r('#qk')&&$r('#qk').checked){const q=Object.assign({},saved);delete q.id;delete q.date;delete q.rec;delete q.rcpt;delete q.link;S.quick.push(Object.assign({id:'q'+uid()},q))}
       if(rp&&!saved.rec){const rid='r'+uid(),tpl=Object.assign({},saved);delete tpl.id;delete tpl.date;delete tpl.rec;delete tpl.link;
         S.recur.push({id:rid,freq:rp,day:+saved.date.slice(8,10),next:advance(saved.date,rp),tpl});saved.rec=rid}
-      else if(saved.rec){const rr=S.recur.find(v=>v.id===saved.rec);if(rr){const tpl=Object.assign({},saved);delete tpl.id;delete tpl.date;delete tpl.rec;delete tpl.link;rr.tpl=tpl}}
+
       S.defAcc=o.acc;const rf=$r('#rf').files[0];closeSheet();commit(t('saved'));if(rp)runRecurring();if(rf)uploadReceipt(saved,rf)};
   });
 }
@@ -1333,12 +1340,16 @@ function accForm(acc,preset){
     <div id="cardW" class="form" ${type==='card'?'':'hidden'}>
       <div class="two"><label class="fld"><span>${t('closeDay')}</span><input class="in-f num" id="kd" inputmode="numeric" value="${acc.closeDay||''}" placeholder="11"></label>
       <label class="fld"><span>${t('payDay')}</span><input class="in-f num" id="kp" inputmode="numeric" value="${acc.dueDay||''}" placeholder="5"></label></div>
+      <p class="hint" id="kEx"></p>
       <label class="fld"><span>${t('cardLimit')}</span><input class="in-f num" id="kl" inputmode="decimal" value="${acc.limit||''}" placeholder="0"></label>
       <p class="hint">${t('cardOpenHint')}</p>
     </div>
     ${isNew?'':`<p class="hint">${t('balance')}: ${moneyC(accBalance(acc),acc.currency)} ${acc.currency===BASE()?esc(curSym(BASE())):''}</p>`}
     <div class="foot">${isNew?'':`<button type="button" class="btn danger" id="del">${t('del')}</button>`}<button class="btn pri grow">${t('save')}</button></div>
   </form>`,r=>{
+    const kEx=()=>{const cd=parseInt(val(r,'kd')),dd=parseInt(val(r,'kp')),el=r.querySelector('#kEx');if(!el)return;if(!(cd>=1&&cd<=31&&dd>=1&&dd<=31)){el.textContent=t('cardDaysNeed');return}
+      const f={closeDay:cd,dueDay:dd},ex=[TODAY,iso(new Date(dOf(TODAY).getTime()+20*864e5))];el.textContent=ex.map(d=>t('cardEx').replace('%b',shortDate(d)).replace('%p',shortDate(cardDueFor(f,d)))).join(' · ')};
+    ['kd','kp'].forEach(id=>{const e=r.querySelector('#'+id);if(e)e.addEventListener('input',kEx)});kEx();
     bindSeg(r,'at',v=>{const wasGold=type==='gold';type=v;r.querySelector('#certW').hidden=v!=='cert';r.querySelector('#cardW').hidden=v!=='card';
       if((v==='gold')!==wasGold){r.querySelector('#cc').innerHTML=curOpts(v==='gold'?'G21':BASE(),v==='gold');r.querySelector('#ccL').textContent=v==='gold'?t('karat'):t('currency');r.querySelector('#opL').textContent=v==='gold'?t('openingGrams'):t('opening')}});
     if(!isNew)r.querySelector('#del').onclick=()=>{
@@ -1769,8 +1780,8 @@ function cashActual(list){const r={};const put=(k,l,v)=>{if(!r[k])r[k]={label:l,
     else if(isLiquid(a)){const k=(x.type==='income'?'in:':'out:')+catRoot(x.cat);put(k,catName(catRoot(x.cat)),v)}}
   return r}
 function cashPlan(m){const r={};const put=(k,l,v)=>{if(v<=0.004)return;if(!r[k])r[k]={label:l,v:0};r[k].v+=v};
-  for(let i=-3;i<=0;i++){const pm=ymAdd(m,i);for(const it of planItems(pm)){const a=accOf(it.acc);
-    if(a&&a.type==='card'){if(it.type==='expense'&&!it.done&&it.date>=TODAY){const due=cardDueFor(a,it.date);if(due.slice(0,7)===m)put('out:card:'+a.id,t('cardPayNote')+' · '+a.name,it.amount)}}
+  for(let i=-3;i<=0;i++){const pm=ymAdd(m,i);for(const it of planItems(pm)){const a=accById(it.acc);
+    if(a&&a.type==='card'){if(it.type==='expense'&&!it.done&&(it.date>=TODAY||pm===TODAY_YM)){const due=cardDueFor(a,it.date<TODAY?TODAY:it.date);if(due.slice(0,7)===m)put('out:card:'+a.id,t('cardPayNote')+' · '+a.name,it.amount)}}
     else if(i===0)put((it.type==='income'?'in:':'out:')+catRoot(it.cat),catName(catRoot(it.cat)),it.amount)}}
   cards().forEach(a=>{const c=cardInfo(a);if(!c.owed)return;
     const parts=a.closeDay?[[c.due,c.dueDate],[c.cycle,cardDueFor(a,c.nextClose)]]:[[c.owed,cardDueFor(a,TODAY)]];
@@ -1786,7 +1797,9 @@ function monthCash(m){
   /* this month: the row shows the plan as it is; the balance also takes into account where actual already went past the plan */
   const lines={},dev=[];new Set([...Object.keys(pl),...Object.keys(act)]).forEach(k=>{const p=pl[k]?pl[k].v:0,a=act[k]?act[k].v:0;lines[k]={label:(pl[k]||act[k]).label,v:Math.max(p,a),a,p};if(a-p>0.5)dev.push({k,label:lines[k].label,v:a-p})});
   const sp=pfx=>Object.entries(lines).filter(([k])=>k.startsWith(pfx)).reduce((v,[,x])=>v+x.p,0);
-  return {i:sp('in:'),e:sp('out:'),iMax:sum(lines,'in:'),eMax:sum(lines,'out:'),kind:'cur',lines,dev};
+  /* projected for the whole month = what already happened up to today + what is still to come (same calculation as "will the money last?") */
+  const past=cashActual(txOf(m).filter(x=>x.date<=TODAY)),rem=remainingPlan(m),rs=d=>rem.filter(e=>e.dir===d).reduce((v,e)=>v+e.amt,0);
+  return {i:sp('in:'),e:sp('out:'),iMax:sum(past,'in:')+rs('in'),eMax:sum(past,'out:')+rs('out'),kind:'cur',lines,dev};
 }
 function fcMonthSheet(m){
   const r=monthCash(m),row=(l,v,c)=>`<div class="row"><div class="main"><span class="t">${esc(l)}</span></div><b class="amt ${c||''}">${money(v)}</b></div>`;
@@ -1809,7 +1822,7 @@ function fcMonthSheet(m){
     <div class="blk"><div class="blk-h"><span>${t('diffActPlan')}</span></div><div class="flowb"><div><span>${t('cashIn')}</span>${sg(ai-pi,true)}</div><div><span>${t('cashOut')}</span>${sg(ao-po,false)}</div><div><span>${t('netShort')}</span>${sg((ai-ao)-(pi-po),true)}</div></div></div>
     <div class="blk plan" style="padding-bottom:8px"><div class="blk-h"><span>✎ ${t('editPlan')}</span></div>
     ${(()=>{const adj=(S.planAdj||[]).map((a,i)=>({a,i})).filter(z=>z.a.m===m);const tin=adj.filter(z=>z.a.type==='income').reduce((v,z)=>v+(+z.a.amount),0),tout=adj.filter(z=>z.a.type!=='income').reduce((v,z)=>v+(+z.a.amount),0);return adj.length?`<div class="grp"><span>${t('extraPlan')}</span></div><div class="flowb" style="border-top:0;padding:6px 12px"><div><span>${t('cashIn')}</span><b class="pos">${money(tin)}</b></div><div><span>${t('cashOut')}</span><b>${money(tout)}</b></div><div><span>${t('netShort')}</span><b class="${tin-tout<0?'neg':'pos'}">${money(tin-tout)}</b></div></div><div class="list">${adj.map(({a,i})=>`<div class="row tap" data-adje="${i}"><div class="main"><span class="t">${esc(a.label||catName(a.cat))} ›</span><span class="s">${a.type==='income'?t('inc1'):t('exp1')}</span></div><b class="amt ${a.type==='income'?'pos':''}">${money(a.amount)}</b><button type="button" class="btn sm danger" data-adj="${i}">${t('del')}</button></div>`).join('')}</div>`:''})()}
-    ${(()=>{const cp=cashPlan(m),it=planItems(m).filter(x=>x.src&&!x.done).map(x=>{const a=accOf(x.acc);return a&&a.type==='card'?Object.assign(x,{onCard:a,payM:cardDueFor(a,x.date<TODAY?TODAY:x.date).slice(0,7)}):x}).concat(cards().filter(a=>cp['out:card:'+a.id]).map(a=>{const z=cp['out:card:'+a.id];return {type:'expense',cat:'other',amount:z.v,base:z.base,label:z.label,src:'card:'+a.id,card:1}}));const tin=it.filter(x=>x.type==='income').reduce((v,x)=>v+x.amount,0),tout=it.filter(x=>x.type!=='income'&&!x.onCard).reduce((v,x)=>v+x.amount,0);return it.length?`<div class="grp"><span>${t('planLines')}</span></div><div class="flowb" style="border-top:0;padding:6px 12px"><div><span>${t('cashIn')}</span><b class="pos">${money(tin)}</b></div><div><span>${t('cashOut')}</span><b>${money(tout)}</b></div><div><span>${t('netShort')}</span><b class="${tin-tout<0?'neg':'pos'}">${money(tin-tout)}</b></div></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''} ›</span><span class="s">${x.card?t('cardPayLine'):x.onCard?'💳 '+esc(x.onCard.name)+' · '+t('paidIn')+' '+esc(monthLbl(x.payM)):(x.type==='income'?t('inc1'):t('exp1'))+' · '+esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
+    ${(()=>{const cp=cashPlan(m),it=planItems(m).filter(x=>x.src&&!x.done).map(x=>{const a=accById(x.acc);return a&&a.type==='card'?Object.assign(x,{onCard:a,payD:cardDueFor(a,x.date<TODAY?TODAY:x.date),payM:cardDueFor(a,x.date<TODAY?TODAY:x.date).slice(0,7)}):x}).concat(cards().filter(a=>cp['out:card:'+a.id]).map(a=>{const z=cp['out:card:'+a.id];return {type:'expense',cat:'other',amount:z.v,base:z.base,label:z.label,src:'card:'+a.id,card:1}}));const tin=it.filter(x=>x.type==='income').reduce((v,x)=>v+x.amount,0),tout=it.filter(x=>x.type!=='income'&&!x.onCard).reduce((v,x)=>v+x.amount,0);return it.length?`<div class="grp"><span>${t('planLines')}</span></div><div class="flowb" style="border-top:0;padding:6px 12px"><div><span>${t('cashIn')}</span><b class="pos">${money(tin)}</b></div><div><span>${t('cashOut')}</span><b>${money(tout)}</b></div><div><span>${t('netShort')}</span><b class="${tin-tout<0?'neg':'pos'}">${money(tin-tout)}</b></div></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''} ›</span><span class="s">${x.card?t('cardPayLine'):x.onCard?'💳 '+esc(x.onCard.name)+' · '+t('paidIn')+' '+esc(shortDate(x.payD))+(x.onCard.closeDay?'':' ⚠️'):(x.type==='income'?t('inc1'):t('exp1'))+' · '+esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
     <div style="padding:0 10px"><button type="button" class="btn block" id="adjAdd">+ ${t('addPlan')}</button></div></div>
     <p class="hint">${t('fcMonthHint')}</p></div>`,rr=>{
     rr.querySelectorAll('[data-adj]').forEach(b=>b.onclick=e=>{e.stopPropagation();S.planAdj.splice(+b.dataset.adj,1);commit(t('deleted'));fcMonthSheet(m)});
@@ -1896,7 +1909,7 @@ function maybeAskClose(){
 
 /* one category in plan vs actual: where the planned amount comes from, and what actually happened */
 function planCatSheet(root,ty){
-  const months=perMonths(),pl=[],ac=[],onCard=id=>{const a=accOf(id);return a&&a.type==='card'?a:null};
+  const months=perMonths(),pl=[],ac=[],onCard=id=>{const a=accById(id);return a&&a.type==='card'?a:null};
   months.forEach(m=>{planItems(m).filter(x=>x.type===ty&&catRoot(x.cat)===root).forEach(x=>pl.push(Object.assign({m},x)));
     txOf(m).filter(x=>x.type===ty&&catRoot(x.cat)===root).forEach(x=>ac.push(x))});
   const tp=pl.filter(x=>!onCard(x.acc)).reduce((v,x)=>v+x.amount,0),ta=ac.filter(x=>isLiquid(accOf(x.acc))).reduce((v,x)=>v+baseAmt(x),0),d=ty==='income'?ta-tp:tp-ta;
@@ -1909,28 +1922,33 @@ function planCatSheet(root,ty){
 }
 
 /* ---------- will the money last? day by day from today to the end of next month ---------- */
+/* what is still to come in month m: each plan line minus what already happened on it, card bills, and entries dated later this month */
+function remainingPlan(m){
+  const out=[],push=(date,amt,label,dir,kind)=>{if(amt>0.5)out.push({date:date<TODAY?TODAY:date,amt:Math.round(amt),label,dir,kind})};
+  const tx=txOf(m),mStart=m+'-01',mEnd=monthEnd(m);
+  /* actual entries on cash & banks use up the plan line by line: same category first, then a plan made on a whole group */
+  const leaf={};tx.forEach(x=>{const a=accById(x.acc);if(!isLiquid(a)||!['income','expense'].includes(x.type))return;const k=x.type+'|'+x.cat;leaf[k]=(leaf[k]||0)+baseAmt(x)});
+  const items=planItems(m).filter(it=>{const a=accById(it.acc);return !(a&&a.type==='card')}).sort((a,b)=>(a.src&&a.src.startsWith('bud:'))-(b.src&&b.src.startsWith('bud:'))||(a.date||'').localeCompare(b.date||''));
+  items.forEach(it=>{const k=it.type+'|'+it.cat,u=Math.min(it.amount,leaf[k]||0);leaf[k]=(leaf[k]||0)-u;it.rem=it.amount-u});
+  items.forEach(it=>{if(it.rem<=0.5)return;const r=catRoot(it.cat);for(const k of Object.keys(leaf)){const [ty,c]=k.split('|');if(ty!==it.type||catRoot(c)!==r||leaf[k]<=0||(it.cat!==r&&c!==r))continue;const u=Math.min(it.rem,leaf[k]);leaf[k]-=u;it.rem-=u;if(it.rem<=0.5)break}});
+  for(const it of items){if(it.rem<=0.5||it.done)continue;
+    const label=it.label||catName(it.cat),dir=it.type==='income'?'in':'out',kind=it.src?it.src.split(':')[0]:'adj';
+    if(kind==='bud'){
+      /* what is left of a monthly budget is set aside from the start of the month (or today): one line per category */
+      push(mStart<TODAY?TODAY:mStart,it.rem,t('budLeft')+' '+label+' · '+monthLbl(m),'out','bud');continue}
+    push(it.date&&it.date.slice(0,7)===m?it.date:mStart,it.rem,label,dir,kind)}
+  /* entries already recorded with a later date this month */
+  tx.filter(x=>x.date>TODAY).forEach(x=>{const a=accById(x.acc),label=x.note||catName(x.cat);
+    if(x.type==='transfer'){const b=accById(x.toAcc),la=isLiquid(a),lb=isLiquid(b);if(la&&!lb)push(x.date,baseAmt(x),label,'out','tx');else if(!la&&lb)push(x.date,toBase(+(x.toAmount??x.amount),b.currency),label,'in','tx')}
+    else if(isLiquid(a))push(x.date,baseAmt(x),label,x.type==='income'?'in':'out','tx')});
+  const cp=cashPlan(m),ca=cashActual(tx);
+  cards().forEach(a=>{const k='out:card:'+a.id,p=(cp[k]||{}).v||0,done=(ca[k]||{}).v||0,rem=p-done;if(rem<=0.5)return;
+    const c=cardInfo(a),d=c.dueDate&&c.dueDate.slice(0,7)===m?c.dueDate:dateIn(+m.slice(0,4),+m.slice(5,7),+(a.dueDay||a.closeDay||28));push(d,toBase(rem,a.currency),t('cardPayNote')+' · '+a.name,'out','card')});
+  return out;
+}
+/* will the money last? day by day from today to the end of next month */
 function cashTimeline(){
-  const ev=[],push=(date,amt,label,dir)=>{if(amt>0.5)ev.push({date:date<TODAY?TODAY:date,amt:Math.round(amt),label,dir})};
-  const months=[TODAY_YM,ymAdd(TODAY_YM,1)];
-  months.forEach(m=>{
-    const tx=txOf(m),mStart=m+'-01',mEnd=monthEnd(m);
-    /* what already happened this month (cash & banks) uses up the plan line by line, earliest first; only what is left is still to come */
-    const leaf={};tx.forEach(x=>{const a=accOf(x.acc);if(!isLiquid(a)||!['income','expense'].includes(x.type))return;const k=x.type+'|'+x.cat;leaf[k]=(leaf[k]||0)+baseAmt(x)});
-    const items=planItems(m).filter(it=>{const a=accOf(it.acc);return !(a&&a.type==='card')}).sort((a,b)=>(a.src&&a.src.startsWith('bud:'))-(b.src&&b.src.startsWith('bud:'))||(a.date||'').localeCompare(b.date||''));
-    /* pass 1: actual spending in the same category; pass 2: a plan on a whole group, or spending recorded on the group itself */
-    items.forEach(it=>{const k=it.type+'|'+it.cat,u=Math.min(it.amount,leaf[k]||0);leaf[k]=(leaf[k]||0)-u;it.rem=it.amount-u});
-    items.forEach(it=>{if(it.rem<=0.5)return;const r=catRoot(it.cat);for(const k of Object.keys(leaf)){const [ty,c]=k.split('|');if(ty!==it.type||catRoot(c)!==r||leaf[k]<=0||(it.cat!==r&&c!==r))continue;const u=Math.min(it.rem,leaf[k]);leaf[k]-=u;it.rem-=u;if(it.rem<=0.5)break}});
-    for(const it of items){
-      const label=it.label||catName(it.cat),dir=it.type==='income'?'in':'out';let rem=it.rem;if(rem<=0.5||it.done)continue;
-      if(it.src&&it.src.startsWith('bud:')){
-        /* what is left of a monthly budget is spent week by week until the month ends */
-        const from=mStart<TODAY?TODAY:mStart,n=Math.round((dOf(mEnd)-dOf(from))/864e5)+1,wk=[];for(let i=0;i<n;i+=7)wk.push([iso(new Date(dOf(from).getTime()+i*864e5)),Math.min(7,n-i)]);
-        wk.forEach(([d,len])=>push(d,rem*len/n,label,'out'));continue}
-      push(it.date&&it.date.slice(0,7)===m?it.date:mStart,rem,label,dir)}
-    const cp=cashPlan(m),ca=cashActual(tx);
-    cards().forEach(a=>{const k='out:card:'+a.id,p=(cp[k]||{}).v||0,done=(ca[k]||{}).v||0,rem=p-done;if(rem<=0.5)return;
-      const c=cardInfo(a),d=c.dueDate&&c.dueDate.slice(0,7)===m?c.dueDate:dateIn(+m.slice(0,4),+m.slice(5,7),+(a.dueDay||a.closeDay||28));push(d,toBase(rem,a.currency),t('cardPayNote')+' · '+a.name,'out')});
-  });
+  const ev=[...remainingPlan(TODAY_YM),...remainingPlan(ymAdd(TODAY_YM,1))];
   ev.sort((a,b)=>a.date.localeCompare(b.date)||(a.dir==='in'?-1:1));
   let bal=Math.round(liqAll(TODAY));const start=bal;let low=null,first=null;
   ev.forEach(e=>{bal+=e.dir==='in'?e.amt:-e.amt;e.bal=bal;if(bal<-0.5&&!first&&e.dir==='out')first=e;if(!low||bal<low.bal)low=e});
@@ -1943,7 +1961,8 @@ function cashSheet(){
   const tl=cashTimeline();let shown=false;
   const grouped=[];tl.ev.forEach(e=>{const g=grouped[grouped.length-1];if(g&&g.date===e.date&&g.label===e.label&&g.dir===e.dir){g.amt+=e.amt;g.bal=e.bal}else grouped.push(Object.assign({},e))});
   const rows=grouped;
-  openSheet(t('willLast'),`<div class="form">
+  const noDays=cards().filter(a=>!a.closeDay);
+  openSheet(t('willLast'),`<div class="form">${noDays.length?`<div class="banner"><span>${t('cardSetDays')}</span><button class="btn sm" data-act="goCards">${t('edit')}</button></div>`:''}
     <div class="blk ${tl.first?'':'act'}"><div class="blk-h"><span>${tl.first?'⚠️ '+t('notEnough'):'✓ '+t('enough')}</span></div>
       <div class="flowb"><div><span>${t('nowHave')}</span><b>${money(tl.start)}</b></div><div><span>${t('lowestBal')}</span><b class="${tl.low&&tl.low.bal<0?'neg':''}">${money(tl.low?tl.low.bal:tl.start)}</b><span>${tl.low?esc(shortDate(tl.low.date)):''}</span></div><div><span>${t('endBal')}</span><b class="${tl.end<0?'neg':''}">${money(tl.end)}</b><span>${esc(shortDate(monthEnd(ymAdd(TODAY_YM,1))))}</span></div></div>
       ${tl.first?`<p class="hint" style="padding:0 14px">${t('shortMsg').replace('%d',shortDate(tl.first.date)).replace('%l',tl.first.label).replace('%n',fmt(-tl.low.bal))}</p>`:''}</div>
@@ -1971,6 +1990,7 @@ function planHTML(){
     </div><p class="hint">${t('planHint')}</p></details>
   <button class="btn block" data-act="cashSheet" style="margin:6px 0">${(()=>{const a=cashTimeline();return a.first?'⚠️ '+t('willLast')+' · '+t('notEnough'):'✓ '+t('willLast')})()}</button>
   ${fc.length?`<details class="box" open><summary><h2>${t('forecastT')}</h2></summary><div class="list">
+    ${cards().some(a=>!a.closeDay)?`<p class="hint" style="padding:6px 14px;margin:0">${t('cardSetDays')}</p>`:''}
     ${(()=>{const low=fc.reduce((a,r)=>r.bal<a.bal?r:a,fc[0]),firstGap=fc.find(r=>r.i-r.e<0);return `<div class="flowb" style="border-top:0"><div><span>${t('lowestBal')}</span><b class="${low.bal<0?'neg':''}">${money(low.bal)}</b><span>${esc(monthLbl(low.m))}</span></div><div><span>${t('firstGap')}</span><b class="${firstGap?'neg':'pos'}">${firstGap?money(firstGap.i-firstGap.e):'—'}</b><span>${firstGap?esc(monthLbl(firstGap.m)):t('noGap')}</span></div><div><span>${t('endBal')}</span><b class="${fc[fc.length-1].bal<0?'neg':''}">${money(fc[fc.length-1].bal)}</b><span>${esc(monthLbl(fc[fc.length-1].m))}</span></div></div>`})()}
     <div class="cmp h fc"><span>${t('monthW')}</span><span>${t('cashIn')}</span><span>${t('cashOut')}</span><span>${t('gapW')}</span><span>${t('availEnd')}</span></div>
     ${fc.map(r=>`<div class="cmp fc tap" data-act="fcMonth" data-m="${r.m}"><span>${esc(monthShort(r.m))} ${r.m.slice(2,4)}${r.kind==='cur'?' •':''}</span><span class="pos">${money(r.i)}</span><span>${money(r.e)}</span><b class="${r.i-r.e<0?'neg':'pos'}">${money(r.i-r.e)}</b><b class="${r.bal<0?'neg':''}">${money(r.bal)}</b></div>${r.dev&&r.dev.length?`<div class="cmp fc" style="font-size:11px"><span style="grid-column:1/5;white-space:normal">↳ ${t('overPlan')}: ${r.dev.map(d=>esc(d.label)+' '+(d.k.startsWith('in:')?'+':'−')+fmt(d.v)).join('، ')}</span><b></b></div>`:''}`).join('')}
@@ -2044,7 +2064,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.43 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.44 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -2092,7 +2112,7 @@ $('#view').addEventListener('click',e=>{
     users:usersSheet,unreg:unregister,reg:()=>{if(!driveReady()){toast(t('regLoading'));return}doRegister().then(()=>{toast(t('regDone')+' '+REG.email);render()},()=>toast(t('regFail')))},
     pushOn:pushEnable,pushOff:pushDisable,pushTest:pushTest,bioOn:bioEnableForm,bioOff:bioOff,importX:importForm,
     settle:()=>settleForm(b.dataset.from,b.dataset.to,b.dataset.v),
-    payCard:()=>payCard(id),goCards:()=>{tab='obl';oblTab='card';render();window.scrollTo(0,0)},goAcc:()=>{const e=document.querySelector('#view details.box');if(e){e.open=true;e.scrollIntoView({behavior:'smooth'})}},
+    payCard:()=>payCard(id),goCards:()=>{closeSheet();tab='obl';oblTab='card';render();window.scrollTo(0,0)},goAcc:()=>{const e=document.querySelector('#view details.box');if(e){e.open=true;e.scrollIntoView({behavior:'smooth'})}},
     addTxT:()=>txForm(null,'',{type:b.dataset.ty}),addRecT:()=>txForm(null,'monthly'),
     appUpdate:async()=>{toast(t('working'),0);try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()},
     goNW:()=>{tab='rep';render();setTimeout(()=>{const e=$('#nw');if(e)e.scrollIntoView({behavior:'smooth'})},50)},
@@ -2933,6 +2953,9 @@ document.addEventListener('visibilitychange',()=>{
 
 if(!(window.crypto&&crypto.subtle)){$('#lkT').textContent='This browser cannot encrypt data. Open the app over https.';}
 else showLock();
+
+/* automated checks only: exposed on a local test server, never on the real site */
+if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,commit,render,migrate,blank,save};
 })();
 </script>
 
