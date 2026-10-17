@@ -478,6 +478,7 @@ linkedOk:['متربط ✓','Connected ✓'],
 recTitle:['نسيت الرقم السري؟','Forgot your PIN?'],recHint:['ادخل بنفس حساب جوجل المربوط بالبرنامج، وبعدها اختار رقم سري جديد. بياناتك هتفضل زي ما هي.','Sign in with the Google account linked to the app, then choose a new PIN. Your data stays as it is.'],
 recBtn:['استرجع بحساب جوجل','Recover with Google'],recWipe:['مش قادر، امسح كل البيانات','I can\'t, erase all data'],recSetNew:['اختار رقم سري جديد لدفتري.','Choose a new PIN for Daftari.'],
 recFail:['معرفناش نسترجع. اتأكد إنك اخترت نفس حساب جوجل','Could not recover. Make sure you chose the same Google account'],recNoKey:['مفتاح الاسترجاع مش موجود على Drive بتاعك','The recovery key was not found in your Drive'],
+payCat:['بند المصروف','Expense category'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1154,7 +1155,7 @@ function payForm(k,id,recv){
       if(recv){o.received=true;S.tx.push({id:uid(),acc,type:'income',cat:'gamin',amount:a,date,note:o.name,link:{k:'gamr',id}})}
       else{if(a>left+0.004){toast(t('overLeft')+' '+fmt(left));return}
         const alloc=allocate(k,o,a),ms=Object.keys(alloc);
-        S.tx.push({id:uid(),acc,type:'expense',cat:k,amount:a,date,note:o.name+' · '+ms.map(monthShort).join('، ')+(ms.length===1&&alloc[ms[0]]<oblPer(k,o)-0.004?' ('+t('partial')+')':''),link:{k,id,alloc}})}
+        S.tx.push({id:uid(),acc,type:'expense',cat:(o.cat&&S.cats.expense.some(c=>c.id===o.cat)?o.cat:k),amount:a,date,note:o.name+' · '+ms.map(monthShort).join('، ')+(ms.length===1&&alloc[ms[0]]<oblPer(k,o)-0.004?' ('+t('partial')+')':''),link:{k,id,alloc}})}
       closeSheet();commit(t('saved'))};
   });
 }
@@ -1310,7 +1311,8 @@ function instForm(it){
   const isNew=!it;it=it||{name:'',monthly:'',currency:BASE(),group:'',count:12,start:TODAY_YM,paid:[]};
   openSheet(isNew?t('addInst'):it.name,`<form class="form" id="f">
     <label class="fld"><span>${t('name')}</span><input class="in-f" id="nm" value="${esc(it.name)}" placeholder="${S.lang==='en'?'e.g. Fridge':'مثلاً: تلاجة، عربية، موبايل'}"></label>
-    <label class="fld"><span>${t('group')}</span><input class="in-f" id="gp" list="dl-og" value="${esc(it.group||'')}" placeholder="${t('groupHint')}">${datalist('dl-og',[...S.inst,...S.gam].map(o=>o.group))}</label>
+    <div class="two"><label class="fld"><span>${t('group')}</span><input class="in-f" id="gp" list="dl-og" value="${esc(it.group||'')}" placeholder="${t('groupHint')}">${datalist('dl-og',[...S.inst,...S.gam].map(o=>o.group))}</label>
+    <label class="fld"><span>${t('payCat')}</span><select class="in-f" id="ic">${catOptsTree('expense',it.cat||'inst',false)}</select></label></div>
     <div class="two"><label class="fld"><span>${t('monthly')}</span><input class="in-f amt num" id="mo" inputmode="decimal" value="${it.monthly}"></label>
     <label class="fld"><span>${t('currency')}</span><select class="in-f" id="oc">${curOpts(it.currency||BASE())}</select></label></div>
     <div class="two"><label class="fld"><span>${t('count')}</span><input class="in-f num" id="ct" inputmode="numeric" value="${it.count}"></label>
@@ -1324,8 +1326,8 @@ function instForm(it){
       const u=r.querySelector('#undo');if(u)u.onclick=()=>{closeSheet();undoLast('inst',it.id)}}
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const nm=val(r,'nm'),mo=numv(r,'mo'),ct=Math.max(1,parseInt(val(r,'ct'))||1),st=val(r,'st')||TODAY_YM;
       if(!nm){toast(t('needName'));return}if(mo<=0){toast(t('needAmt'));return}
-      if(isNew){const n=Math.min(ct,Math.max(0,parseInt(val(r,'pd'))||0));const o={id:uid(),name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),count:ct,start:st,paid:[]};o.paid=instMonths(o).slice(0,n);S.inst.push(o)}
-      else{const o=S.inst.find(x=>x.id===it.id);Object.assign(o,{name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),count:ct,start:st});const ms=instMonths(o);o.paid=o.paid.filter(m=>ms.includes(m))}
+      if(isNew){const n=Math.min(ct,Math.max(0,parseInt(val(r,'pd'))||0));const o={id:uid(),name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),cat:val(r,'ic')||'inst',dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),count:ct,start:st,paid:[]};o.paid=instMonths(o).slice(0,n);S.inst.push(o)}
+      else{const o=S.inst.find(x=>x.id===it.id);Object.assign(o,{name:nm,monthly:mo,currency:val(r,'oc'),group:val(r,'gp'),cat:val(r,'ic')||'inst',dueDay:Math.min(28,Math.max(1,parseInt(val(r,'dd'))||1)),count:ct,start:st});const ms=instMonths(o);o.paid=o.paid.filter(m=>ms.includes(m))}
       closeSheet();commit(t('saved'))};
   });
 }
@@ -1666,7 +1668,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.21 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.22 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
