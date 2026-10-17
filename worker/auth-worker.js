@@ -56,14 +56,25 @@ async function vapidHeader(endpoint, keys) {
   const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(unsigned));
   return 'vapid t=' + unsigned + '.' + b64u(sig) + ', k=' + keys.pub;
 }
-async function sendAll(env) {
+// Minutes past midnight right now in a user's own time zone.
+function localMinutes(tz, now) {
+  try {
+    const p = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+    return (+p.find(x => x.type === 'hour').value) * 60 + (+p.find(x => x.type === 'minute').value);
+  } catch { return -1; }
+}
+
+// Runs every 15 minutes; wakes only the phones whose chosen reminder time falls in this quarter hour.
+async function sendAll(env, now = new Date()) {
   const keys = await vapidKeys(env);
-  const { results } = await env.DB.prepare('SELECT endpoint FROM push_subs').all();
-  for (const { endpoint } of results) {
+  const { results } = await env.DB.prepare('SELECT endpoint, hm, tz FROM push_subs').all();
+  for (const { endpoint, hm, tz } of results) {
+    const m = localMinutes(tz || 'Africa/Cairo', now);
+    if (m < 0 || Math.floor(m / 15) !== Math.floor((hm ?? 540) / 15)) continue;
     try {
-      const r = await fetch(endpoint, { method: 'POST', headers: { TTL: '43200', Urgency: 'normal', Authorization: await vapidHeader(endpoint, keys), 'Content-Length': '0' } });
+      const r = await fetch(endpoint, { method: 'POST', headers: { TTL: '3600', Urgency: 'normal', Authorization: await vapidHeader(endpoint, keys), 'Content-Length': '0' } });
       if (r.status === 404 || r.status === 410) await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?1').bind(endpoint).run();
-    } catch (e) { /* try again tomorrow */ }
+    } catch (e) { /* try again next time */ }
   }
 }
 
@@ -85,8 +96,10 @@ export default {
       const sub = body.sub || {};
       if (typeof sub.endpoint !== 'string' || !/^https:\/\//.test(sub.endpoint) || sub.endpoint.length > 1000) return reply({ error: 'bad_sub' }, 400);
       if (path === '/push/subscribe') {
-        await env.DB.prepare('INSERT INTO push_subs (endpoint, sub, created) VALUES (?1, ?2, ?3) ON CONFLICT(endpoint) DO UPDATE SET sub = excluded.sub')
-          .bind(sub.endpoint, JSON.stringify(sub).slice(0, 4000), new Date().toISOString()).run();
+        const hm = Number.isInteger(body.hm) && body.hm >= 0 && body.hm < 1440 ? body.hm : 540;
+        const tz = typeof body.tz === 'string' && /^[A-Za-z_+\-\/0-9]{1,64}$/.test(body.tz) && localMinutes(body.tz, new Date()) >= 0 ? body.tz : 'Africa/Cairo';
+        await env.DB.prepare('INSERT INTO push_subs (endpoint, sub, created, hm, tz) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(endpoint) DO UPDATE SET sub = excluded.sub, hm = excluded.hm, tz = excluded.tz')
+          .bind(sub.endpoint, JSON.stringify(sub).slice(0, 4000), new Date().toISOString(), hm, tz).run();
         return reply({ ok: true }, 200);
       }
       if (path === '/push/unsubscribe') {
