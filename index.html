@@ -1914,15 +1914,19 @@ function cashTimeline(){
   const months=[TODAY_YM,ymAdd(TODAY_YM,1)];
   months.forEach(m=>{
     const tx=txOf(m),mStart=m+'-01',mEnd=monthEnd(m);
-    for(const it of planItems(m)){if(it.done)continue;const a=accOf(it.acc);if(a&&a.type==='card')continue;
-      const label=it.label||catName(it.cat),dir=it.type==='income'?'in':'out';
+    /* what already happened this month (cash & banks) uses up the plan line by line, earliest first; only what is left is still to come */
+    const leaf={};tx.forEach(x=>{const a=accOf(x.acc);if(!isLiquid(a)||!['income','expense'].includes(x.type))return;const k=x.type+'|'+x.cat;leaf[k]=(leaf[k]||0)+baseAmt(x)});
+    const items=planItems(m).filter(it=>{const a=accOf(it.acc);return !(a&&a.type==='card')}).sort((a,b)=>(a.src&&a.src.startsWith('bud:'))-(b.src&&b.src.startsWith('bud:'))||(a.date||'').localeCompare(b.date||''));
+    /* pass 1: actual spending in the same category; pass 2: a plan on a whole group, or spending recorded on the group itself */
+    items.forEach(it=>{const k=it.type+'|'+it.cat,u=Math.min(it.amount,leaf[k]||0);leaf[k]=(leaf[k]||0)-u;it.rem=it.amount-u});
+    items.forEach(it=>{if(it.rem<=0.5)return;const r=catRoot(it.cat);for(const k of Object.keys(leaf)){const [ty,c]=k.split('|');if(ty!==it.type||catRoot(c)!==r||leaf[k]<=0||(it.cat!==r&&c!==r))continue;const u=Math.min(it.rem,leaf[k]);leaf[k]-=u;it.rem-=u;if(it.rem<=0.5)break}});
+    for(const it of items){
+      const label=it.label||catName(it.cat),dir=it.type==='income'?'in':'out';let rem=it.rem;if(rem<=0.5||it.done)continue;
       if(it.src&&it.src.startsWith('bud:')){
-        const spent=sumB(tx.filter(x=>x.type==='expense'&&(x.cat===it.cat||catRoot(x.cat)===it.cat)));let rem=it.amount-spent;if(rem<=0.5)continue;
         /* what is left of a monthly budget is spent week by week until the month ends */
         const from=mStart<TODAY?TODAY:mStart,n=Math.round((dOf(mEnd)-dOf(from))/864e5)+1,wk=[];for(let i=0;i<n;i+=7)wk.push([iso(new Date(dOf(from).getTime()+i*864e5)),Math.min(7,n-i)]);
         wk.forEach(([d,len])=>push(d,rem*len/n,label,'out'));continue}
-      if(it.src&&it.src.startsWith('rec:')&&it.date<TODAY)continue;
-      push(it.date&&it.date.slice(0,7)===m?it.date:mStart,it.amount,label,dir)}
+      push(it.date&&it.date.slice(0,7)===m?it.date:mStart,rem,label,dir)}
     const cp=cashPlan(m),ca=cashActual(tx);
     cards().forEach(a=>{const k='out:card:'+a.id,p=(cp[k]||{}).v||0,done=(ca[k]||{}).v||0,rem=p-done;if(rem<=0.5)return;
       const c=cardInfo(a),d=c.dueDate&&c.dueDate.slice(0,7)===m?c.dueDate:dateIn(+m.slice(0,4),+m.slice(5,7),+(a.dueDay||a.closeDay||28));push(d,toBase(rem,a.currency),t('cardPayNote')+' · '+a.name,'out')});
@@ -2040,7 +2044,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.42 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.43 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
