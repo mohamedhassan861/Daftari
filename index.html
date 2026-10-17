@@ -514,6 +514,8 @@ extraPlan:['مبالغ متوقعة إضافية','Extra planned amounts'],addPl
 planLines:['المتوقع في الشهر ده','Planned this month'],planLinesHint:['دوس على أي سطر علشان تغيّر مبلغه في الشهر ده بس، أو من الشهر ده ولقدام. اكتب 0 لو مش هيحصل الشهر ده.','Tap a line to change its amount for this month only, or from this month on. Enter 0 if it will not happen this month.'],
 usually:['عادةً','Usually'],zeroSkip:['0 = مش هيحصل الشهر ده','0 = not this month'],applyTo:['يتطبق على','Apply to'],fromThisOn:['الشهر ده واللي بعده','This month and after'],resetPlan:['رجّعه زي الأصل','Back to usual'],
 fcSheetHint:['الأرقام اللي فوق هي الإجمالي (كاش وبنوك) وفيها كل حاجة تحت. تحت التفاصيل اللي تقدر تعدّلها: المتوقع العادي، والمبالغ الإضافية اللي ضفتها بإيدك.','The totals above (cash & banks) already include everything below. Below are the editable details: the usual plan and the extra amounts you added.'],
+cardPayLine:['سداد الكارت المتوقع','Expected card payment'],cashOrBank:['كاش أو بنك','Cash or bank'],
+paidIn:['هيتسدد في','paid in'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -1733,7 +1735,7 @@ function planItems(m){
   const has=new Set(out.filter(x=>x.type==='expense').map(x=>x.cat));
   Object.entries(S.budgets||{}).forEach(([c,v])=>{if(!has.has(c))add('expense',c,+v,{label:catName(c),src:'bud:'+c})});
   const ov=(S.planOver||{})[m]||{};out.forEach(x=>{if(x.src&&!x.done&&x.src in ov){x.base=x.amount;x.amount=+ov[x.src]}});
-  (S.planAdj||[]).filter(a=>a.m===m).forEach(a=>add(a.type||'expense',a.cat,+a.amount,{label:a.label||catName(a.cat)}));
+  (S.planAdj||[]).filter(a=>a.m===m).forEach(a=>add(a.type||'expense',a.cat,+a.amount,{label:a.label||catName(a.cat),acc:a.acc||'',date:a.acc?m+'-'+pad(Math.max(+TODAY.slice(8,10),1)).slice(-2):m+'-01'}));
   return out.filter(x=>x.amount>0||(x.src&&x.src in ov));
 }
 const byRoot=(list,type,amt)=>{const o={};list.filter(x=>x.type===type).forEach(x=>{const k=catRoot(x.cat);o[k]=(o[k]||0)+amt(x)});return o};
@@ -1764,6 +1766,7 @@ function cashPlan(m){const r={};const put=(k,l,v)=>{if(v<=0.004)return;if(!r[k])
   cards().forEach(a=>{const c=cardInfo(a);if(!c.owed)return;
     const parts=a.closeDay?[[c.due,c.dueDate],[c.cycle,cardDueFor(a,c.nextClose)]]:[[c.owed,cardDueFor(a,TODAY)]];
     parts.forEach(([v,d])=>{if(v>0&&d){const dm=d.slice(0,7)<TODAY_YM?TODAY_YM:d.slice(0,7);if(dm===m)put('out:card:'+a.id,t('cardPayNote')+' · '+a.name,toBase(v,a.currency))}})});
+  const ov=(S.planOver||{})[m]||{};cards().forEach(a=>{const k='out:card:'+a.id,src='card:'+a.id;if(src in ov){if(!r[k])r[k]={label:t('cardPayNote')+' · '+a.name,v:0};r[k].base=r[k].v;r[k].v=+ov[src]}});
   return r}
 /* past months = actual; this month = the larger of actual and plan per line (card payments add up); later months = plan */
 function monthCash(m){
@@ -1781,7 +1784,7 @@ function fcMonthSheet(m){
     <div class="list">${row(t('gapW'),r.i-r.e,r.i-r.e<0?'neg':'pos')}</div>
     <p class="hint">${t('fcSheetHint')}</p>
     ${(()=>{const adj=(S.planAdj||[]).map((a,i)=>({a,i})).filter(z=>z.a.m===m);const tin=adj.filter(z=>z.a.type==='income').reduce((v,z)=>v+(+z.a.amount),0),tout=adj.filter(z=>z.a.type!=='income').reduce((v,z)=>v+(+z.a.amount),0);return adj.length?`<div class="grp"><span>${t('extraPlan')}</span><span class="num">${tin?'+'+money(tin)+' ':''}${tout?'−'+money(tout):''}</span></div><div class="list">${adj.map(({a,i})=>`<div class="row tap" data-adje="${i}"><div class="main"><span class="t">${esc(a.label||catName(a.cat))} ›</span><span class="s">${a.type==='income'?t('inc1'):t('exp1')}</span></div><b class="amt ${a.type==='income'?'pos':''}">${money(a.amount)}</b><button type="button" class="btn sm danger" data-adj="${i}">${t('del')}</button></div>`).join('')}</div>`:''})()}
-    ${(()=>{const it=planItems(m).filter(x=>x.src&&!x.done);const tin=it.filter(x=>x.type==='income').reduce((v,x)=>v+x.amount,0),tout=it.filter(x=>x.type!=='income').reduce((v,x)=>v+x.amount,0);return it.length?`<div class="grp"><span>${t('planLines')}</span><span class="num">${tin?'+'+money(tin)+' ':''}${tout?'−'+money(tout):''}</span></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''} ›</span><span class="s">${x.type==='income'?t('inc1'):t('exp1')} · ${esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
+    ${(()=>{const cp=cashPlan(m),it=planItems(m).filter(x=>x.src&&!x.done).map(x=>{const a=accOf(x.acc);return a&&a.type==='card'?Object.assign(x,{onCard:a,payM:cardDueFor(a,x.date<TODAY?TODAY:x.date).slice(0,7)}):x}).concat(cards().filter(a=>cp['out:card:'+a.id]).map(a=>{const z=cp['out:card:'+a.id];return {type:'expense',cat:'other',amount:z.v,base:z.base,label:z.label,src:'card:'+a.id,card:1}}));const tin=it.filter(x=>x.type==='income').reduce((v,x)=>v+x.amount,0),tout=it.filter(x=>x.type!=='income'&&!x.onCard).reduce((v,x)=>v+x.amount,0);return it.length?`<div class="grp"><span>${t('planLines')}</span><span class="num">${tin?'+'+money(tin)+' ':''}${tout?'−'+money(tout):''}</span></div><div class="list">${it.map(x=>`<div class="row tap" data-pe="${esc(x.src)}" data-pl="${esc(x.label)}" data-pv="${x.amount}" data-pb="${x.base??x.amount}"><div class="main"><span class="t">${esc(x.label)}${x.base!=null?' ✎':''} ›</span><span class="s">${x.card?t('cardPayLine'):x.onCard?'💳 '+esc(x.onCard.name)+' · '+t('paidIn')+' '+esc(monthLbl(x.payM)):(x.type==='income'?t('inc1'):t('exp1'))+' · '+esc(catName(catRoot(x.cat)))}${x.base!=null?' · '+t('usually')+' '+fmt(x.base):''}</span></div><b class="amt ${x.type==='income'?'pos':''}">${money(x.amount)}</b></div>`).join('')}</div><p class="hint">${t('planLinesHint')}</p>`:''})()}
     <button type="button" class="btn block" id="adjAdd">+ ${t('addPlan')}</button>
     <p class="hint">${t('fcMonthHint')}</p></div>`,rr=>{
     rr.querySelectorAll('[data-adj]').forEach(b=>b.onclick=e=>{e.stopPropagation();S.planAdj.splice(+b.dataset.adj,1);commit(t('deleted'));fcMonthSheet(m)});
@@ -1815,12 +1818,14 @@ function planAdjForm(m,idx){
     <label class="fld"><span>${t('category')}</span><select class="in-f" id="pc">${catOptsTree(ty,ed?ed.cat:'',false)}</select></label>
     <label class="fld"><span>${t('amount')}</span><input class="in-f amt num" id="pv" inputmode="decimal" placeholder="0" value="${ed?ed.amount:''}"></label>
     <label class="fld"><span>${t('note')}</span><input class="in-f" id="pn" value="${ed?esc(ed.label&&ed.label!==catName(ed.cat)?ed.label:''):''}"></label>
+    <label class="fld"><span>${t('payWith')}</span><select class="in-f" id="pa2"><option value="">${t('cashOrBank')}</option>${cards().map(a=>`<option value="${a.id}" ${ed&&ed.acc===a.id?'selected':''}>💳 ${esc(a.name)}</option>`).join('')}</select></label>
     <label class="fld" ${ed?'hidden':''}><span>${t('repeatFor')}</span><select class="in-f" id="pr">${[1,2,3,6,12].map(n=>`<option value="${n}">${n===1?t('thisMonthOnly'):n+' '+t('monthsW')}</option>`).join('')}</select></label>
     <div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
     bindSeg(r,'pa',v=>{ty=v;r.querySelector('#pc').innerHTML=catOptsTree(v,'',false)});
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const v=numv(r,'pv');if(!(v>0)){toast(t('needAmt'));return}
       const n=+val(r,'pr')||1,cat=val(r,'pc'),note=val(r,'pn');
-      if(ed)Object.assign(ed,{type:ty,cat,amount:v,label:note||catName(cat)});else for(let i=0;i<n;i++)S.planAdj.push({m:ymAdd(m,i),type:ty,cat,amount:v,label:note||catName(cat)});
+      const acc=ty==='expense'?val(r,'pa2'):'';
+      if(ed)Object.assign(ed,{type:ty,cat,amount:v,acc,label:note||catName(cat)});else for(let i=0;i<n;i++)S.planAdj.push({m:ymAdd(m,i),type:ty,cat,amount:v,acc,label:note||catName(cat)});
       commit(t('saved'));fcMonthSheet(m)};
   });
 }
@@ -1955,7 +1960,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.34 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.35 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
