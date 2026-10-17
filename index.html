@@ -2064,7 +2064,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.44 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.45 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -2093,8 +2093,11 @@ $('#shareBtn').onclick=()=>shareApp();
 $('#mNext').onclick=()=>{perShift(1);render()};
 $('#fab').onclick=()=>txForm();
 
-$('#view').addEventListener('click',e=>{
-  const r=e.target.closest('[data-tx]');if(r){txForm(S.tx.find(x=>x.id===r.dataset.tx));return}
+/* buttons inside a bottom sheet (e.g. "edit" in a warning) use the same actions as the main screen */
+$('#shB').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b&&$('#shB').contains(b))actClick(e)});
+$('#view').addEventListener('click',e=>actClick(e));
+function actClick(e){
+  const r=e.target.closest('#view [data-tx]');if(r){txForm(S.tx.find(x=>x.id===r.dataset.tx));return}
   const b=e.target.closest('[data-act]');if(!b)return;const id=b.dataset.id,a=b.dataset.act;
   const A={
     payInst:()=>payInst(id),payGam:()=>payGam(id),recvGam:()=>recvGam(id),
@@ -2135,7 +2138,7 @@ $('#view').addEventListener('click',e=>{
     reset:()=>confirmSheet(t('resetConfirm'),t('del'),()=>{const l=S.lang,keep=ACT==='me'?S.ledgers:undefined;S=blank();S.lang=l;if(ACT==='me'){S.ledgers=keep||[];PS=S}commit(t('deleted'))}),
   };
   if(A[a])A[a]();
-});
+}
 
 /* ---------- backup ---------- */
 const fileStamp=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'_'+pad(d.getHours())+'-'+pad(d.getMinutes())+'-'+pad(d.getSeconds())};
