@@ -372,7 +372,11 @@ async function unseal(key,iv,ct){const pt=await crypto.subtle.decrypt({name:'AES
 let KEYOBJ=null, SALT=null;
 const readVault=()=>{try{return JSON.parse(localStorage.getItem(VAULT)||'null')}catch(e){return null}};
 let saving=Promise.resolve();
+let tokenAsked=0;
 function save(){
+  if(typeof drv!=='undefined'&&drv.linked&&driveReady()&&!hasToken()&&Date.now()-tokenAsked>60000){
+    tokenAsked=Date.now();requestToken('').then(()=>scheduleDrive()).catch(()=>{drv.needAuth=true;if(S)render()});
+  }
   if(!KEYOBJ||!S)return;const snap=JSON.parse(JSON.stringify(S));const key=KEYOBJ,salt=SALT;
   saving=saving.then(async()=>{const {iv,ct}=await seal(key,snap);try{localStorage.setItem(VAULT,JSON.stringify({v:2,salt:toB64(salt),iter:ITER,iv,ct}));localStorage.setItem('daftar-elbeit-lang',snap.lang)}catch(e){}}).catch(()=>{});
   afterChange();
@@ -643,7 +647,7 @@ function vSet(){
   <section class="sec"><div class="sec-h"><h2>Google Drive</h2><span class="pill ${drv.linked?'ok':''}">${drv.linked?t('driveLinked'):t('driveOff')}</span></div>
     <p class="hint">${driveConfigured()?t('driveHint'):t('driveNotSetup')}</p>
     ${driveConfigured()?(drv.linked?`<div class="acts"><button class="btn pri" data-act="driveSync">${t('driveSyncNow')}</button><button class="btn" data-act="driveRestore">${t('driveRestore')}</button><button class="btn danger" data-act="driveUnlink">${t('driveUnlink')}</button></div>
-      <p class="hint">${t('driveLast')}: ${esc(driveLastLbl())} · ${t('driveKeep')}</p>`:`<div class="acts"><button class="btn pri" data-act="driveLink">${t('driveLink')}</button></div>`):''}
+      <p class="hint">${drv.email?esc(drv.email)+' · ':''}${t('driveLast')}: ${esc(driveLastLbl())} · ${t('driveKeep')}</p>`:`<div class="acts"><button class="btn pri" data-act="driveLink">${t('driveLink')}</button></div>`):''}
   </section>
   ${installEvt?`<section class="sec"><button class="btn pri block" data-act="install">${t('install')}</button></section>`:''}
   <section class="sec"><div class="sec-h"><h2>${t('security')}</h2></div><p class="hint">${t('autoLockHint')}</p>
@@ -775,9 +779,9 @@ function changePinForm(){
 /* ---------- Google Drive (drive.file scope: the app sees only files it created) ---------- */
 const CFG=window.DAFTARI_CONFIG||{};
 const DRV_KEY='daftari-drive', DKEEP=100, GAPI='https://www.googleapis.com';
-let drv={linked:false,folderId:null,lastUp:null,needAuth:false,busy:false};
+let drv={linked:false,folderId:null,lastUp:null,email:'',needAuth:false,busy:false};
 try{Object.assign(drv,JSON.parse(localStorage.getItem(DRV_KEY)||'{}'))}catch(e){}
-const drvSave=()=>{try{localStorage.setItem(DRV_KEY,JSON.stringify({linked:drv.linked,folderId:drv.folderId,lastUp:drv.lastUp}))}catch(e){}};
+const drvSave=()=>{try{localStorage.setItem(DRV_KEY,JSON.stringify({linked:drv.linked,folderId:drv.folderId,lastUp:drv.lastUp,email:drv.email}))}catch(e){}};
 let gToken=null,gExp=0,gClient=null,drvTimer=null;
 const driveConfigured=()=>!!CFG.googleClientId;
 const driveReady=()=>driveConfigured()&&!!(window.google&&google.accounts&&google.accounts.oauth2);
@@ -788,7 +792,7 @@ function requestToken(prompt){
     if(!gClient)gClient=google.accounts.oauth2.initTokenClient({client_id:CFG.googleClientId,scope:'https://www.googleapis.com/auth/drive.file',callback:()=>{}});
     gClient.callback=r=>{if(r&&r.access_token){gToken=r.access_token;gExp=Date.now()+((+r.expires_in||3600)-120)*1000;drv.needAuth=false;res(gToken)}else rej(r)};
     gClient.error_callback=e=>rej(e);
-    gClient.requestAccessToken({prompt});
+    const o={prompt};if(drv.email)o.login_hint=drv.email;gClient.requestAccessToken(o);
   });
 }
 async function gfetch(path,opt){
@@ -838,14 +842,15 @@ async function syncDrive(manual){
 function scheduleDrive(){if(!drv.linked)return;clearTimeout(drvTimer);drvTimer=setTimeout(()=>syncDrive(false),5000)}
 async function driveConnect(){
   if(!driveReady()){toast(driveConfigured()?t('loading'):t('driveNotSetup'));return}
-  try{await requestToken('consent');await ensureFolder();drv.linked=true;drvSave();await syncDrive(true)}catch(e){}
+  try{await requestToken('consent');try{const a=await (await gfetch('/drive/v3/about?fields=user(emailAddress)')).json();drv.email=(a.user&&a.user.emailAddress)||''}catch(x){}
+    await ensureFolder();drv.linked=true;drvSave();await syncDrive(true)}catch(e){}
   render();
 }
 async function driveResume(){try{await requestToken('');await syncDrive(true)}catch(e){render()}}
 function driveUnlink(){
   confirmSheet(t('driveUnlink')+'?',t('driveUnlink'),()=>{
     try{if(gToken&&driveReady())google.accounts.oauth2.revoke(gToken,()=>{})}catch(e){}
-    gToken=null;drv={linked:false,folderId:null,lastUp:null,needAuth:false,busy:false};drvSave();render();
+    gToken=null;drv={linked:false,folderId:null,lastUp:null,email:'',needAuth:false,busy:false};drvSave();render();
   });
 }
 async function driveRestore(){
@@ -899,7 +904,6 @@ function showLock(){
   $('#lock').hidden=false;
   setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
   $('#lkF').onsubmit=async e=>{e.preventDefault();const err=m=>$('#lkE').textContent=m;
-    if(!setup&&drv.linked&&driveReady()&&!hasToken())requestToken('').catch(()=>{drv.needAuth=true});
     const p1=$('#lp1').value;
     if(setup){const p2=$('#lp2').value;if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}
       err(t('working'));SALT=crypto.getRandomValues(new Uint8Array(16));KEYOBJ=await derive(p1,SALT,ITER);
