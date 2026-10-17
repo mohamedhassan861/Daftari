@@ -307,6 +307,7 @@ driveErr:['معرفناش نحفظ على Drive، هنحاول تاني مع ا�
 driveNotSetup:['ربط Google Drive لسه متجهزش في النسخة دي.','Google Drive is not set up in this build yet.'],
 driveNone:['مفيش نسخ على Drive لسه.','No backups on Drive yet.'],driveSyncNow:['احفظ على Drive دلوقتي','Save to Drive now'],
 driveKeep:['بنحتفظ بآخر 100 نسخة، والأقدم بتروح سلة المهملات في الـ Drive.','The latest 100 copies are kept; older ones move to Drive trash.'],
+driveAccount:['الحساب المربوط','Linked account'],driveSwitch:['غيّر الحساب','Change account'],driveAccUnknown:['هيظهر بعد أول حفظ على Drive','Shown after the next save to Drive'],
 install:['ثبّت البرنامج على الموبايل','Install on this phone'],
 shareDrive:['احفظ نسخة على Google Drive','Save a copy to Google Drive'],
 shareHint:['هتظهرلك قايمة المشاركة، اختار منها Drive واحفظ في الفولدر اللي يريحك. النسخة متشفرة بالرقم السري.','The share menu opens; choose Drive and pick a folder. The copy is encrypted with your PIN.'],
@@ -646,8 +647,9 @@ function vSet(){
   <section class="sec"><div class="sec-h"><h2>${t('cats')} · ${t('income')}</h2><button class="link" data-act="addCat" data-ty="income">+ ${t('addCat')}</button></div><div class="list"><div class="chips">${chips('income')}</div></div></section>
   <section class="sec"><div class="sec-h"><h2>Google Drive</h2><span class="pill ${drv.linked?'ok':''}">${drv.linked?t('driveLinked'):t('driveOff')}</span></div>
     <p class="hint">${driveConfigured()?t('driveHint'):t('driveNotSetup')}</p>
-    ${driveConfigured()?(drv.linked?`<div class="acts"><button class="btn pri" data-act="driveSync">${t('driveSyncNow')}</button><button class="btn" data-act="driveRestore">${t('driveRestore')}</button><button class="btn danger" data-act="driveUnlink">${t('driveUnlink')}</button></div>
-      <p class="hint">${drv.email?esc(drv.email)+' · ':''}${t('driveLast')}: ${esc(driveLastLbl())} · ${t('driveKeep')}</p>`:`<div class="acts"><button class="btn pri" data-act="driveLink">${t('driveLink')}</button></div>`):''}
+    ${driveConfigured()?(drv.linked?`<div class="list"><div class="setrow"><span class="label">${t('driveAccount')}</span><b class="num" style="overflow-wrap:anywhere">${drv.email?esc(drv.email):`<span class="muted" style="font-weight:400">${t('driveAccUnknown')}</span>`}</b></div></div>
+      <div class="acts"><button class="btn pri" data-act="driveSync">${t('driveSyncNow')}</button><button class="btn" data-act="driveRestore">${t('driveRestore')}</button><button class="btn" data-act="driveSwitch">${t('driveSwitch')}</button><button class="btn danger" data-act="driveUnlink">${t('driveUnlink')}</button></div>
+      <p class="hint">${t('driveLast')}: ${esc(driveLastLbl())} · ${t('driveKeep')}</p>`:`<div class="acts"><button class="btn pri" data-act="driveLink">${t('driveLink')}</button></div>`):''}
   </section>
   ${installEvt?`<section class="sec"><button class="btn pri block" data-act="install">${t('install')}</button></section>`:''}
   <section class="sec"><div class="sec-h"><h2>${t('security')}</h2></div><p class="hint">${t('autoLockHint')}</p>
@@ -661,7 +663,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v1.3 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v1.4 · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -675,6 +677,7 @@ function render(){
   $('#fab').hidden=!(tab==='home'||tab==='tx');
   if(tab==='tx'){bindSeg(v,'txf',x=>{txFilter=x;render()});const q=v.querySelector('#q');q.oninput=()=>{txQuery=q.value;const p=q.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(p,p)}}
   if(tab==='obl')bindSeg(v,'obf',x=>{oblTab=x;render()});
+  if(tab==='set'&&drv.linked&&!drv.email&&hasToken()&&!fetchDriveEmail.busy){fetchDriveEmail.busy=1;fetchDriveEmail().then(e=>{fetchDriveEmail.busy=0;if(e&&tab==='set')render()})}
   if(tab==='set'){bindSeg(v,'lg',x=>{S.lang=x;LANG=x;commit()});const ad=v.querySelector('#autoDl');ad.onchange=()=>{S.autoDl=ad.checked;commit(t('saved'))};const c=v.querySelector('#cur');c.onchange=()=>{S.currency=c.value.trim()||'ج.م';commit(t('saved'))}}
 }
 $('#nav').onclick=e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;render();window.scrollTo(0,0)}};
@@ -698,7 +701,7 @@ $('#view').addEventListener('click',e=>{
       r.querySelector('#f').onsubmit=ev=>{ev.preventDefault();const nm=val(r,'nm');if(!nm){toast(t('needName'));return}S.cats[ty].splice(S.cats[ty].length-(ty==='expense'?3:2),0,{id:'c'+uid(),ar:nm,en:nm,sys:false});closeSheet();commit(t('saved'))}})},
     delCat:()=>{const ty=b.dataset.ty,used=S.tx.some(x=>x.cat===id);confirmSheet(used?t('catInUse'):t('confirmDel'),t('del'),()=>{
       S.cats[ty]=S.cats[ty].filter(c=>c.id!==id);S.tx.forEach(x=>{if(x.cat===id)x.cat=ty==='expense'?'other':'iother'});delete S.budgets[id];commit(t('deleted'))})},
-    export:()=>saveToPhone(false).then(ok=>{if(ok)render()}),import:doImport,copyBackup:copyBackup,shareDrive:shareBackup,driveLink:driveConnect,driveSync:()=>{if(hasToken())syncDrive(true);else driveResume()},driveRestore:driveRestore,driveUnlink:driveUnlink,driveResume:driveResume,
+    export:()=>saveToPhone(false).then(ok=>{if(ok)render()}),import:doImport,copyBackup:copyBackup,shareDrive:shareBackup,driveLink:driveConnect,driveSync:()=>{if(hasToken())syncDrive(true);else driveResume()},driveRestore:driveRestore,driveUnlink:driveUnlink,driveSwitch:driveSwitch,driveResume:driveResume,
     install:()=>{if(installEvt){installEvt.prompt();installEvt=null;render()}},changePin:changePinForm,lockNow:lockNow,
     reset:()=>confirmSheet(t('resetConfirm'),t('del'),()=>{const l=S.lang;S=blank();S.lang=l;commit(t('deleted'))}),
   };
@@ -848,6 +851,18 @@ async function driveConnect(){
   if(!driveReady()){toast(driveConfigured()?t('loading'):t('driveNotSetup'));return}
   try{await requestToken('consent');try{const a=await (await gfetch('/drive/v3/about?fields=user(emailAddress)')).json();drv.email=(a.user&&a.user.emailAddress)||''}catch(x){}
     await ensureFolder();drv.linked=true;drvSave();await syncDrive(true)}catch(e){}
+  render();
+}
+async function fetchDriveEmail(){
+  try{const a=await (await gfetch('/drive/v3/about?fields=user(emailAddress)')).json();drv.email=(a.user&&a.user.emailAddress)||'';drvSave();return drv.email}catch(e){return ''}
+}
+async function driveSwitch(){
+  if(!driveReady())return;
+  try{
+    try{if(gToken)google.accounts.oauth2.revoke(gToken,()=>{})}catch(e){}
+    gToken=null;keepToken();drv.email='';drv.folderId=null;drv.lastUp=null;drvSave();
+    await requestToken('select_account consent');await fetchDriveEmail();await ensureFolder();drv.linked=true;drvSave();await syncDrive(true);
+  }catch(e){}
   render();
 }
 async function driveResume(){try{await requestToken('');await syncDrive(true)}catch(e){render()}}
