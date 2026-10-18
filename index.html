@@ -302,7 +302,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.54';
+const APP_VER='0.55';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -506,7 +506,7 @@ netMonthOnly:['صافي الشهر لوحده','This month only'],
 needOnline:['أول مرة محتاج إنترنت علشان تسجّل بجوجل وتربط Drive.','The first time you need internet to sign in with Google and link Drive.'],
 regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Google Drive علشان تكمّل.','Sign in with Google and allow Google Drive to continue.'],
 regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],newVer:['فيه نسخة جديدة من البرنامج، وهتتحدث لوحدها أول ما يتقفل. أو حدّثها دلوقتي:','A new version is ready. It installs itself next time the app locks, or update now:'],
-cashIn:['دخل','In'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
+cashIn:['دخل','In'],xferTo:['تحويل إلى','Transfer to'],xferFrom:['تحويل من','Transfer from'],xferNet:['تحويلات بين حساباتك (مش دخل ولا مصروف)','Moves between your accounts (not income or spending)'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
 cardsOwe:['عليك للكروت','Owed on cards'],nextPay:['أقرب سداد','Next payment'],payWith:['بيتدفع من','Paid from'],anyAcc:['أي حساب','Any account'],
 loanPlan:['طريقة السداد','Repayment'],planOnce:['مرة واحدة','In one go'],planInst:['أقساط شهرية','Monthly installments'],instFrom:['أول قسط','First installment'],perMonthFrom:['في الشهر من','a month from'],
 instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],instMonths:['عدد الشهور','Months'],instOfLeft:['الباقي %v:','Left %v:'],lastInst:['آخر قسط','last one'],loanPaidSoFar:['اتدفع','Paid'],loanMoreB:['زوّد السلفة','Borrow more'],loanMoreL:['سلّفته تاني','Lend more'],loanAdded:['زيادة','Added'],loanIntoAcc:['الفلوس دخلت في','Money went into'],loanFromAcc:['الفلوس طلعت من','Money came from'],loanNoAcc:['مش هسجلها في حساب','Don\'t record in an account'],loanMoreHint:['المبلغ هيتضاف على نفس السلفة. بعد الحفظ هتفتح السلفة عشان تعدّل طريقة السداد لو عايز، والأقساط بتتحسب على الباقي.','The amount is added to the same loan. After saving the loan opens so you can change the repayment; installments are worked out on what is left.'],loanMoreDone:['اتضافت على السلفة','Added to the loan'],
@@ -1005,6 +1005,19 @@ const KW_CAT=[[/بنزين|وقود|سولار|غاز طبيعي|fuel|petrol|gas
   [/مرتب|راتب|salary|payroll/i,'salary'],[/حافز|مكافأة|مكافاة|بونص|bonus/i,'bonus'],[/فوايد|فوائد|عائد|interest/i,'interest']];
 const KW_IN=/قبضت|استلمت|جالي|جالى|اتحول لي|اتحولي|حولولي|إيداع|ايداع|اضافة|إضافة|دائن|credited|received|deposit|refund|استرداد|مرتجع|تم استلام|incoming/i;
 const KW_OUT=/صرفت|دفعت|اشتريت|خصم|سحب|شراء|مدين|debited|purchase|paid|withdraw|spent|تم دفع|سداد|charged/i;
+function xferOf(raw,low){
+  const byType=ty=>S.accounts.find(a=>a.type===ty),bank=()=>byType('bank'),cash=()=>byType('cash'),card=()=>byType('card');
+  /* accounts named in the text, in the order they appear (by name, or by words like كاش / البنك / الكارت) */
+  const hits=[];S.accounts.forEach(a=>{const i=a.name?low.indexOf(a.name.toLowerCase()):-1;if(i>=0)hits.push({a,i})});
+  const word=(rx,a)=>{const m=raw.match(rx);if(m&&a&&!hits.some(h=>h.a.id===a.id))hits.push({a,i:m.index})};
+  word(/كاش|نقدي|نقدا|نقداً|cash/i,cash());word(/البنك|بنك|الحساب البنكي|bank/i,bank());word(/الكارت|الفيزا|الكريديت|كريدت|credit|card/i,card());
+  hits.sort((x,y)=>x.i-y.i);
+  if(/سحب.{0,12}(نقد|كاش|atm|صراف|ماكين)|atm|صراف آلي|ماكينة/i.test(raw)){const from=(hits.find(h=>h.a.type==='bank')||{}).a||bank();return {from:from&&from.id,to:(cash()||{}).id}}
+  if(/(ايداع|إيداع).{0,10}(نقد|كاش)/i.test(raw)){const to=(hits.find(h=>h.a.type==='bank')||{}).a||bank();return {from:(cash()||{}).id,to:to&&to.id}}
+  if(/(سداد|سددت|دفعت).{0,15}(الكارت|الفيزا|الكريديت|كريدت|credit card)/i.test(raw)&&card()){const from=(hits.find(h=>h.a.type!=='card')||{}).a||bank()||accOf(S.defAcc);return {from:from&&from.id,to:card().id}}
+  if(/حولت|حوّلت|تحويل|نقلت|سحبت/i.test(raw)&&hits.length>=2){const m=raw.match(/من\s*(\S+)/),fromH=m?hits.find(h=>h.i>=m.index&&h.i<=m.index+m[0].length+2):null,from=fromH||hits[0],to=hits.find(h=>h!==from);return {from:from.a.id,to:to.a.id}}
+  return null;
+}
 function parseEntry(text){
   const raw=normDigits(text).replace(/\s+/g,' ').trim();if(!raw)return null;
   /* amounts, skipping ones labelled as the remaining balance */
@@ -1021,6 +1034,8 @@ function parseEntry(text){
   if(!cat)for(const [rx,id] of KW_CAT){if(rx.test(raw)&&S.cats[type].some(c=>c.id===id)){cat=id;break}}
   /* prefer a sub-category whose name appears */
   if(cat)for(const k of catKids(type,cat))if(low.includes(cName(k).toLowerCase())){cat=k.id;break}
+  /* moves between your own accounts: "حولت 5000 من البنك للكاش", ATM withdrawals, cash deposits, card payments */
+  const xf=xferOf(raw,low);if(xf&&xf.from&&xf.to&&xf.from!==xf.to){const nt=raw.replace(re,' ').replace(/جنيه|جنيها|ج\.م|EGP|LE|جم/gi,' ').replace(/\s+/g,' ').trim().slice(0,60);return {type:'transfer',amount,acc:xf.from,toAcc:xf.to,cat:'transfer',note:nt}}
   let note=raw.replace(/(رصيد|balance|available|المتاح).*$/i,'').replace(re,' ').replace(/جنيه|جنيها|ج\.م|EGP|LE|L\.E|جم|دولار|USD|\$|يورو|EUR|ريال|SAR/gi,' ').replace(/\s+/g,' ').trim();
   if(note.length>60)note=note.slice(0,60)+'…';
   return {type,amount,acc:(acc||accOf(S.defAcc)).id,cat:cat||(type==='expense'?'other':'iother'),note};
@@ -1042,7 +1057,7 @@ function quickFromText(text){const p=parseEntry(text);if(!p||!p.amount){toast(t(
 /* ---------- safe to spend this month ---------- */
 function safeToSpend(){
   const liquid=liqAll(TODAY),ev=remainingPlan(TODAY_YM),sm=f=>ev.filter(f).reduce((v,e)=>v+e.amt,0);
-  const obl=sm(e=>e.dir==='out'&&['inst','gam','loan','card','adj','tx'].includes(e.kind)),recOut=sm(e=>e.dir==='out'&&e.kind==='rec'),recIn=sm(e=>e.dir==='in');
+  const obl=sm(e=>e.dir==='out'&&['inst','gam','loan','card','adj','tx','xfer'].includes(e.kind)),recOut=sm(e=>e.dir==='out'&&e.kind==='rec'),recIn=sm(e=>e.dir==='in');
   const goals=S.goals.reduce((v,g)=>v+toBase(goalMonthly(g),g.currency||BASE()),0);
   const safe=liquid-obl-recOut-goals;
   const last=new Date(+TODAY.slice(0,4),+TODAY.slice(5,7),0).getDate(),daysLeft=last-+TODAY.slice(8,10)+1;
@@ -1644,6 +1659,7 @@ function vHome(){
     ${oweT>0?`<div class="row tap" data-act="goCards" style="padding:8px 14px"><div class="main"><span class="t">💳 ${t('cardsOwe')}</span><span class="s">${nextD?t('nextPay')+' '+esc(shortDate(nextD)):''}</span></div><b class="amt neg">${money(oweT)}</b></div>`:''}
     <div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(exp)}</span></div></div>
     <div class="net tile" data-act="stmtFlow" data-ty="net" style="padding-top:6px"><span class="label">${per.mode==='month'?t('netMonthOnly'):t('netPer')} ›</span><span class="mid ${net<0?'neg':'pos'}">${money(net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div>
+    ${Math.abs(P.xf)>0.5?`<p class="hint" style="padding:0 14px 8px;margin:0">⇄ ${t('xferNet')}: ${P.xf>0?'+':'−'}${money(Math.abs(P.xf))}</p>`:''}
     ${Math.abs(P.fx)>1?`<p class="hint" style="padding:0 14px 8px;margin:0">${t('fxDiff')} ${money(P.fx)}</p>`:''}`})()}
   </section>
   <section class="sec"><div class="sec-h"><h2>${per.mode==='month'?t('dueMonth'):t('dueUntil')+' '+esc(monthLbl(DM))}</h2>${dueTotal?`<span class="muted">${money(dueTotal)} ${esc(curSym(BASE()))}</span>`:''}</div>
@@ -1868,7 +1884,7 @@ const byRoot=(list,type,amt)=>{const o={};list.filter(x=>x.type===type).forEach(
 function planVsActual(months){
   const P={income:{},expense:{}},A={income:{},expense:{}},L={};
   months.forEach(m=>{const cp=cashPlan(m),ca=cashActual(txOf(m));
-    [[cp,P],[ca,A]].forEach(([src,dst])=>Object.entries(src).forEach(([k,x])=>{const ty=k.startsWith('in:')?'income':'expense',id=k.slice(k.indexOf(':')+1);dst[ty][id]=(dst[ty][id]||0)+x.v;L[id]=x.label}))});
+    [[cp,P],[ca,A]].forEach(([src,dst])=>Object.entries(src).forEach(([k,x])=>{if(k.startsWith('x'))return;const ty=k.startsWith('in:')?'income':'expense',id=k.slice(k.indexOf(':')+1);dst[ty][id]=(dst[ty][id]||0)+x.v;L[id]=x.label}))});
   return {P,A,L};
 }
 const isLiquid=a=>!!a&&['cash','bank','wallet'].includes(a.type);
@@ -1880,8 +1896,8 @@ function cardDueFor(a,date){const [y,m,d]=date.split('-').map(Number);
 function cashActual(list){const r={};const put=(k,l,v)=>{if(!r[k])r[k]={label:l,v:0};r[k].v+=v};
   for(const x of list){const a=accOf(x.acc);if(!a)continue;const v=baseAmt(x);
     if(x.type==='transfer'){const b=accOf(x.toAcc);if(!b)continue;const la=isLiquid(a),lb=isLiquid(b);
-      if(la&&!lb)put(b.type==='card'?'out:card:'+b.id:'out:xfer',b.type==='card'?t('cardPayNote')+' · '+b.name:t('transfer')+' · '+b.name,v);
-      else if(!la&&lb)put('in:xfer',t('transfer')+' · '+a.name,toBase(+(x.toAmount??x.amount),b.currency))}
+      if(la&&!lb)put(b.type==='card'?'out:card:'+b.id:'xout:'+b.id,b.type==='card'?t('cardPayNote')+' · '+b.name:t('xferTo')+' '+b.name,v);
+      else if(!la&&lb)put('xin:'+a.id,t('xferFrom')+' '+a.name,toBase(+(x.toAmount??x.amount),b.currency))}
     else if(isLiquid(a)){const k=(x.type==='income'?'in:':'out:')+catRoot(x.cat);put(k,catName(catRoot(x.cat)),v)}}
   return r}
 function cashPlan(m){const r={};const put=(k,l,v)=>{if(v<=0.004)return;if(!r[k])r[k]={label:l,v:0};r[k].v+=v};
@@ -1897,14 +1913,17 @@ function cashPlan(m){const r={};const put=(k,l,v)=>{if(v<=0.004)return;if(!r[k])
 /* past months = actual; this month = the larger of actual and plan per line (card payments add up); later months = plan */
 function monthCash(m){
   const act=cashActual(txOf(m));const sum=(o,p)=>Object.entries(o).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
-  if(m<TODAY_YM)return {i:sum(act,'in:'),e:sum(act,'out:'),kind:'act',lines:act};
-  const pl=cashPlan(m);if(m>TODAY_YM)return {i:sum(pl,'in:'),e:sum(pl,'out:'),kind:'plan',lines:pl};
+  const xn=o=>sum(o,'xin:')-sum(o,'xout:');
+  if(m<TODAY_YM)return {i:sum(act,'in:'),e:sum(act,'out:'),x:xn(act),kind:'act',lines:act};
+  const pl=cashPlan(m);
+  /* later months: the plan less what was already paid ahead, plus entries already recorded with a date in that month (moves between your accounts kept apart) */
+  if(m>TODAY_YM){const rem=remainingPlan(m),rs=d=>rem.filter(e=>e.dir===d&&e.kind!=='xfer').reduce((v,e)=>v+e.amt,0);return {i:rs('in'),e:rs('out'),x:rem.filter(e=>e.kind==='xfer').reduce((v,e)=>v+(e.dir==='in'?e.amt:-e.amt),0),kind:'plan',lines:pl}}
   /* this month: the row shows the plan as it is; the balance also takes into account where actual already went past the plan */
-  const lines={},dev=[];new Set([...Object.keys(pl),...Object.keys(act)]).forEach(k=>{const p=pl[k]?pl[k].v:0,a=act[k]?act[k].v:0;lines[k]={label:(pl[k]||act[k]).label,v:Math.max(p,a),a,p};if(a-p>0.5)dev.push({k,label:lines[k].label,v:a-p})});
+  const lines={},dev=[];new Set([...Object.keys(pl),...Object.keys(act)].filter(k=>!k.startsWith('x'))).forEach(k=>{const p=pl[k]?pl[k].v:0,a=act[k]?act[k].v:0;lines[k]={label:(pl[k]||act[k]).label,v:Math.max(p,a),a,p};if(a-p>0.5)dev.push({k,label:lines[k].label,v:a-p})});
   const sp=pfx=>Object.entries(lines).filter(([k])=>k.startsWith(pfx)).reduce((v,[,x])=>v+x.p,0);
   /* projected for the whole month = what already happened up to today + what is still to come (same calculation as "will the money last?") */
-  const past=cashActual(txOf(m).filter(x=>x.date<=TODAY)),rem=remainingPlan(m),rs=d=>rem.filter(e=>e.dir===d).reduce((v,e)=>v+e.amt,0);
-  return {i:sp('in:'),e:sp('out:'),iMax:sum(past,'in:')+rs('in'),eMax:sum(past,'out:')+rs('out'),kind:'cur',lines,dev};
+  const past=cashActual(txOf(m).filter(x=>x.date<=TODAY)),rem=remainingPlan(m),rs=d=>rem.filter(e=>e.dir===d&&e.kind!=='xfer').reduce((v,e)=>v+e.amt,0),rx=rem.filter(e=>e.kind==='xfer').reduce((v,e)=>v+(e.dir==='in'?e.amt:-e.amt),0);
+  return {i:sp('in:'),e:sp('out:'),iMax:sum(past,'in:')+rs('in'),eMax:sum(past,'out:')+rs('out'),x:xn(past)+rx,kind:'cur',lines,dev};
 }
 function fcMonthSheet(m){
   const r=monthCash(m),row=(l,v,c)=>`<div class="row"><div class="main"><span class="t">${esc(l)}</span></div><b class="amt ${c||''}">${money(v)}</b></div>`;
@@ -1919,17 +1938,18 @@ function fcMonthSheet(m){
   const sumP=(o,p)=>Object.entries(o).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
   const ai=sumP(A,'in:'),ao=sumP(A,'out:'),pi=sumP(P,'in:'),po=sumP(P,'out:');
   const three=(i,o,cls)=>`<div class="flowb"><div><span>${t('cashIn')}</span><b class="${cls?'':'pos'}">${money(i)}</b></div><div><span>${t('cashOut')}</span><b>${money(o)}</b></div><div><span>${t('netShort')}</span><b class="${i-o<0?'neg':'pos'}">${money(i-o)}</b></div></div>`;
-  const lines=o=>{const L=Object.entries(o).sort((a,b)=>b[1].v-a[1].v);return L.length?`<details><summary>${t('showLines')} ›</summary>${L.map(([k,x])=>`<div class="ln"><span>${k.startsWith('in:')?'+':'−'} ${esc(x.label)}</span><b class="${k.startsWith('in:')?'pos':''}">${money(x.v)}</b></div>`).join('')}</details>`:''};
+  const ax=sumP(A,'xin:')-sumP(A,'xout:'),xrow=Math.abs(ax)>0.5?`<div class="ln" style="padding:0 12px 6px"><span>⇄ ${t('xferNet')}</span><b>${ax>0?'+':'−'}${money(Math.abs(ax))}</b></div>`:'';
+  const lines=o=>{const L=Object.entries(o).filter(([k])=>!k.startsWith('x')).sort((a,b)=>b[1].v-a[1].v);return L.length?`<details><summary>${t('showLines')} ›</summary>${L.map(([k,x])=>`<div class="ln"><span>${k.startsWith('in:')?'+':'−'} ${esc(x.label)}</span><b class="${k.startsWith('in:')?'pos':''}">${money(x.v)}</b></div>`).join('')}</details>`:''};
   const sg=(v,goodUp)=>{const c=Math.abs(v)<0.5?'':(v>0)===goodUp?'pos':'neg';return `<b class="${c}">${v>0.5?'+':''}${money(v)}</b>`};
   openSheet(monthLbl(m),`<div class="form">
-    <div class="blk act"><div class="blk-h"><span>● ${t('actual')}</span><small class="muted">${m>TODAY_YM?t('notYet'):t('cashBanks')}</small></div>${three(ai,ao)}${lines(A)}</div>
+    <div class="blk act"><div class="blk-h"><span>● ${t('actual')}</span><small class="muted">${m>TODAY_YM?t('notYet'):t('cashBanks')}</small></div>${three(ai,ao)}${xrow}${lines(A)}</div>
     <div class="blk plan"><div class="blk-h"><span>● ${t('planned')}</span><small class="muted">${t('cashBanks')}</small></div>${three(pi,po)}${lines(P)}</div>
     ${m>=TODAY_YM?(()=>{const sr=fcSeries(m),me=sr[sr.length-1],nowBal=liqAll(TODAY),curRem=remainingPlan(TODAY_YM).reduce((v,e)=>v+(e.dir==='in'?e.amt:-e.amt),0);
       const steps=[`<div class="ln"><span>${t('nowHave')} (${esc(shortDate(TODAY))})</span><b>${money(nowBal)}</b></div>`];let run=nowBal;
       const lines=mm=>monthLines(mm).map(e=>`<div class="ln" style="padding-inline-start:14px;font-size:12px"><span>${e.dir==='in'?'+':'−'} ${esc(e.label)}</span><b class="${e.dir==='in'?'pos':''}">${money(e.amt)}</b></div>`).join('');
       const step=(lbl,n,mm)=>`<details class="ln" style="display:block"><summary style="display:flex;justify-content:space-between;gap:8px;color:inherit;font-size:13px"><span>${n<0?'−':'+'} ${lbl} ›</span><b class="${n<0?'neg':'pos'}">${money(Math.abs(n))}</b></summary>${lines(mm)}</details>`;
       if(m>TODAY_YM){run+=curRem;steps.push(step(t('restOf')+' '+esc(monthLbl(TODAY_YM)),curRem,TODAY_YM));
-        sr.slice(1,-1).forEach(x=>{const n=x.i-x.e;run+=n;steps.push(step(t('gapW')+' '+esc(monthLbl(x.m)),n,x.m))})}
+        sr.slice(1,-1).forEach(x=>{const n=x.i-x.e+(x.x||0);run+=n;steps.push(step(t('gapW')+' '+esc(monthLbl(x.m)),n,x.m))})}
       steps.push(`<div class="ln"><span><b>= ${m>TODAY_YM?t('availStart')+' '+esc(monthLbl(m)):t('nowHave')}</b></span><b>${money(m>TODAY_YM?me.open:nowBal)}</b></div>`);
       const net=me.bal-me.open;
       return `<div class="blk plan"><div class="blk-h"><span>● ${t('availEnd')}</span></div>
@@ -2056,7 +2076,7 @@ function remainingPlan(m){
     push(it.date&&it.date.slice(0,7)===m?it.date:mStart,it.rem,label,dir,kind)}
   /* entries already recorded with a later date this month */
   tx.filter(x=>x.date>TODAY).forEach(x=>{const a=accById(x.acc),label=x.note||catName(x.cat);
-    if(x.type==='transfer'){const b=accById(x.toAcc),la=isLiquid(a),lb=isLiquid(b);if(la&&!lb)push(x.date,baseAmt(x),label,'out','tx');else if(!la&&lb)push(x.date,toBase(+(x.toAmount??x.amount),b.currency),label,'in','tx')}
+    if(x.type==='transfer'){const b=accById(x.toAcc),la=isLiquid(a),lb=isLiquid(b);if(la&&!lb)push(x.date,baseAmt(x),label,'out',b&&b.type==='card'?'tx':'xfer');else if(!la&&lb)push(x.date,toBase(+(x.toAmount??x.amount),b.currency),label,'in','xfer')}
     else if(isLiquid(a))push(x.date,baseAmt(x),label,x.type==='income'?'in':'out','tx')});
   const cp=cashPlan(m),ca=cashActual(tx);
   cards().forEach(a=>{const k='out:card:'+a.id,p=(cp[k]||{}).v||0,done=(ca[k]||{}).v||0,rem=p-done;if(rem<=0.5)return;
@@ -2092,7 +2112,7 @@ function cashSheet(){
 /* what goes in and out of cash & banks in a month: obligations one by one, monthly spending and recurring income summed */
 function monthLines(m){
   let ev;
-  if(m===TODAY_YM)ev=remainingPlan(m);
+  if(m>=TODAY_YM)ev=remainingPlan(m);
   else{ev=planItems(m).filter(it=>{const a=accById(it.acc);return !(a&&a.type==='card')&&!it.done}).map(it=>({label:it.label||catName(it.cat),amt:it.amount,dir:it.type==='income'?'in':'out',kind:it.src?it.src.split(':')[0]:'adj'}));
     const cp=cashPlan(m);cards().forEach(a=>{const x=cp['out:card:'+a.id];if(x&&x.v>0.5)ev.push({label:x.label,amt:x.v,dir:'out',kind:'card'})})}
   const out=[],agg={};ev.forEach(e=>{if(e.kind==='bud'||e.kind==='rec'){const k=e.dir+e.kind;if(!agg[k])agg[k]={label:e.dir==='in'?t('regularIn'):e.kind==='bud'?t('monthlySpend'):t('regularOut'),amt:0,dir:e.dir};agg[k].amt+=e.amt}else out.push(e)});
@@ -2100,23 +2120,23 @@ function monthLines(m){
 }
 /* planned cash in/out still to come from today up to date d: whole future months use the month plan (as in the forecast), a part month uses the dated plan lines */
 function projFlows(d){
-  let i=0,o=0;if(d<=TODAY)return {i,o};
+  let i=0,o=0,x=0;if(d<=TODAY)return {i,o,x};
   for(let m=TODAY_YM;m<=d.slice(0,7);m=ymAdd(m,1)){
-    if(m>TODAY_YM&&d>=monthEnd(m)){const r=monthCash(m);i+=r.i;o+=r.e;continue}
-    remainingPlan(m).forEach(e=>{if(e.date>d)return;if(e.dir==='in')i+=e.amt;else o+=e.amt})}
-  return {i,o};
+    if(m>TODAY_YM&&d>=monthEnd(m)){const r=monthCash(m);i+=r.i;o+=r.e;x+=r.x||0;continue}
+    remainingPlan(m).forEach(e=>{if(e.date>d)return;if(e.kind==='xfer')x+=e.dir==='in'?e.amt:-e.amt;else if(e.dir==='in')i+=e.amt;else o+=e.amt})}
+  return {i,o,x};
 }
 /* cash & banks over the period: actual up to today, plan after it */
 function perCash(){
   const [a,b]=perRange(),proj=b>TODAY,now=liqAll(TODAY);
-  if(a>TODAY){const p0=projFlows(dayBefore(a)),p1=projFlows(b),o=now+p0.i-p0.o,pi=p1.i-p0.i,po=p1.o-p0.o;return {a,b,proj,fut:true,o,ai:0,ao:0,pi,po,c:o+pi-po,now,fx:0}}
+  if(a>TODAY){const p0=projFlows(dayBefore(a)),p1=projFlows(b),o=now+p0.i-p0.o+p0.x,pi=p1.i-p0.i,po=p1.o-p0.o,xf=p1.x-p0.x;return {a,b,proj,fut:true,o,ai:0,ao:0,xf,pi,po,c:o+pi-po+xf,now,fx:0}}
   const o=liqAll(dayBefore(a)),cf=cashActual(S.tx.filter(x=>x.date>=a&&x.date<=(proj?TODAY:b))),sm=p=>Object.entries(cf).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
-  const ai=sm('in:'),ao=sm('out:'),endA=proj?now:liqAll(b),p=proj?projFlows(b):{i:0,o:0};
-  return {a,b,proj,fut:false,o,ai,ao,pi:p.i,po:p.o,c:endA+p.i-p.o,now,fx:endA-o-(ai-ao)};
+  const ai=sm('in:'),ao=sm('out:'),xf0=sm('xin:')-sm('xout:'),endA=proj?now:liqAll(b),p=proj?projFlows(b):{i:0,o:0,x:0},xf=xf0+p.x;
+  return {a,b,proj,fut:false,o,ai,ao,xf,pi:p.i,po:p.o,c:endA+p.i-p.o+p.x,now,fx:endA-o-(ai-ao)-xf0};
 }
 function fcSeries(endM){
   const out=[];let bal=liqAll(monthEnd(ymAdd(TODAY_YM,-1)));
-  for(let m=TODAY_YM;m<=endM&&out.length<60;m=ymAdd(m,1)){const r=monthCash(m),open=bal;bal+=r.kind==='cur'?r.iMax-r.eMax:r.i-r.e;out.push(Object.assign({m,open,bal},r))}
+  for(let m=TODAY_YM;m<=endM&&out.length<60;m=ymAdd(m,1)){const r=monthCash(m),open=bal;bal+=(r.kind==='cur'?r.iMax-r.eMax:r.i-r.e)+(r.x||0);out.push(Object.assign({m,open,bal},r))}
   return out;
 }
 function planHTML(){
@@ -2140,7 +2160,7 @@ function planHTML(){
     ${cards().some(a=>!a.closeDay)?`<p class="hint" style="padding:6px 14px;margin:0">${t('cardSetDays')}</p>`:''}
     ${(()=>{const low=fc.reduce((a,r)=>r.bal<a.bal?r:a,fc[0]),firstGap=fc.find(r=>r.i-r.e<0);return `<div class="flowb" style="border-top:0"><div><span>${t('lowestBal')}</span><b class="${low.bal<0?'neg':''}">${money(low.bal)}</b><span>${esc(monthLbl(low.m))}</span></div><div><span>${t('firstGap')}</span><b class="${firstGap?'neg':'pos'}">${firstGap?money(firstGap.i-firstGap.e):'—'}</b><span>${firstGap?esc(monthLbl(firstGap.m)):t('noGap')}</span></div><div><span>${t('endBal')}</span><b class="${fc[fc.length-1].bal<0?'neg':''}">${money(fc[fc.length-1].bal)}</b><span>${esc(monthLbl(fc[fc.length-1].m))}</span></div></div>`})()}
     <div class="cmp h fc"><span>${t('monthW')}</span><span>${t('cashIn')}</span><span>${t('cashOut')}</span><span>${t('gapW')}</span><span>${t('availEnd')}</span></div>
-    ${fc.map(r=>`<div class="cmp fc tap" data-act="fcMonth" data-m="${r.m}"><span>${esc(monthShort(r.m))} ${r.m.slice(2,4)}${r.kind==='cur'?' •':''}</span><span class="pos">${money(r.i)}</span><span>${money(r.e)}</span><b class="${r.i-r.e<0?'neg':'pos'}">${money(r.i-r.e)}</b><b class="${r.bal<0?'neg':''}">${money(r.bal)}</b></div>${r.dev&&r.dev.length?`<div class="cmp fc" style="font-size:11px"><span style="grid-column:1/5;white-space:normal">↳ ${t('overPlan')}: ${r.dev.map(d=>esc(d.label)+' '+(d.k.startsWith('in:')?'+':'−')+fmt(d.v)).join('، ')}</span><b></b></div>`:''}`).join('')}
+    ${fc.map(r=>`<div class="cmp fc tap" data-act="fcMonth" data-m="${r.m}"><span>${esc(monthShort(r.m))} ${r.m.slice(2,4)}${r.kind==='cur'?' •':''}</span><span class="pos">${money(r.i)}</span><span>${money(r.e)}</span><b class="${r.i-r.e<0?'neg':'pos'}">${money(r.i-r.e)}</b><b class="${r.bal<0?'neg':''}">${money(r.bal)}</b></div>${Math.abs(r.x||0)>0.5?`<div class="cmp fc" style="font-size:11px"><span style="grid-column:1/5;white-space:normal">↳ ⇄ ${t('xferNet')}: ${r.x>0?'+':'−'}${fmt(Math.abs(r.x))}</span><b></b></div>`:''}${r.dev&&r.dev.length?`<div class="cmp fc" style="font-size:11px"><span style="grid-column:1/5;white-space:normal">↳ ${t('overPlan')}: ${r.dev.map(d=>esc(d.label)+' '+(d.k.startsWith('in:')?'+':'−')+fmt(d.v)).join('، ')}</span><b></b></div>`:''}`).join('')}
     </div><p class="hint">${t('forecastHint')}</p></details>`:''}`;
 }
 
@@ -3125,7 +3145,7 @@ if(!(window.crypto&&crypto.subtle)){$('#lkT').textContent='This browser cannot e
 else showLock();
 
 /* automated checks only: exposed on a local test server, never on the real site */
-if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,loanForm,loanTopUp,loanPaid,loanAdj,commit,render,migrate,blank,save};
+if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,loanForm,loanTopUp,loanPaid,loanAdj,parseEntry,commit,render,migrate,blank,save};
 })();
 </script>
 
