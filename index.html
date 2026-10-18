@@ -302,7 +302,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.56';
+const APP_VER='0.57';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -482,7 +482,7 @@ skipDup:['تجاهل الحركات المكررة','Skip duplicates'],importNow
 splitTitle:['مين عليه كام','Who owes whom'],you:['انت','you'],shareOf:['نصيبه','share'],settleBtn:['سجّل تسوية','Record settlement'],fromWho:['مين دفع','From'],toWho:['لمين','To'],
 splitHint:['كل مصروف بيتقسم بالتساوي على أعضاء الدفتر، إلا لو اخترت "على حسابي لوحدي".','Each expense is split equally among members unless marked "just me".'],paidByL:['مين دفع','Paid by'],splitL:['التقسيم','Split'],splitAll:['بالتساوي على الكل','Equally'],splitSelf:['على حسابي لوحدي','Just me'],
 bioOn:['الفتح بالبصمة','Fingerprint unlock'],bioHint:['اكتب رقمك السري مرة أخيرة، وبعدها الموبايل هيطلب بصمتك علشان يحفظ مفتاح دفتري.','Enter your PIN once more; your phone will then ask for your fingerprint to save a Daftari key.'],
-bioSetup:['فعّل البصمة','Set up fingerprint'],bioDone:['البصمة اشتغلت','Fingerprint unlock is on'],bioOffMsg:['البصمة اتقفلت','Fingerprint unlock is off'],bioUnlock:['افتح بالبصمة','Unlock with fingerprint'],
+bioSetup:['فعّل البصمة','Set up fingerprint'],bioDone:['البصمة اشتغلت','Fingerprint unlock is on'],bioOffMsg:['البصمة اتقفلت','Fingerprint unlock is off'],usePin:['اكتب الرقم السري','Type your PIN'],lockChoose:['افتح بالبصمة أو بالرقم السري','Open with fingerprint or PIN'],bioUnlock:['افتح بالبصمة','Unlock with fingerprint'],
 bioFail:['معرفناش نستخدم البصمة، اكتب الرقم السري','Fingerprint failed; enter your PIN'],bioUnsupported:['الموبايل أو المتصفح ده مش بيدعم الفتح بالبصمة','This phone or browser does not support fingerprint unlock'],bioReset:['غيّرت الرقم السري، فعّل البصمة تاني من الإعدادات','PIN changed; turn fingerprint unlock on again in Settings'],
 foundBackup:['لقينا نسخ ليك على Google Drive، اختار اللي ترجّعها أو اقفل لو مش عايز','We found backups in your Google Drive. Pick one to restore, or close to skip'],
 linkedOk:['متربط ✓','Connected ✓'],
@@ -3059,14 +3059,15 @@ function showLock(){
   const vt=readVault(),setup=!vt,needReg=!!CFG.authWorker;LOCKSETUP=setup;
   const de=document.documentElement;de.lang=LANG;de.dir=LANG==='en'?'ltr':'rtl';
   $('#lkBrand').textContent=t('app');
-  $('#lkT').textContent=setup?t('setupTitle'):t('lockTitle');
+  $('#lkT').textContent=setup?t('setupTitle'):bioInfo()?t('lockChoose'):t('lockTitle');
   $('#lkH').textContent=setup?t('pinMin'):'';
   $('#lkE').textContent='';
   $('#lkF').innerHTML=`${needReg?`<div id="acctW">${acctHTML()}</div>`:''}
+    ${!setup&&bioInfo()?`<button type="button" class="btn pri block" id="bioBtn">👆 ${t('bioUnlock')}</button><button type="button" class="btn block" id="pinBtn">🔢 ${t('usePin')}</button>`:''}
+    <div id="pinW" style="display:grid;gap:10px" ${!setup&&bioInfo()?'hidden':''}>
     <input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="lp1" aria-label="${t('pin1')}" placeholder="${t('pin1')}">
     ${setup?`<input class="in-f pin" type="password" inputmode="numeric" autocomplete="off" id="lp2" aria-label="${t('pin2')}" placeholder="${t('pin2')}">`:''}
-    <button class="btn pri block">${setup?t('create'):t('open')}</button>
-    ${!setup&&bioInfo()?`<button type="button" class="btn block" id="bioBtn">👆 ${t('bioUnlock')}</button>`:''}
+    <button class="btn pri block">${setup?t('create'):t('open')}</button></div>
     ${needReg?`<p class="hint" style="text-align:center;margin:0"><a href="privacy.html" target="_blank" rel="noopener" style="color:var(--muted)">${t('privacy')}</a></p>`:''}`;
   $('#lkForgot').hidden=setup;$('#lkForgot').textContent=t('forgot');
   $('#lock').hidden=false;
@@ -3076,7 +3077,8 @@ function showLock(){
   bindG();
   let bioBusy=false;const bioGo=async auto=>{if(bioBusy)return;bioBusy=true;try{const pin=await bioUnlockPin();$('#lp1').value=pin;$('#lkF').requestSubmit()}catch(x){if(!auto)err(t('bioFail'))}bioBusy=false};
   const bb=$('#bioBtn');if(bb)bb.onclick=()=>bioGo(false);
-  if(!setup)takeSession().then(pin=>{if(pin&&$('#lp1')&&!S){$('#lp1').value=pin;$('#lkF').requestSubmit()}else if(S||($('#lp1')&&$('#lp1').value)){}else if(bb&&!document.hidden)bioGo(true);else if(!needReg||REG){const i=$('#lp1');if(i)i.focus()}});
+  const pb=$('#pinBtn');if(pb)pb.onclick=()=>{$('#pinW').hidden=false;pb.hidden=true;$('#lkT').textContent=t('lockTitle');bb.classList.remove('pri');$('#lp1').focus()};
+  if(!setup)takeSession().then(pin=>{if(pin&&$('#lp1')&&!S){$('#lp1').value=pin;$('#lkF').requestSubmit()}});
   else if(!needReg||REG)setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
   $('#lkF').onsubmit=async e=>{e.preventDefault();
     const p1=$('#lp1').value;
