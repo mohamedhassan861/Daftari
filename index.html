@@ -301,7 +301,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.50';
+const APP_VER='0.51';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -390,7 +390,7 @@ driveAgain:['اضغط "اربط Google Drive" مرة كمان علشان نكم�
 driveNeedRT:['خطوة أخيرة علشان Google Drive يفضل مربوط على طول، من غير ما يسألك تاني.','One last step so Google Drive stays linked without asking again.'],driveFinish:['كمّل الربط','Finish linking'],
 restorePick:['اختار النسخة اللي عايز ترجعلها. هيطلب منك الرقم السري اللي كان وقتها.','Pick the copy to go back to. You will be asked for the PIN used at that time.'],
 period:['اختار الفترة','Choose period'],pMonth:['شهر','Month'],pQuarter:['ربع سنة','Quarter'],pHalf:['نص سنة','Half year'],pYear:['سنة','Year'],pCustom:['من - إلى','Custom'],
-pFrom:['من','From'],qThisM:['الشهر ده','This month'],qLastM:['الشهر اللي فات','Last month'],q3M:['آخر ٣ شهور','Last 3 months'],qYTD:['من أول السنة','Year to date'],pTo:['إلى','To'],pNow:['الفترة الحالية','Current period'],apply:['اعرض','Show'],pNeedDates:['اختار تاريخ البداية والنهاية','Choose a start and end date'],
+pFrom:['من','From'],qThisM:['الشهر ده','This month'],qLastM:['الشهر اللي فات','Last month'],q3M:['آخر ٣ شهور','Last 3 months'],qYTD:['من أول السنة','Year to date'],qNextM:['الشهر الجاي','Next month'],qN3M:['التلات شهور الجاية','Next 3 months'],qRestY:['من النهارده لآخر السنة','Today to year end'],pTo:['إلى','To'],pNow:['الفترة الحالية','Current period'],apply:['اعرض','Show'],pNeedDates:['اختار تاريخ البداية والنهاية','Choose a start and end date'],
 netPer:['صافي الفترة','Net for the period'],byMonth:['حسب الشهور','By month'],
 shareApp:['شارك البرنامج','Share the app'],shareText:['دفتري — برنامج بسيط لمتابعة المصروفات والأقساط والجمعيات والسلف. بياناتك بتفضل متشفرة على موبايلك.','Daftari — a simple app for expenses, installments, savings circles and loans. Your data stays encrypted on your phone.'],linkCopied:['اتنسخ اللينك','Link copied'],
 transfer:['تحويل','Transfer'],transfers:['تحويلات','Transfers'],account:['الحساب','Account'],fromAcc:['من حساب','From account'],toAcc:['إلى حساب','To account'],
@@ -1147,7 +1147,7 @@ function periodForm(){
       <label class="fld" id="wy"><span>${t('pYear')}</span><select class="in-f" id="sy">${yOpts}</select></label>
     </div>
     <div id="pc">
-      <div class="qchips" style="padding:0 0 8px;flex-wrap:wrap;overflow:visible">${[['qThisM',t('qThisM')],['qLastM',t('qLastM')],['q3M',t('q3M')],['qYTD',t('qYTD')]].map(([v,l])=>`<button type="button" class="balchip" data-q="${v}">${esc(l)}</button>`).join('')}</div>
+      <div class="qchips" style="padding:0 0 8px;flex-wrap:wrap;overflow:visible">${[['qLastM',t('qLastM')],['qThisM',t('qThisM')],['qNextM',t('qNextM')],['q3M',t('q3M')],['qN3M',t('qN3M')],['qYTD',t('qYTD')],['qRestY',t('qRestY')]].map(([v,l])=>`<button type="button" class="balchip" data-q="${v}">${esc(l)}</button>`).join('')}</div>
       ${['f','t'].map(w=>{const [yy,mm,dd]=((w==='f'?per.from:per.to)||TODAY).split('-').map(Number);return `<div class="fld"><span>${w==='f'?t('pFrom'):t('pTo')}</span><div class="dmy" style="display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr) minmax(0,1fr);gap:6px">
         <select class="in-f" id="p${w}d">${Array.from({length:31},(_,i)=>`<option value="${i+1}" ${i+1===dd?'selected':''}>${i+1}</option>`).join('')}</select>
         <select class="in-f" id="p${w}m">${Array.from({length:12},(_,i)=>`<option value="${i+1}" ${i+1===mm?'selected':''}>${esc(new Intl.DateTimeFormat(L(),{month:'long'}).format(new Date(2026,i,1)))}</option>`).join('')}</select>
@@ -1162,7 +1162,7 @@ function periodForm(){
     const setD=(w,ds)=>{const [y,m,d]=ds.split('-').map(Number);const ys=$r('#p'+w+'y');if(![...ys.options].some(o=>+o.value===y))ys.add(new Option(y,y));ys.value=y;$r('#p'+w+'m').value=m;$r('#p'+w+'d').value=d};
     ['f','t'].forEach(w=>['m','y'].forEach(z=>$r('#p'+w+z).addEventListener('change',()=>setD(w,getD(w)))));
     r.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const q=b.dataset.q,lm=ymAdd(TODAY_YM,-1);
-      const [f,to]=q==='qThisM'?[TODAY_YM+'-01',monthEnd(TODAY_YM)]:q==='qLastM'?[lm+'-01',monthEnd(lm)]:q==='q3M'?[ymAdd(TODAY_YM,-2)+'-01',monthEnd(TODAY_YM)]:[TODAY.slice(0,4)+'-01-01',TODAY];
+      const nm=ymAdd(TODAY_YM,1),[f,to]=q==='qThisM'?[TODAY_YM+'-01',monthEnd(TODAY_YM)]:q==='qLastM'?[lm+'-01',monthEnd(lm)]:q==='qNextM'?[nm+'-01',monthEnd(nm)]:q==='q3M'?[ymAdd(TODAY_YM,-2)+'-01',monthEnd(TODAY_YM)]:q==='qN3M'?[nm+'-01',monthEnd(ymAdd(TODAY_YM,3))]:q==='qRestY'?[TODAY,TODAY.slice(0,4)+'-12-31']:[TODAY.slice(0,4)+'-01-01',TODAY];
       setD('f',f);setD('t',to)});
     $r('#pnow').onclick=()=>{per.mode=mode;cur=TODAY_YM;if(mode==='custom'){per.from=TODAY_YM+'-01';per.to=TODAY}closeSheet();render()};
     $r('#f').onsubmit=e=>{e.preventDefault();per.mode=mode;const yy=$r('#sy').value;
