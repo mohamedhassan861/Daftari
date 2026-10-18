@@ -318,7 +318,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.61';
+const APP_VER='0.62';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -3018,7 +3018,7 @@ const bioInfo=()=>{try{return JSON.parse(localStorage.getItem(BIO_KEY)||'null')}
 const bioSupported=()=>!!(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext);
 async function prfKey(bytes){const k=await crypto.subtle.importKey('raw',bytes,'HKDF',false,['deriveKey']);return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:new Uint8Array(32),info:te.encode('daftari-bio')},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
 async function bioPrf(credId,salt){
-  goingOut();const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:credId}],userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
+  goingOut();const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:credId,transports:['internal']}],hints:['client-device'],userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
   const r=a.getClientExtensionResults();if(!r.prf||!r.prf.results||!r.prf.results.first)throw new Error('noprf');return new Uint8Array(r.prf.results.first);
 }
 function bioEnableForm(){
@@ -3031,7 +3031,7 @@ function bioEnableForm(){
         const salt=crypto.getRandomValues(new Uint8Array(32));
         goingOut();const cred=await navigator.credentials.create({publicKey:{rp:{name:'Daftari',id:location.hostname},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:myEmail()||'daftari',displayName:t('app')},
           challenge:crypto.getRandomValues(new Uint8Array(32)),pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
-          authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
+          authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},hints:['client-device'],timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
         const ext=cred.getClientExtensionResults();if(ext.prf&&ext.prf.enabled===false)throw new Error('noprf');
         const out=ext.prf&&ext.prf.results&&ext.prf.results.first?new Uint8Array(ext.prf.results.first):await bioPrf(cred.rawId,salt);
         const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},await prfKey(out),te.encode(pin));
@@ -3110,6 +3110,7 @@ function showLock(){
   bindG();
   let bioBusy=false;const bioGo=async auto=>{if(bioBusy)return;bioBusy=true;try{const pin=await bioUnlockPin();$('#lp1').value=pin;$('#lkF').requestSubmit()}catch(x){if(!auto)err(t('bioFail'))}bioBusy=false};
   const bb=$('#bioBtn');if(bb)bb.onclick=()=>bioGo(false);
+  if(bb&&window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable)PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(()=>{});
   const pb=$('#pinBtn');if(pb)pb.onclick=()=>{$('#pinW').hidden=false;pb.hidden=true;$('#lkT').textContent=t('lockTitle');bb.classList.remove('pri');$('#lp1').focus()};
   if(!setup)takeSession().then(pin=>{if(pin&&$('#lp1')&&!S){$('#lp1').value=pin;$('#lkF').requestSubmit()}});
   else if(!needReg||REG)setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
