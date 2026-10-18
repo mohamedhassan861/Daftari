@@ -301,7 +301,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.52';
+const APP_VER='0.53';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -2799,6 +2799,12 @@ function unregister(){
 /* ---------- reminders: the app writes upcoming due items; a daily push wakes the phone to show them ---------- */
 const pIdb=()=>new Promise((res,rej)=>{const r=indexedDB.open('daftari-sw',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const pSet=async(k,v)=>{try{const db=await pIdb();await new Promise(res=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=res;tx.onerror=res})}catch(e){}};
+const pGet=async k=>{try{const db=await pIdb();return await new Promise(res=>{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)})}catch(e){return undefined}};
+/* updating while open: keep the session for one reload only (a one-time key that cannot be read out, valid 60 seconds, deleted on use) */
+async function keepSession(){try{if(!PINMEM)return;await saving;const k=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']),iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(PINMEM));await pSet('resume',{k,iv,ct,at:Date.now()})}catch(e){}}
+async function takeSession(){try{const r=await pGet('resume');if(!r)return null;await pSet('resume',null);if(Date.now()-r.at>60000||Date.now()<r.at)return null;
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:r.iv},r.k,r.ct))}catch(e){return null}}
 function upcomingReminders(D){
   if(!D)return [];const out=[],end=iso(new Date(dOf(TODAY).getTime()+14*864e5)),sym=c=>curSym(c||BASE());
   [['inst',D.inst||[]],['gam',D.gam||[]]].forEach(([k,l])=>l.forEach(o=>{
@@ -3025,8 +3031,10 @@ function showLock(){
   const bindG=()=>{const g=$('#gbtn');if(g)g.onclick=async()=>{if(!driveReady()){err(t('regLoading'));return}err(t('working'));
     try{await doRegister();$('#acctW').innerHTML=acctHTML();err('');$('#lp1').focus()}catch(x){err(t('regFail'))}}};
   bindG();
-  const bb=$('#bioBtn');if(bb)bb.onclick=async()=>{try{const pin=await bioUnlockPin();$('#lp1').value=pin;$('#lkF').requestSubmit()}catch(x){err(t('bioFail'))}};
-  if(!needReg||REG)setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
+  let bioBusy=false;const bioGo=async auto=>{if(bioBusy)return;bioBusy=true;try{const pin=await bioUnlockPin();$('#lp1').value=pin;$('#lkF').requestSubmit()}catch(x){if(!auto)err(t('bioFail'))}bioBusy=false};
+  const bb=$('#bioBtn');if(bb)bb.onclick=()=>bioGo(false);
+  if(!setup)takeSession().then(pin=>{if(pin&&$('#lp1')&&!S){$('#lp1').value=pin;$('#lkF').requestSubmit()}else if(S||($('#lp1')&&$('#lp1').value)){}else if(bb&&!document.hidden)bioGo(true);else if(!needReg||REG){const i=$('#lp1');if(i)i.focus()}});
+  else if(!needReg||REG)setTimeout(()=>{const i=$('#lp1');if(i)i.focus()},80);
   $('#lkF').onsubmit=async e=>{e.preventDefault();
     const p1=$('#lp1').value;
     if(setup){const p2=$('#lp2').value;if(p1.length<6){err(t('pinShort'));return}if(p1!==p2){err(t('pinMismatch'));return}}
@@ -3096,7 +3104,7 @@ async function checkUpdate(){
     if(!S&&!($('#lp1')&&$('#lp1').value)&&tried!==v){try{sessionStorage.setItem('daftari-upd',v)}catch(e){}await updateNow();return}
     if(S)render()}catch(e){}
 }
-async function updateNow(){try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()}
+async function updateNow(){if(S)await keepSession();try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.reload()}
 setInterval(checkUpdate,30*60000);
 
 checkUpdate();
