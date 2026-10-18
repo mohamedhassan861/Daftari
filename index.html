@@ -202,7 +202,7 @@ input[type=date].in-f,input[type=month].in-f,input[type=time].in-f{min-width:0;m
 .tblw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
 .stmt{width:100%;border-collapse:collapse;font-size:13px}
 details.box>summary{flex-wrap:wrap}
-.sumline{flex-basis:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 8px;font-size:12px;color:var(--muted);margin-top:6px}.sumline b{display:block;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}.sumline small{display:block;font-size:11px}
+.sumline{flex-basis:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;font-size:12px;color:var(--muted);margin-top:8px;border:1px solid var(--line);border-radius:12px;background:var(--bg);align-items:stretch}.sumline>div{padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}.sumline>div+div{border-inline-start:1px solid var(--line)}.sumline>div>span{display:block}.sumline b{display:block;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}.sumline small{display:block;font-size:11px}
 #view .list:has(>.cmp.h) .grp{top:calc(var(--topH) + 72px)}
 details.box[open]>summary .sumline{display:none}
 .stickbar{position:sticky;top:var(--topH);z-index:4;background:var(--bg);display:flex;flex-direction:column;gap:8px;padding:6px 0;margin:-6px 0}
@@ -210,7 +210,11 @@ details.box[open]>summary .sumline{display:none}
 #privacy{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;font-size:44px}#privacy[hidden]{display:none}
 /* headers stay on screen while you scroll through what they head */
 :root{--topH:64px;--shH:48px}
-#view .sec-h,#view details.box>summary{position:sticky;top:var(--topH);z-index:3;background:var(--bg);padding:8px 2px 6px;margin:-8px -2px 0}
+#view .sec-h{position:sticky;top:var(--topH);z-index:3;background:var(--bg);padding:8px 2px 6px;margin:-8px -2px 0}
+#view details.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:0 12px 12px}
+#view details.box>summary{position:sticky;top:var(--topH);z-index:3;background:var(--surface);padding:12px 2px 8px;border-radius:var(--r) var(--r) 0 0}
+#view details.box>summary h2{font-size:16px}
+#view details.box>.list,#view details.box .list{border-radius:12px}
 #view details.box[open]>summary{box-shadow:0 1px 0 var(--line)}
 #view .grp,#view .cmp.h{position:sticky;top:calc(var(--topH) + 40px);z-index:2}
 #view .cmp.h{background:var(--surface)}
@@ -319,7 +323,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.64';
+const APP_VER='0.65';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -523,7 +527,7 @@ netMonthOnly:['صافي الشهر لوحده','This month only'],
 needOnline:['أول مرة محتاج إنترنت علشان تسجّل بجوجل وتربط Drive.','The first time you need internet to sign in with Google and link Drive.'],
 regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Google Drive علشان تكمّل.','Sign in with Google and allow Google Drive to continue.'],
 regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],newVer:['فيه نسخة جديدة من البرنامج، وهتتحدث لوحدها أول ما يتقفل. أو حدّثها دلوقتي:','A new version is ready. It installs itself next time the app locks, or update now:'],
-cashIn:['دخل','In'],avgIn:['متوسط الدخل','Avg in'],avgOut:['متوسط المصروف','Avg out'],dueLbl:['المستحق','Due'],plusLate:['ومعاه متأخر','plus overdue'],noLate:['مفيش متأخر','nothing overdue'],sinceStart:['من الأول لحد','to date'],ofTotal:['من إجمالي','of'],gotInPer:['اتحصّل في الفترة','collected in period'],paidInPer:['اتسدد في الفترة','paid in period'],dueThisPer:['مستحق الفترة','due in period'],payCash:['كاش','Cash'],payBank:['بنك','Bank'],payCard:['كارت','Card'],oblSearch:['دوّر بالاسم أو الملاحظة…','Search by name or note…'],finTitle:['سلف وجمعيات','Loans & gam\'eyas'],finHint:['فلوس داخلة وخارجة، مش دخل ولا مصروف','Money in and out, not income or spending'],finIn:['داخل','In'],finOut:['خارج','Out'],xferTo:['تحويل إلى','Transfer to'],xferFrom:['تحويل من','Transfer from'],xferNet:['تحويلات بين حساباتك (مش دخل ولا مصروف)','Moves between your accounts (not income or spending)'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
+cashIn:['دخل','In'],asPlanned:['زي المتوقع','As planned'],betterBy:['أحسن من المتوقع بـ','Better than planned by'],worseBy:['أقل من المتوقع بـ','Worse than planned by'],finUnplanned:['منها سلف/جمعيات مش متخططة','of which unplanned loans/gam\'eyas'],asOfToday:['على النهارده','as of today'],perSummary:['ملخص الفترة','Period summary'],projEndS:['المتوقع آخر الفترة','Expected at end'],movesNet:['صافي الحركة','Net movement'],closeBal:['رصيد آخر الفترة','Closing balance'],cardSpendNotPaid:['مشتريات بالكارت لسه ماتدفعتش','Card spending not paid yet'],restExpected:['متوقع الباقي من الفترة','Rest of the period (expected)'],expIn:['دخل متوقع','Expected in'],expOut:['خرج متوقع','Expected out'],bridgeHint:['الإيرادات والمصروفات بتتحسب يوم الشرا، والرصيد يوم خروج الفلوس؛ السطور دي بتوضح الفرق.','Income and spending count on the day you buy, the balance on the day money leaves; these lines show the gap.'],avgIn:['متوسط الدخل','Avg in'],avgOut:['متوسط المصروف','Avg out'],dueLbl:['المستحق','Due'],plusLate:['ومعاه متأخر','plus overdue'],noLate:['مفيش متأخر','nothing overdue'],sinceStart:['من الأول لحد','to date'],ofTotal:['من إجمالي','of'],gotInPer:['اتحصّل في الفترة','collected in period'],paidInPer:['اتسدد في الفترة','paid in period'],dueThisPer:['مستحق الفترة','due in period'],payCash:['كاش','Cash'],payBank:['بنك','Bank'],payCard:['كارت','Card'],oblSearch:['دوّر بالاسم أو الملاحظة…','Search by name or note…'],finTitle:['سلف وجمعيات','Loans & gam\'eyas'],finHint:['فلوس داخلة وخارجة، مش دخل ولا مصروف','Money in and out, not income or spending'],finIn:['داخل','In'],finOut:['خارج','Out'],xferTo:['تحويل إلى','Transfer to'],xferFrom:['تحويل من','Transfer from'],xferNet:['تحويلات بين حساباتك (مش دخل ولا مصروف)','Moves between your accounts (not income or spending)'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
 cardsOwe:['عليك للكروت','Owed on cards'],nextPay:['أقرب سداد','Next payment'],payWith:['بيتدفع من','Paid from'],anyAcc:['أي حساب','Any account'],
 loanPlan:['طريقة السداد','Repayment'],planOnce:['مرة واحدة','In one go'],planInst:['أقساط شهرية','Monthly installments'],instFrom:['أول قسط','First installment'],perMonthFrom:['في الشهر من','a month from'],
 instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],instMonths:['عدد الشهور','Months'],instOfLeft:['الباقي %v:','Left %v:'],lastInst:['آخر قسط','last one'],loanPaidSoFar:['اتدفع','Paid'],loanMoreB:['زوّد السلفة','Borrow more'],loanMoreL:['سلّفته تاني','Lend more'],loanAdded:['زيادة','Added'],loanIntoAcc:['الفلوس دخلت في','Money went into'],loanFromAcc:['الفلوس طلعت من','Money came from'],loanNoAcc:['مش هسجلها في حساب','Don\'t record in an account'],loanMoreHint:['المبلغ هيتضاف على نفس السلفة. بعد الحفظ هتفتح السلفة عشان تعدّل طريقة السداد لو عايز، والأقساط بتتحسب على الباقي.','The amount is added to the same loan. After saving the loan opens so you can change the repayment; installments are worked out on what is left.'],loanMoreDone:['اتضافت على السلفة','Added to the loan'],
@@ -1920,10 +1924,10 @@ function netWorth(date){
   return {assets,neg,recv,pay,obl,net:assets+neg+recv-pay-obl};
 }
 function netWorthHTML(){
-  const n=netWorth(),ms=Array.from({length:12},(_,i)=>ymAdd(TODAY_YM,i-11)).map(m=>{const end=m===TODAY_YM?TODAY:ymAdd(m,1)+'-01';const d=m===TODAY_YM?TODAY:iso(new Date(dOf(end).getTime()-864e5));return{m,v:netWorth(d).net}});
+  const PE=perRange()[1],n=netWorth(PE),ms=Array.from({length:12},(_,i)=>ymAdd(TODAY_YM,i-11)).map(m=>{const end=m===TODAY_YM?TODAY:ymAdd(m,1)+'-01';const d=m===TODAY_YM?TODAY:iso(new Date(dOf(end).getTime()-864e5));return{m,v:netWorth(d).net}});
   const top=Math.max(1,...ms.map(o=>Math.abs(o.v))),row=(l,v,c)=>`<div class="row"><div class="main"><span class="t">${l}</span></div><b class="amt ${c||''}">${money(v)}</b></div>`;
-  return `<details class="box" id="nw" data-k="nw"><summary><h2>${t('netWorth')}</h2><span class="sumv ${n.net<0?'neg':''}">${money(n.net)} <small>${esc(curSym(BASE()))}</small></span></summary>
-    <div class="slip"><div class="net"><span class="label">${t('netWorthNow')}</span><span class="big ${n.net<0?'neg':''}">${money(n.net)}<small>${esc(curSym(BASE()))}</small></span></div></div>
+  return `<details class="box" id="nw" data-k="nw"><summary><h2>${t('netWorth')} <small class="muted" style="font-size:12px;font-weight:400">${t('asOf')} ${esc(dmyOf(dsDate(PE)))}</small></h2><span class="sumv ${n.net<0?'neg':''}">${money(n.net)} <small>${esc(curSym(BASE()))}</small></span></summary>
+    <div class="slip"><div class="net"><span class="label">${t('netWorth')} ${t('asOf')} ${esc(dmyOf(dsDate(PE)))}</span><span class="big ${n.net<0?'neg':''}">${money(n.net)}<small>${esc(curSym(BASE()))}</small></span></div></div>
     <div class="list">${row(t('nwAssets'),n.assets)}${n.neg?row(t('nwNeg'),n.neg,'neg'):''}${row(t('owedToMe'),n.recv,'pos')}${row(t('iOwe'),-n.pay,n.pay?'neg':'')}${row(t('nwObl'),-n.obl,n.obl?'neg':'')}</div>
     <div class="list"><div class="cols" dir="ltr" style="grid-template-columns:repeat(12,minmax(18px,1fr))">${(lng()==='ar'?[...ms].reverse():ms).map(o=>`<div class="c" title="${esc(monthLbl(o.m))}: ${fmt(o.v)}"><i class="${o.v<0?'b':'a'}" style="width:60%;max-width:20px;height:${Math.abs(o.v)/top*100}%"></i></div>`).join('')}</div>
     <div class="colsx" dir="ltr" style="grid-template-columns:repeat(12,minmax(18px,1fr))">${(lng()==='ar'?[...ms].reverse():ms).map(o=>`<span>${esc(monthShort(o.m))}</span>`).join('')}</div>
@@ -1936,7 +1940,7 @@ function zakatHTML(){
   const recv=S.loans.filter(l=>l.dir==='lent').reduce((v,l)=>v+toBase(loanLeft(l),l.currency||BASE()),0),debt=S.loans.filter(l=>l.dir==='borrowed').reduce((v,l)=>v+toBase(loanLeft(l),l.currency||BASE()),0);
   const base=cash+(z.gold?gold:0)+(z.recv?recv:0)-(z.debt?debt:0),due=price&&base>=nisab;
   const row=(l,v)=>`<div class="row"><div class="main"><span class="t">${l}</span></div><b class="amt">${money(v)}</b></div>`;
-  return `<details class="box" id="zk" data-k="zk"><summary><h2>${t('zakat')}</h2><span class="sumv">${price?money(due?base*0.025:0):'—'} <small>${esc(curSym(BASE()))}</small></span></summary>
+  return `<details class="box" id="zk" data-k="zk"><summary><h2>${t('zakat')} <small class="muted" style="font-size:12px;font-weight:400">${t('asOfToday')}</small></h2><span class="sumv">${price?money(due?base*0.025:0):'—'} <small>${esc(curSym(BASE()))}</small></span></summary>
     <div class="list">
       <div class="setrow"><span>${t('nisabKarat')}</span><select class="in-f" id="zkK" style="max-width:40%"><option value="21" ${z.karat==='21'?'selected':''}>${t('k21')}</option><option value="24" ${z.karat==='24'?'selected':''}>${t('k24')}</option></select></div>
       <label class="setrow chk" style="justify-content:space-between"><span>${t('zkGold')}</span><input type="checkbox" id="zkG" ${z.gold?'checked':''}></label>
@@ -2232,7 +2236,7 @@ function perCash(){
   if(a>TODAY){const p0=projFlows(dayBefore(a)),p1=projFlows(b),o=now+p0.i-p0.o+p0.x,pi=p1.i-p0.i,po=p1.o-p0.o,xf=p1.x-p0.x;return {a,b,proj,fut:true,o,ai:0,ao:0,xf,pi,po,c:o+pi-po+xf,now,fx:0}}
   const o=liqAll(dayBefore(a)),cf=cashActual(S.tx.filter(x=>x.date>=a&&x.date<=(proj?TODAY:b))),sm=p=>Object.entries(cf).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
   const ai=sm('in:'),ao=sm('out:'),xf0=sm('xin:')-sm('xout:'),endA=proj?now:liqAll(b),p=proj?projFlows(b):{i:0,o:0,x:0},xf=xf0+p.x;
-  return {a,b,proj,fut:false,o,ai,ao,xf,pi:p.i,po:p.o,c:endA+p.i-p.o+p.x,now,fx:endA-o-(ai-ao)-xf0};
+  return {a,b,proj,fut:false,o,ai,ao,xf,xf0,pi:p.i,po:p.o,c:endA+p.i-p.o+p.x,now,fx:endA-o-(ai-ao)-xf0};
 }
 function fcSeries(endM){
   const out=[];let bal=liqAll(monthEnd(ymAdd(TODAY_YM,-1)));
@@ -2250,14 +2254,14 @@ function planHTML(){
   const start=TODAY_YM,endY=(+TODAY.slice(0,4)+1)+'-12',horizon=[];for(let m=start;m<=endY&&horizon.length<36;m=ymAdd(m,1))horizon.push(m);
   const fc=fcSeries(horizon[horizon.length-1]||start);
   const cm=per.mode==='month'?cur:ymAdd(TODAY_YM,-1);
-  const dN=na-np;
-  return `<details class="box" data-k="pva"><summary><h2>${t('planVsAct')}</h2><div class="sumline"><div>${t('cashIn')} · ${t('actual')}<b class="pos">${money(I.ta)}</b><small>${t('planned')} ${money(I.tp)}</small></div><div>${t('cashOut')} · ${t('actual')}<b>${money(E.ta)}</b><small>${t('planned')} ${money(E.tp)}</small></div><div>${t('netShort')}<b class="${na<0?'neg':''}">${money(na)}</b><small class="${dN<-0.5?'neg':dN>0.5?'pos':''}">${t('variance')} ${dN>0.5?'+':''}${money(dN)}</small></div></div></summary>${cm<=TODAY_YM?`<button class="btn block" data-act="closeMonth" data-m="${cm}" style="margin:8px 0">${S.closed[cm]?'✓ ':''}${t('closeTitle')} · ${esc(monthLbl(cm))}</button>`:''}<div class="list">
+  const dN=na-np,finUn=[...FIN_CATS].reduce((v,k)=>v+Math.max(0,(A.income[k]||0)-(P.income[k]||0)),0);
+  return `<details class="box" data-k="pva"><summary><h2>${t('planVsAct')}</h2><div class="sumline"><div>${t('cashIn')} · ${t('actual')}<b class="pos">${money(I.ta)}</b><small>${t('planned')} ${money(I.tp)}</small></div><div>${t('cashOut')} · ${t('actual')}<b>${money(E.ta)}</b><small>${t('planned')} ${money(E.tp)}</small></div><div>${t('netShort')}<b class="${na<0?'neg':''}">${money(na)}</b><small>${t('planned')} ${money(np)}</small><small class="${dN<-0.5?'neg':dN>0.5?'pos':''}">${Math.abs(dN)<0.5?t('asPlanned'):(dN>0?t('betterBy'):t('worseBy'))+' '+fmt(Math.round(Math.abs(dN)))}</small>${finUn>0.5?`<small>${t('finUnplanned')} ${fmt(Math.round(finUn))}</small>`:''}</div></div></summary>${cm<=TODAY_YM?`<button class="btn block" data-act="closeMonth" data-m="${cm}" style="margin:8px 0">${S.closed[cm]?'✓ ':''}${t('closeTitle')} · ${esc(monthLbl(cm))}</button>`:''}<div class="list">
     <div class="cmp h"><span>${t('category')}</span><span>${t('planned')}</span><span>${t('actual')}</span><span>${t('variance')}</span></div>
     ${I.html}${E.html}
     <div class="cmp t"><span>${t('netShort')}</span><span>${money(np)}</span><span>${money(na)}</span><b class="${na-np<-0.5?'neg':na-np>0.5?'pos':''}">${na-np>0.5?'+':''}${money(na-np)}</b></div>
     </div><p class="hint">${t('planHint')}</p></details>
   <button class="btn block" data-act="cashSheet" style="margin:6px 0">${(()=>{const a=cashTimeline();return a.first?'⚠️ '+t('willLast')+' · '+t('notEnough'):'✓ '+t('willLast')})()}</button>
-  ${fc.length?`<details class="box" data-k="fc"><summary><h2>${t('forecastT')}</h2>
+  ${fc.length?`<details class="box" data-k="fc"><summary><h2>${t('forecastT')} <small class="muted" style="font-size:12px;font-weight:400">${t('fromToday')}</small></h2>
     ${(()=>{const low=fc.reduce((a,r)=>r.bal<a.bal?r:a,fc[0]),firstGap=fc.find(r=>r.i-r.e<0);return `<div class="flowb sumline" style="border-top:0;padding:0"><div><span>${t('lowestBal')}</span><b class="${low.bal<0?'neg':''}">${money(low.bal)}</b><span>${esc(monthLbl(low.m))}</span></div><div><span>${t('firstGap')}</span><b class="${firstGap?'neg':'pos'}">${firstGap?money(firstGap.i-firstGap.e):'—'}</b><span>${firstGap?esc(monthLbl(firstGap.m)):t('noGap')}</span></div><div><span>${t('endBal')}</span><b class="${fc[fc.length-1].bal<0?'neg':''}">${money(fc[fc.length-1].bal)}</b><span>${esc(monthLbl(fc[fc.length-1].m))}</span></div></div>`})()}</summary><div class="list">
     ${cards().some(a=>!a.closeDay)?`<p class="hint" style="padding:6px 14px;margin:0">${t('cardSetDays')}</p>`:''}
     <div class="cmp h fc"><span>${t('monthW')}</span><span>${t('cashIn')}</span><span>${t('cashOut')}</span><span>${t('gapW')}</span><span>${t('availEnd')}</span></div>
@@ -2265,6 +2269,20 @@ function planHTML(){
     </div><p class="hint">${t('forecastHint')}</p></details>`:''}`;
 }
 
+/* cash & banks over the period, from the opening to the closing, line by line */
+function bridgeHTML(){
+  const P=perCash(),[PA,PE]=perRange(),to=P.proj?TODAY:PE,W=P.fut?[]:S.tx.filter(x=>x.date>=PA&&x.date<=to);
+  const sm=f=>W.filter(f).reduce((v,x)=>v+baseAmt(x),0),liq=x=>isLiquid(accById(x.acc));
+  const inc=sm(x=>x.type==='income'&&isPL(x)),exp=sm(x=>x.type==='expense'&&isPL(x)),fi=sm(x=>x.type==='income'&&isFin(x)),fo=sm(x=>x.type==='expense'&&isFin(x));
+  const offCash=sm(x=>x.type==='expense'&&!liq(x))-sm(x=>x.type==='income'&&!liq(x));
+  const ca=cashActual(W),cardPay=Object.entries(ca).filter(([k])=>k.startsWith('out:card:')).reduce((v,[,x])=>v+x.v,0);
+  const line=(l,v,act,ty,strong)=>Math.abs(v)<0.5&&!strong?'':`<div class="row ${act?'tap':''}" ${act?`data-act="${act}" ${ty?`data-ty="${ty}"`:''}`:''} style="padding:7px 12px"><div class="main"><span class="t" style="${strong?'font-weight:700':''}">${l}${act?' ›':''}</span></div><b class="amt ${v<0?'neg':strong?'':'pos'}">${strong?money(v):(v<0?'− ':'+ ')+money(Math.abs(v))}</b></div>`;
+  const endA=P.fut?P.o:P.proj?P.now:P.c,rest=P.c-endA,rows=P.fut?
+    line(t('projStart'),P.o,'','',1)+line(t('expIn'),P.pi)+line(t('expOut'),-P.po)+line(t('xferNet'),P.xf)+line(t('projEndS'),P.c,'cashSheet','',1):
+    line(t('openBal'),P.o,'','',1)+line(t('income'),inc,'stmtFlow','income')+line(t('expense'),-exp,'stmtFlow','expense')+line(t('finTitle'),fi-fo,'stmtFin')+line(t('cardSpendNotPaid'),offCash,'goCards')+line(t('cardPayNote'),-cardPay,'goCards')+line(t('xferNet'),P.xf0)+line(t('fxDiff'),P.fx)
+    +(P.proj?line(t('availNow'),endA,'goAcc','',1)+line(t('restExpected'),rest,'cashSheet')+line(t('projEndS'),P.c,'cashSheet','',1):line(t('closeBal'),P.c,'goAcc','',1));
+  return `<details class="box" data-k="bridge"><summary><h2>${t('perSummary')} <small class="muted" style="font-size:12px;font-weight:400">${t('cashBanks')}</small></h2><div class="sumline"><div>${P.fut?t('projStart'):t('openBal')}<b>${money(P.o)}</b></div><div>${t('movesNet')}<b class="${P.c-P.o<0?'neg':'pos'}">${P.c-P.o<0?'− ':'+ '}${money(Math.abs(P.c-P.o))}</b></div><div>${P.proj?t('projEndS'):t('closeBal')}<b class="${P.c<0?'neg':''}">${money(P.c)}</b></div></div></summary><div class="list">${rows}</div><p class="hint">${t('bridgeHint')}</p></details>`;
+}
 function vRep(){
   const tx=txIn(),exp=tx.filter(x=>x.type==='expense'&&isPL(x)),inc=sumB(tx.filter(x=>x.type==='income'&&isPL(x))),te=sumB(exp),bf=perFactor(),B=id=>S.budgets[id]?Math.round(S.budgets[id]*bf):0;
   const by={};exp.forEach(x=>{const k=catRoot(x.cat);by[k]=(by[k]||0)+baseAmt(x)});
@@ -2273,14 +2291,14 @@ function vRep(){
   const mlist=per.mode==='month'?Array.from({length:6},(_,i)=>ymAdd(cur,i-5)):perMonths().slice(-24);
   const ms=mlist.map(m=>{const x=txOf(m);return{m,i:sumB(x.filter(y=>y.type==='income'&&isPL(y))),e:sumB(x.filter(y=>y.type==='expense'&&isPL(y)))}});
   const top=Math.max(1,...ms.map(o=>Math.max(o.i,o.e)));
-  return `<section class="slip"><div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(te)}</span></div></div>
+  return `${bridgeHTML()}<section class="slip"><div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(te)}</span></div></div>
     <div class="perf"></div><div class="net tile" data-act="stmtFlow" data-ty="net"><span class="label">${t('net')} ›</span><span class="mid ${inc-te<0?'neg':''}">${money(inc-te)} <small class="muted">${esc(curSym(BASE()))}</small></span></div>${finHTML(tx)}</section>
   ${planHTML()}
   <details class="box" data-k="byCat"><summary><h2>${t('byCat')}</h2><span class="sumv">${money(te)} <small>${esc(curSym(BASE()))}</small></span></summary><div class="acts" style="justify-content:flex-end"><button class="link" data-act="exportCats">⤓ ${t('export')}</button> · <button class="link" data-act="budget">${t('budget')}</button></div>
     <div class="list">${rows.length?rows.map(([id,v])=>{const lim=B(id),p=lim?v/lim:0;
       return `<div class="catbar tile" data-act="${catKids('expense',id).length?'catGroup':'stmtCat'}" data-id="${id}" data-ty="expense"><div class="l"><span>${esc(catName(id))}${catKids('expense',id).length?' ›':''}</span><span>${money(v)}${lim?` <span class="muted">/ ${money(lim)}</span>`:''} <span class="muted num">${te?Math.round(v/te*100):0}%</span></span></div>
       <div class="bar"><i class="${lim?(p>=1?'neg':p>=.8?'warn':''):''}" style="width:${lim?Math.min(100,p*100):v/mx*100}%"></i></div></div>`}).join(''):`<div class="empty">${t('noTx')}</div>`}</div></details>
-  <details class="box" data-k="byMonth"><summary><h2>${per.mode==='month'?t('sixMonths'):t('byMonth')}</h2>${(()=>{const n=ms.length||1,ai=ms.reduce((v,o)=>v+o.i,0)/n,ae=ms.reduce((v,o)=>v+o.e,0)/n;return `<div class="sumline"><div>${t('avgIn')}<b class="pos">${money(ai)}</b></div><div>${t('avgOut')}<b>${money(ae)}</b></div><div>${t('netShort')}<b class="${ai-ae<0?'neg':''}">${money(ai-ae)}</b></div></div>`})()}</summary>
+  <details class="box" data-k="byMonth"><summary><h2>${per.mode==='month'?t('sixMonths'):t('byMonth')}</h2>${(()=>{const n=ms.length||1,ai=ms.reduce((v,o)=>v+o.i,0)/n,ae=ms.reduce((v,o)=>v+o.e,0)/n;return `<div class="sumline"><div>${t('avgIn')}<b class="pos">${money(Math.round(ai))}</b></div><div>${t('avgOut')}<b>${money(Math.round(ae))}</b></div><div>${t('netShort')}<b class="${ai-ae<0?'neg':''}">${money(Math.round(ai-ae))}</b></div></div>`})()}</summary>
     <div class="list" style="overflow-x:auto"><div class="cols" dir="ltr" style="grid-template-columns:repeat(${ms.length},minmax(18px,1fr))">${(S.lang==='ar'?[...ms].reverse():ms).map(o=>`<div class="c" title="${esc(monthLbl(o.m))}"><i class="a" style="height:${o.i/top*100}%"></i><i class="b" style="height:${o.e/top*100}%"></i></div>`).join('')}</div>
     <div class="colsx" dir="ltr" style="grid-template-columns:repeat(${ms.length},minmax(18px,1fr))">${(S.lang==='ar'?[...ms].reverse():ms).map(o=>`<span style="${per.mode==='month'&&o.m===cur?'color:var(--ink);font-weight:600':''}">${esc(monthShort(o.m))}${ms.length>12?'':''}</span>`).join('')}</div>
     <div class="legend"><span style="--c:var(--accent)">${t('income')}</span><span style="--c:var(--neg)">${t('expense')}</span></div></div></details>
@@ -3264,7 +3282,7 @@ if(!(window.crypto&&crypto.subtle)){$('#lkT').textContent='This browser cannot e
 else showLock();
 
 /* automated checks only: exposed on a local test server, never on the real site */
-if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,loanForm,loanTopUp,loanPaid,loanAdj,parseEntry,isPL,isFin,flowStmt,commit,render,migrate,blank,save};
+if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,bridgeHTML,loanForm,loanTopUp,loanPaid,loanAdj,parseEntry,isPL,isFin,flowStmt,commit,render,migrate,blank,save};
 })();
 </script>
 
