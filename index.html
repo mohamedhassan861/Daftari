@@ -302,7 +302,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.57';
+const APP_VER='0.58';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -367,7 +367,7 @@ waitTry:['محاولات غلط كتير. استنى 30 ثانية.','Too many w
 forgotConfirm:['كل البيانات اللي على الجهاز ده هتتمسح، وبعدها تقدر ترجعها من نسخة احتياطية. نكمل؟','All data on this device will be erased; you can restore a backup afterwards. Continue?'],
 security:['الأمان','Security'],changePin:['غيّر الرقم السري','Change PIN'],curPin:['الرقم السري الحالي','Current PIN'],newPin:['الرقم السري الجديد','New PIN'],
 pinChanged:['اتغيّر الرقم السري','PIN changed'],
-autoLockHint:['البيانات متشفرة على الجهاز، والبرنامج بيتقفل لوحده لو سبته أكتر من دقيقة.','Data is encrypted on this device, and the app locks itself after a minute in the background.'],
+autoLockHint:['البيانات متشفرة على الجهاز، والبرنامج بيتقفل أول ما تخرج منه لتطبيق تاني.','Data is encrypted on this device, and the app locks as soon as you switch to another app.'],
 pinChangeHint:['النسخ الاحتياطية القديمة هتفضل تتفتح بالرقم السري القديم.','Older backups still open with the old PIN.'],
 encHint:['كل نسخة متشفرة بالرقم السري، ومحدش يقدر يقراها من غيره.','Every backup is encrypted with your PIN; nobody can read it without it.'],
 autoDl:['نزّل نسخة على الموبايل بعد كل تعديل','Save a copy to the phone after every change'],
@@ -804,7 +804,7 @@ function recRuleForm(r){
 let XLSXP=null;
 function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(XLSXP)return XLSXP;
   XLSXP=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=()=>res(window.XLSX);sc.onerror=()=>{XLSXP=null;rej(new Error('xlsx'))};document.head.appendChild(sc)});return XLSXP}
-async function deliverFile(blob,name){
+async function deliverFile(blob,name){goingOut();
   let file=null;try{file=new File([blob],name,{type:blob.type})}catch(e){}
   if(file&&navigator.canShare&&navigator.canShare({files:[file]})&&/Android|iPhone|iPad/i.test(navigator.userAgent)){
     try{await navigator.share({files:[file],title:name});return}catch(e){if(e&&e.name==='AbortError')return}
@@ -831,7 +831,7 @@ function exportSheet(d){
     r.querySelector('#xp').onclick=()=>printDoc(d);
   });
 }
-function printDoc(d){
+function printDoc(d){goingOut();
   const dir=lng()==='en'?'ltr':'rtl',cell=(v,i)=>`<td class="${(d.num||[]).includes(i)?'n':''}">${esc(v==null?'':(typeof v==='number'?fmt(v):v))}</td>`;
   const html=`<!doctype html><html lang="${lng()}" dir="${dir}"><head><meta charset="utf-8"><title>${esc(d.title)}</title><style>
     @page{size:A4;margin:14mm}body{font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;color:#17201C;font-size:11px}
@@ -1051,7 +1051,7 @@ let pendingShare=null;
 (function(){try{const sp=new URLSearchParams(location.search);const txt=[sp.get('title'),sp.get('text')].filter(Boolean).join(' ').trim();if(txt){pendingShare=txt;history.replaceState(null,'',location.pathname)}}catch(e){}})();
 const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
 function listen(cb){
-  if(!SpeechRec){toast(t('noVoice'));return}
+  if(!SpeechRec){toast(t('noVoice'));return}goingOut();
   const r=new SpeechRec();r.lang=lng()==='en'?'en-US':'ar-EG';r.interimResults=false;r.maxAlternatives=1;
   let got=false;
   r.onresult=e=>{got=true;toastOff(t('listening'));cb(e.results[0][0].transcript)};
@@ -2425,7 +2425,7 @@ async function ensureAccess(){
   }
   return false;
 }
-function requestCode(selectAccount,withId,hint){
+function requestCode(selectAccount,withId,hint){goingOut();
   return new Promise((res,rej)=>{
     if(!driveReady()){rej(new Error('notready'));return}
     const cfg={client_id:CFG.googleClientId,scope:withId?SCOPE+' openid email profile':SCOPE,ux_mode:'popup',callback:r=>{r&&r.code?res(r.code):rej(r)},error_callback:e=>rej(e)};
@@ -2444,7 +2444,7 @@ async function authorize(selectAccount){
   gToken=null;keepToken();toast(t('driveAgain'));throw new Error('again');
 }
 function revokeAll(){try{if(driveReady()){if(RT)google.accounts.oauth2.revoke(RT,()=>{});else if(gToken)google.accounts.oauth2.revoke(gToken,()=>{})}}catch(e){}}
-function requestToken(prompt){
+function requestToken(prompt){goingOut();
   return new Promise((res,rej)=>{
     if(!driveReady()){rej(new Error('notready'));return}
     if(!gClient)gClient=google.accounts.oauth2.initTokenClient({client_id:CFG.googleClientId,scope:'https://www.googleapis.com/auth/drive.file',callback:()=>{}});
@@ -2775,7 +2775,7 @@ async function shareBackup(){
 const REG_KEY='daftari-reg';
 let REG=null;try{REG=JSON.parse(localStorage.getItem(REG_KEY)||'null')}catch(e){}
 let idClient=null;
-function idToken(prompt,hint){
+function idToken(prompt,hint){goingOut();
   return new Promise((res,rej)=>{
     if(!driveReady()){rej(new Error('notready'));return}
     if(!idClient)idClient=google.accounts.oauth2.initTokenClient({client_id:CFG.googleClientId,scope:'openid email profile',callback:()=>{}});
@@ -2985,7 +2985,7 @@ const bioInfo=()=>{try{return JSON.parse(localStorage.getItem(BIO_KEY)||'null')}
 const bioSupported=()=>!!(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext);
 async function prfKey(bytes){const k=await crypto.subtle.importKey('raw',bytes,'HKDF',false,['deriveKey']);return crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:new Uint8Array(32),info:te.encode('daftari-bio')},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
 async function bioPrf(credId,salt){
-  const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:credId}],userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
+  goingOut();const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:credId}],userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
   const r=a.getClientExtensionResults();if(!r.prf||!r.prf.results||!r.prf.results.first)throw new Error('noprf');return new Uint8Array(r.prf.results.first);
 }
 function bioEnableForm(){
@@ -2996,7 +2996,7 @@ function bioEnableForm(){
       try{err(t('working'));const vt=readVault();const k=await derive(pin,fromB64(vt.salt),vt.iter);await unseal(k,vt.iv,vt.ct)}catch(x){err(t('wrongPin'));return}
       try{
         const salt=crypto.getRandomValues(new Uint8Array(32));
-        const cred=await navigator.credentials.create({publicKey:{rp:{name:'Daftari',id:location.hostname},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:myEmail()||'daftari',displayName:t('app')},
+        goingOut();const cred=await navigator.credentials.create({publicKey:{rp:{name:'Daftari',id:location.hostname},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:myEmail()||'daftari',displayName:t('app')},
           challenge:crypto.getRandomValues(new Uint8Array(32)),pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
           authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
         const ext=cred.getClientExtensionResults();if(ext.prf&&ext.prf.enabled===false)throw new Error('noprf');
@@ -3115,7 +3115,7 @@ function unlocked(){if(RECOVERED){const k=RECOVERED;RECOVERED=null;setTimeout(()
     if(drv.linked&&useWorker()&&!RT&&!hasToken()&&S){drv.needAuth=true;render()}
     setTimeout(()=>recSetup(false),1500)})}
 function lockNow(){if(NEWVER&&NEWVER!==APP_VER)setTimeout(checkUpdate,300);clearTimeout(bkTimer);if(ACT!=='me'&&shDirty)shPush();stopPoll();ACT='me';SHM=null;PS=null;closeSheet();S=null;KEYOBJ=null;SALT=null;RT=null;PINMEM=null;$('#view').innerHTML='';showLock()}
-let RECOVERED=null;
+let RECOVERED=null,EXT=0,hiddenOut=false;function goingOut(){EXT=Date.now()}
 $('#lkForgot').onclick=()=>{
   if(recInfo()&&driveConfigured()){
     $('#lkT').textContent=t('recTitle');$('#lkH').textContent=t('recovHint');$('#lkE').textContent='';$('#lkForgot').hidden=true;
@@ -3136,9 +3136,12 @@ function forgotWipe(){
 }
 $('#lockBtn').onclick=()=>{if(S)lockNow()};
 $('#brand').onclick=()=>{if(S&&PS)ledgersSheet()};
+/* leaving the app locks it at once; when you leave from inside it (picking a file, sharing, Google sign-in, printing, the fingerprint prompt) it stays open if you come back within 5 minutes */
+document.addEventListener('click',e=>{const x=e.target.closest&&e.target;if(!x)return;const l=x.closest('label');if(x.closest('input[type=file],a[target=_blank],a[href^="mailto:"],a[href^="tel:"],a[href^="https://wa.me"]')||(l&&l.querySelector('input[type=file]')))goingOut()},true);
+try{if(navigator.share){const sh=navigator.share.bind(navigator);navigator.share=(...a)=>{goingOut();return sh(...a)}}}catch(e){}
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){hiddenAt=Date.now()}
-  else{if(S&&hiddenAt&&Date.now()-hiddenAt>60000){lockNow()}checkUpdate()}
+  if(document.hidden){hiddenAt=Date.now();hiddenOut=Date.now()-EXT<20000;if(S&&!hiddenOut)lockNow()}
+  else{if(S&&hiddenAt&&(!hiddenOut||Date.now()-hiddenAt>300000))lockNow();EXT=0;checkUpdate()}
 });
 /* updates: the published version is in version.json; while locked the app reloads itself, while open it shows a banner and updates at the next lock */
 let NEWVER=null;
