@@ -302,7 +302,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.55';
+const APP_VER='0.56';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -506,7 +506,7 @@ netMonthOnly:['صافي الشهر لوحده','This month only'],
 needOnline:['أول مرة محتاج إنترنت علشان تسجّل بجوجل وتربط Drive.','The first time you need internet to sign in with Google and link Drive.'],
 regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Google Drive علشان تكمّل.','Sign in with Google and allow Google Drive to continue.'],
 regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],newVer:['فيه نسخة جديدة من البرنامج، وهتتحدث لوحدها أول ما يتقفل. أو حدّثها دلوقتي:','A new version is ready. It installs itself next time the app locks, or update now:'],
-cashIn:['دخل','In'],xferTo:['تحويل إلى','Transfer to'],xferFrom:['تحويل من','Transfer from'],xferNet:['تحويلات بين حساباتك (مش دخل ولا مصروف)','Moves between your accounts (not income or spending)'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
+cashIn:['دخل','In'],finTitle:['سلف وجمعيات','Loans & gam\'eyas'],finHint:['فلوس داخلة وخارجة، مش دخل ولا مصروف','Money in and out, not income or spending'],finIn:['داخل','In'],finOut:['خارج','Out'],xferTo:['تحويل إلى','Transfer to'],xferFrom:['تحويل من','Transfer from'],xferNet:['تحويلات بين حساباتك (مش دخل ولا مصروف)','Moves between your accounts (not income or spending)'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
 cardsOwe:['عليك للكروت','Owed on cards'],nextPay:['أقرب سداد','Next payment'],payWith:['بيتدفع من','Paid from'],anyAcc:['أي حساب','Any account'],
 loanPlan:['طريقة السداد','Repayment'],planOnce:['مرة واحدة','In one go'],planInst:['أقساط شهرية','Monthly installments'],instFrom:['أول قسط','First installment'],perMonthFrom:['في الشهر من','a month from'],
 instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],instMonths:['عدد الشهور','Months'],instOfLeft:['الباقي %v:','Left %v:'],lastInst:['آخر قسط','last one'],loanPaidSoFar:['اتدفع','Paid'],loanMoreB:['زوّد السلفة','Borrow more'],loanMoreL:['سلّفته تاني','Lend more'],loanAdded:['زيادة','Added'],loanIntoAcc:['الفلوس دخلت في','Money went into'],loanFromAcc:['الفلوس طلعت من','Money came from'],loanNoAcc:['مش هسجلها في حساب','Don\'t record in an account'],loanMoreHint:['المبلغ هيتضاف على نفس السلفة. بعد الحفظ هتفتح السلفة عشان تعدّل طريقة السداد لو عايز، والأقساط بتتحسب على الباقي.','The amount is added to the same loan. After saving the loan opens so you can change the repayment; installments are worked out on what is left.'],loanMoreDone:['اتضافت على السلفة','Added to the loan'],
@@ -905,13 +905,20 @@ function accStmt(id){
   });
   stmtSheet({title:a.name+' · '+a.currency,sub:accGroup(a)+' · '+perLabel(),cur:a.currency,kind:'acc',opening:open,rows,acc:a});
 }
+/* loans and gam'eyas move money but are not income or spending (paying back a loan, saving in a gam'eya) */
+const FIN_CATS=new Set(['loanpay','loanback','loanrecv','loangive','gam','gamin']);
+const isFin=x=>FIN_CATS.has(catRoot(x.cat));
+const isPL=x=>(x.type==='income'||x.type==='expense')&&!isFin(x);
+function finHTML(tx){const f=tx.filter(x=>x.type!=='transfer'&&isFin(x));if(!f.length)return '';const fi=sumB(f.filter(x=>x.type==='income')),fo=sumB(f.filter(x=>x.type==='expense'));
+  return `<div class="row tap" data-act="stmtFin" style="padding:6px 14px 10px"><div class="main"><span class="t" style="font-size:13px">🤝 ${t('finTitle')} ›</span><span class="s">${t('finHint')}</span></div><span class="muted" style="font-size:12px;text-align:end">${t('finIn')} <b class="pos">${money(fi)}</b><br>${t('finOut')} <b>${money(fo)}</b></span></div>`}
 function flowRows(list){return list.map(x=>{const a=accOf(x.acc),v=baseAmt(x);let desc=catPath(x.cat)+(x.note?' · '+x.note:'')+' · '+a.name;
   if(a.currency!==BASE())desc+=' ('+fmt(x.amount)+' '+curSym(a.currency)+')';
   return {date:x.date,desc,dr:x.type==='expense'?v:0,cr:x.type==='income'?v:0,tx:x.id}})}
 function catStmt(id){const ty=catTypeOf(id);stmtSheet({title:catPath(id),sub:(ty==='expense'?t('expense'):t('income'))+' · '+perLabel(),cur:BASE(),kind:'flow',rows:flowRows(txIn().filter(x=>x.type===ty&&inCat(x,id)))})}
 function flowStmt(ty){
-  if(ty==='net'){stmtSheet({title:per.mode==='month'?t('net'):t('netPer'),sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(txIn().filter(x=>x.type!=='transfer'))});return}
-  stmtSheet({title:ty==='expense'?t('expense'):t('income'),sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(txIn().filter(x=>x.type===ty))});
+  if(ty==='fin'){stmtSheet({title:t('finTitle'),sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(txIn().filter(x=>x.type!=='transfer'&&isFin(x)))});return}
+  if(ty==='net'){stmtSheet({title:per.mode==='month'?t('net'):t('netPer'),sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(txIn().filter(isPL))});return}
+  stmtSheet({title:ty==='expense'?t('expense'):t('income'),sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(txIn().filter(x=>x.type===ty&&isPL(x)))});
 }
 function catGroupSheet(ty,id){
   const kids=catKids(ty,id),tx=txIn().filter(x=>x.type===ty);
@@ -1609,7 +1616,7 @@ function accountsHTML(){
     <p class="hint">${t('tapForStmt')}</p></details>`;
 }
 function catTotalsHTML(ty){
-  const tx=txIn().filter(x=>x.type===ty);if(!tx.length)return '';
+  const tx=txIn().filter(x=>x.type===ty&&isPL(x));if(!tx.length)return '';
   const by=new Map();tx.forEach(x=>{const k=catRoot(x.cat);by.set(k,(by.get(k)||0)+baseAmt(x))});
   const tot=[...by.values()].reduce((a,b)=>a+b,0),rows=[...by].sort((a,b)=>b[1]-a[1]);
   return `<details class="box"><summary><h2>${ty==='expense'?t('expByCat'):t('incByCat')}</h2><span class="sumv">${fmt(tot)} <small>${esc(curSym(BASE()))}</small></span></summary>
@@ -1638,7 +1645,7 @@ function goalsHTML(){
   return `<details class="box"><summary><h2>${t('goals')}</h2><span class="sumv">${S.goals.length}</span></summary><div class="list">${S.goals.map(g=>{const sv=goalSavedAt(g,perRange()[1]),p=Math.min(1,sv/(+g.target||1));return `<div class="catbar tile" data-act="goGoals"><div class="l"><span>${esc(g.name)}</span><span>${fmt(sv)} / ${fmt(g.target)}<span class="pct">${Math.round(p*100)}%</span></span></div><div class="bar"><i style="width:${p*100}%"></i></div></div>`}).join('')}</div></details>`;
 }
 function vHome(){
-  const tx=txIn(),inc=sumB(tx.filter(x=>x.type==='income')),exp=sumB(tx.filter(x=>x.type==='expense')),net=inc-exp;
+  const tx=txIn(),inc=sumB(tx.filter(x=>x.type==='income'&&isPL(x))),exp=sumB(tx.filter(x=>x.type==='expense'&&isPL(x))),net=inc-exp;
   const [PA,PE]=perRange(),DM=PE.slice(0,7),due=dueFor(DM),past=PE<TODAY,future=PA>TODAY;
   const nw=netWorth(PE).net;
   const alerts=budgetState().filter(b=>b.p>=.8),sa=shortAlert();
@@ -1659,6 +1666,7 @@ function vHome(){
     ${oweT>0?`<div class="row tap" data-act="goCards" style="padding:8px 14px"><div class="main"><span class="t">💳 ${t('cardsOwe')}</span><span class="s">${nextD?t('nextPay')+' '+esc(shortDate(nextD)):''}</span></div><b class="amt neg">${money(oweT)}</b></div>`:''}
     <div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(exp)}</span></div></div>
     <div class="net tile" data-act="stmtFlow" data-ty="net" style="padding-top:6px"><span class="label">${per.mode==='month'?t('netMonthOnly'):t('netPer')} ›</span><span class="mid ${net<0?'neg':'pos'}">${money(net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div>
+    ${finHTML(tx)}
     ${Math.abs(P.xf)>0.5?`<p class="hint" style="padding:0 14px 8px;margin:0">⇄ ${t('xferNet')}: ${P.xf>0?'+':'−'}${money(Math.abs(P.xf))}</p>`:''}
     ${Math.abs(P.fx)>1?`<p class="hint" style="padding:0 14px 8px;margin:0">${t('fxDiff')} ${money(P.fx)}</p>`:''}`})()}
   </section>
@@ -1701,7 +1709,7 @@ function txFiltered(){
   return tx;
 }
 function totalsBar(tx){
-  const inc=sumB(tx.filter(x=>x.type==='income')),exp=sumB(tx.filter(x=>x.type==='expense')),trs=tx.filter(x=>x.type==='transfer');
+  const pl=x=>txCat&&FIN_CATS.has(catRoot(txCat))?true:isPL(x),inc=sumB(tx.filter(x=>x.type==='income'&&pl(x))),exp=sumB(tx.filter(x=>x.type==='expense'&&pl(x))),trs=tx.filter(x=>x.type==='transfer');
   if(txFilter==='transfer')return `<div class="totbar"><div><span class="label">${t('countWord')}</span><b>${trs.length}</b></div><div style="grid-column:span 2"><span class="label">${t('transfers')} (${BASE()})</span><b>${fmt(trs.reduce((v,x)=>v+baseAmt(x),0))}</b></div></div>`;
   return `<div class="totbar"><div class="tile" data-act="stmtFilt" data-ty="income"><span class="label">${t('income')}</span><b class="pos">${fmt(inc)}</b></div><div class="tile" data-act="stmtFilt" data-ty="expense"><span class="label">${t('expense')}</span><b>${fmt(exp)}</b></div><div class="tile" data-act="stmtFilt" data-ty="net"><span class="label">${t('netShort')} · ${tx.length} ${t('rowsWord')}</span><b class="${inc-exp<0?'neg':''}">${fmt(inc-exp)}</b></div></div>`;
 }
@@ -2165,15 +2173,15 @@ function planHTML(){
 }
 
 function vRep(){
-  const tx=txIn(),exp=tx.filter(x=>x.type==='expense'),inc=sumB(tx.filter(x=>x.type==='income')),te=sumB(exp),bf=perFactor(),B=id=>S.budgets[id]?Math.round(S.budgets[id]*bf):0;
+  const tx=txIn(),exp=tx.filter(x=>x.type==='expense'&&isPL(x)),inc=sumB(tx.filter(x=>x.type==='income'&&isPL(x))),te=sumB(exp),bf=perFactor(),B=id=>S.budgets[id]?Math.round(S.budgets[id]*bf):0;
   const by={};exp.forEach(x=>{const k=catRoot(x.cat);by[k]=(by[k]||0)+baseAmt(x)});
   Object.keys(S.budgets).forEach(k=>{if(!(k in by))by[k]=0});
   const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);const mx=Math.max(1,...rows.map(r=>Math.max(r[1],B(r[0]))));
   const mlist=per.mode==='month'?Array.from({length:6},(_,i)=>ymAdd(cur,i-5)):perMonths().slice(-24);
-  const ms=mlist.map(m=>{const x=txOf(m);return{m,i:sumB(x.filter(y=>y.type==='income')),e:sumB(x.filter(y=>y.type==='expense'))}});
+  const ms=mlist.map(m=>{const x=txOf(m);return{m,i:sumB(x.filter(y=>y.type==='income'&&isPL(y))),e:sumB(x.filter(y=>y.type==='expense'&&isPL(y)))}});
   const top=Math.max(1,...ms.map(o=>Math.max(o.i,o.e)));
   return `<section class="slip"><div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(te)}</span></div></div>
-    <div class="perf"></div><div class="net tile" data-act="stmtFlow" data-ty="net"><span class="label">${t('net')} ›</span><span class="mid ${inc-te<0?'neg':''}">${money(inc-te)} <small class="muted">${esc(curSym(BASE()))}</small></span></div></section>
+    <div class="perf"></div><div class="net tile" data-act="stmtFlow" data-ty="net"><span class="label">${t('net')} ›</span><span class="mid ${inc-te<0?'neg':''}">${money(inc-te)} <small class="muted">${esc(curSym(BASE()))}</small></span></div>${finHTML(tx)}</section>
   ${planHTML()}
   <section class="sec"><div class="sec-h"><h2>${t('byCat')}</h2><span><button class="link" data-act="exportCats">⤓ ${t('export')}</button> · <button class="link" data-act="budget">${t('budget')}</button></span></div>
     <div class="list">${rows.length?rows.map(([id,v])=>{const lim=B(id),p=lim?v/lim:0;
@@ -2277,8 +2285,10 @@ function actClick(e){
     clearFilt:()=>{txCat='';txAcc='';txQuery='';txTag='';txDay='';render()},clearDay:()=>{txDay='';render()},pickDay:()=>{txDay=txDay===b.dataset.d?'':b.dataset.d;render()},
     stmtTag:()=>{const g=b.dataset.name;stmtSheet({title:'#'+g,sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(txIn().filter(x=>x.type!=='transfer'&&(x.tags||[]).includes(g)))})},
     stmtFilt:()=>{const ty=b.dataset.ty,list=txFiltered(),title=[txCat?catPath(txCat):'',txAcc?accOf(txAcc).name+' '+accOf(txAcc).currency:'',txQuery?'"'+txQuery+'"':''].filter(Boolean).join(' · ')||t('tx');
-      if(ty==='net')stmtSheet({title,sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(list.filter(x=>x.type!=='transfer'))});
-      else stmtSheet({title:(ty==='income'?t('income'):t('expense'))+' · '+title,sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(list.filter(x=>x.type===ty))})},
+      const pl=x=>txCat&&FIN_CATS.has(catRoot(txCat))?x.type!=='transfer':isPL(x);
+      if(ty==='net')stmtSheet({title,sub:perLabel(),cur:BASE(),kind:'acc',opening:0,rows:flowRows(list.filter(pl))});
+      else stmtSheet({title:(ty==='income'?t('income'):t('expense'))+' · '+title,sub:perLabel(),cur:BASE(),kind:'flow',rows:flowRows(list.filter(x=>x.type===ty&&pl(x)))})},
+    stmtFin:()=>flowStmt('fin'),
     users:usersSheet,unreg:unregister,reg:()=>{if(!driveReady()){toast(t('regLoading'));return}doRegister().then(()=>{toast(t('regDone')+' '+REG.email);render()},()=>toast(t('regFail')))},
     pushOn:pushEnable,pushOff:pushDisable,pushTest:pushTest,bioOn:bioEnableForm,bioOff:bioOff,importX:importForm,
     settle:()=>settleForm(b.dataset.from,b.dataset.to,b.dataset.v),
@@ -2288,7 +2298,7 @@ function actClick(e){
     goNW:()=>{tab='rep';render();setTimeout(()=>{const e=$('#nw');if(e)e.scrollIntoView({behavior:'smooth'})},50)},
     editRec:()=>{const r=S.recur.find(v=>v.id===id);if(r)recRuleForm(r)},
     stmtRec:()=>{const r=S.recur.find(v=>v.id===id);if(!r)return;stmtSheet({title:r.tpl.note||catPath(r.tpl.cat),sub:freqName(r.freq)+' · '+t('allTime'),cur:BASE(),kind:'flow',rows:flowRows(S.tx.filter(x=>x.rec===r.id&&x.type!=='transfer'))})},exportTx:()=>exportTx((()=>{let l=txIn();if(txFilter!=='all')l=l.filter(x=>x.type===txFilter);return l})(),t('tx')),
-    exportCats:()=>{const tx=txIn().filter(x=>x.type==='expense');const by=new Map();tx.forEach(x=>by.set(x.cat,(by.get(x.cat)||0)+baseAmt(x)));exportSheet({title:t('byCat'),sub:perLabel()+' · '+curName(BASE()),cols:[t('category'),t('amount')],num:[1],rows:[...by].sort((a,b)=>b[1]-a[1]).map(([c,v])=>[catPath(c),Math.round(v*100)/100]),foot:[[t('total'),Math.round([...by.values()].reduce((a,b)=>a+b,0)*100)/100]]})},
+    exportCats:()=>{const tx=txIn().filter(x=>x.type==='expense'&&isPL(x));const by=new Map();tx.forEach(x=>by.set(x.cat,(by.get(x.cat)||0)+baseAmt(x)));exportSheet({title:t('byCat'),sub:perLabel()+' · '+curName(BASE()),cols:[t('category'),t('amount')],num:[1],rows:[...by].sort((a,b)=>b[1]-a[1]).map(([c,v])=>[catPath(c),Math.round(v*100)/100]),foot:[[t('total'),Math.round([...by.values()].reduce((a,b)=>a+b,0)*100)/100]]})},
     budget:budgetForm,
     clearSample:()=>{const l=S.lang,keep=S.ledgers;S=blank();S.lang=l;S.ledgers=keep||[];if(ACT==='me')PS=S;commit()},
     addCat:()=>catForm(b.dataset.ty),editCat:()=>{const ty=b.dataset.ty;catForm(ty,S.cats[ty].find(c=>c.id===id))},
@@ -3145,7 +3155,7 @@ if(!(window.crypto&&crypto.subtle)){$('#lkT').textContent='This browser cannot e
 else showLock();
 
 /* automated checks only: exposed on a local test server, never on the real site */
-if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,loanForm,loanTopUp,loanPaid,loanAdj,parseEntry,commit,render,migrate,blank,save};
+if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,loanForm,loanTopUp,loanPaid,loanAdj,parseEntry,isPL,isFin,flowStmt,commit,render,migrate,blank,save};
 })();
 </script>
 
