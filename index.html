@@ -301,7 +301,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.51';
+const APP_VER='0.52';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -508,7 +508,7 @@ regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and lin
 cashIn:['دخل','In'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
 cardsOwe:['عليك للكروت','Owed on cards'],nextPay:['أقرب سداد','Next payment'],payWith:['بيتدفع من','Paid from'],anyAcc:['أي حساب','Any account'],
 loanPlan:['طريقة السداد','Repayment'],planOnce:['مرة واحدة','In one go'],planInst:['أقساط شهرية','Monthly installments'],instFrom:['أول قسط','First installment'],perMonthFrom:['في الشهر من','a month from'],
-instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],
+instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],instMonths:['عدد الشهور','Months'],instOfLeft:['الباقي %v:','Left %v:'],lastInst:['آخر قسط','last one'],loanPaidSoFar:['اتدفع','Paid'],loanMoreB:['زوّد السلفة','Borrow more'],loanMoreL:['سلّفته تاني','Lend more'],loanAdded:['زيادة','Added'],loanIntoAcc:['الفلوس دخلت في','Money went into'],loanFromAcc:['الفلوس طلعت من','Money came from'],loanNoAcc:['مش هسجلها في حساب','Don\'t record in an account'],loanMoreHint:['المبلغ هيتضاف على نفس السلفة. بعد الحفظ هتفتح السلفة عشان تعدّل طريقة السداد لو عايز، والأقساط بتتحسب على الباقي.','The amount is added to the same loan. After saving the loan opens so you can change the repayment; installments are worked out on what is left.'],loanMoreDone:['اتضافت على السلفة','Added to the loan'],
 closeTitle:['إقفال الشهر','Close the month'],closeBtn:['اعتمد','Confirm'],later:['بعدين','Later'],moveTo:['رحّل لـ','Move to'],finalAmt:['ده المبلغ النهائي','This is final'],keepDue:['سيبه مستحق','Keep it due'],
 closeHint:['دي الحاجات اللي كانت متوقعة في الشهر ده ولسه متدفعتش كلها. لكل واحدة اختار: المبلغ اللي اتدفع هو النهائي، ولا ترحّل الباقي لشهر تاني.','These were planned this month and are not fully paid. For each: is what was paid final, or move the rest to another month?'],
 closeNothing:['كل اللي كان متوقع في الشهر ده اتعمل. دوس اعتمد.','Everything planned this month was done. Tap Confirm.'],closedMsg:['الشهر اتقفل','Month closed'],carriedFrom:['مرحّل من','moved from'],
@@ -642,7 +642,7 @@ function loanSched(l){
   return Object.keys(mm).sort().map(m=>({m,amount:Math.round(mm[m]*100)/100})).filter(x=>Math.abs(x.amount)>0.004);
 }
 function loanSched0(l){
-  if(l.plan==='inst'&&+l.instAmt>0&&l.instStart){const out=[];let left=+l.amount,m=l.instStart,g=0;while(left>0.004&&g++<600){const v=Math.min(+l.instAmt,left);out.push({m,amount:Math.round(v*100)/100});left-=v;m=ymAdd(m,1)}return out}
+  if(l.plan==='inst'&&+l.instAmt>0&&l.instStart){const base=Math.min(Math.max(0,+l.instBase||0),+l.amount),out=[];if(base>0.004){const lm=(l.date||l.instStart).slice(0,7);out.push({m:lm<l.instStart?lm:ymAdd(l.instStart,-1),amount:Math.round(base*100)/100})}let left=+l.amount-base,m=l.instStart,g=0;while(left>0.004&&g++<600){const v=Math.min(+l.instAmt,left);out.push({m,amount:Math.round(v*100)/100});left-=v;m=ymAdd(m,1)}return out}
   return l.due?[{m:l.due,amount:+l.amount}]:[];
 }
 /* still owed on the schedule up to month m (payments cover the earliest months first) */
@@ -703,7 +703,7 @@ function migrate(){
   const addCat=(ty,id,ar,en,sys,before)=>{if(!S.cats[ty].some(c=>c.id===id)){const i=S.cats[ty].findIndex(c=>c.id===before);S.cats[ty].splice(i<0?S.cats[ty].length:i,0,{id,ar,en,sys})}};
   addCat('expense','bankfees','رسوم ومصاريف بنكية','Bank fees',false,'inst');addCat('expense','adjust','فروقات تسوية','Reconciliation difference',true,'other');
   addCat('income','interest','فوايد وعوائد','Interest & returns',false,'gamin');
-  addCat('expense','loanpay','سداد سلف','Loan repayments',true,'other');addCat('income','loanback','تحصيل سلف','Loan collections',true,'iother');addCat('income','iadjust','فروقات تسوية','Reconciliation difference',true,'iother');
+  addCat('expense','loanpay','سداد سلف','Loan repayments',true,'other');addCat('income','loanback','تحصيل سلف','Loan collections',true,'iother');addCat('income','loanrecv','سلف استلمتها','Loans received',true,'iother');addCat('expense','loangive','سلف ادّيتها','Loans given',true,'other');addCat('income','iadjust','فروقات تسوية','Reconciliation difference',true,'iother');
   if(!S.defAcc||!ids.has(S.defAcc))S.defAcc=S.accounts[0].id;
   {const cd=S.accounts.find(a=>a.type==='card');for(const o of S.inst)if(o.payWith===undefined)o.payWith=cd&&/كريديت|كارت|credit|card/i.test(o.name)?cd.id:''}
   if('currency' in S)delete S.currency;
@@ -1254,10 +1254,12 @@ function relink(tx,lk){
   unlink(Object.assign({},tx,{link:lk}));
   if(lk.k==='inst'||lk.k==='gam'){const o=(lk.k==='inst'?S.inst:S.gam).find(x=>x.id===lk.id);if(!o||tx.type!=='expense'){delete tx.link;return}tx.link={k:lk.k,id:lk.id,alloc:allocate(lk.k,o,+tx.amount)}}
   else if(lk.k==='loan'){const l=S.loans.find(x=>x.id===lk.id);if(!l||tx.type==='transfer'){delete tx.link;return}const p={id:lk.pay||uid(),amount:+tx.amount,date:tx.date};l.pays.push(p);tx.link={k:'loan',id:l.id,pay:p.id}}
+  else if(lk.k==='loanadd'){const l=S.loans.find(x=>x.id===lk.id);if(!l||tx.type==='transfer'){delete tx.link;return}const a={id:lk.add||uid(),amount:+tx.amount,date:tx.date};l.adds=(l.adds||[]).concat(a);l.amount=Math.round((+l.amount+a.amount)*100)/100;tx.link={k:'loanadd',id:l.id,add:a.id}}
   else if(lk.k==='gamr'){const g=S.gam.find(x=>x.id===lk.id);if(g&&tx.type==='income')g.received=true;else delete tx.link}
 }
 function unlink(tx){if(!tx.link)return;const l=tx.link;
   if(l.k==='loan'){const o=S.loans.find(x=>x.id===l.id);if(o)o.pays=o.pays.filter(p=>p.id!==l.pay);return}
+  if(l.k==='loanadd'){const o=S.loans.find(x=>x.id===l.id);if(o){const a=(o.adds||[]).find(z=>z.id===l.add);if(a){o.amount=Math.round((+o.amount-(+a.amount||0))*100)/100;o.adds=o.adds.filter(z=>z.id!==l.add)}}return}
   if(l.k==='gamr'){const g=S.gam.find(x=>x.id===l.id);if(g)g.received=false;return}
   const o=(l.k==='inst'?S.inst:S.gam).find(x=>x.id===l.id);if(!o)return;
   const per=oblPer(l.k,o),alloc=l.alloc||(l.ym?{[l.ym]:per}:{});o.part=o.part||{};
@@ -1476,7 +1478,10 @@ function loanForm(l){
     <div class="two"><label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${l.date}"></label>
     <label class="fld" id="ldW" ${l.plan==='inst'?'hidden':''}><span>${t('loanDue')}</span><input class="in-f" type="month" id="ld" value="${l.due||''}"></label></div>
     <div class="fld"><span>${t('loanPlan')}</span>${segHTML('lp',[['once',t('planOnce')],['inst',t('planInst')]],l.plan||'once')}</div>
-    <div class="two" id="liW" ${l.plan==='inst'?'':'hidden'}><label class="fld"><span>${t('monthly')}</span><input class="in-f amt num" id="lia" inputmode="decimal" value="${l.instAmt||''}"></label>
+    ${!isNew?`<div class="row" style="padding:0 2px"><div class="main"><span class="s">${t('loanPaidSoFar')} ${moneyC(loanPaid(l),l.currency)} · ${t('remaining')} ${moneyC(loanLeft(l),l.currency)}</span></div><button type="button" class="btn sm" id="topup">+ ${l.dir==='borrowed'?t('loanMoreB'):t('loanMoreL')}</button></div>`:''}
+    ${(l.adds||[]).length?`<div class="list">${l.adds.map(z=>`<div class="row"><div class="main"><span class="t">+ ${moneyC(z.amount,l.currency)}</span><span class="s">${t('loanAdded')} · ${esc(dayLbl(z.date))}</span></div></div>`).join('')}</div>`:''}
+    <div id="liW" ${l.plan==='inst'?'':'hidden'}><div class="two"><label class="fld"><span>${t('monthly')}</span><input class="in-f amt num" id="lia" inputmode="decimal" value="${l.instAmt||''}"></label>
+    <label class="fld"><span>${t('instMonths')}</span><input class="in-f num" id="lic" inputmode="numeric" value=""></label></div>
     <label class="fld"><span>${t('instFrom')}</span><input class="in-f" type="month" id="lis" value="${l.instStart||ymAdd(TODAY_YM,1)}"></label></div>
     <p class="hint" id="liH" ${l.plan==='inst'?'':'hidden'}></p>
     <label class="fld"><span>${t('note')}</span><input class="in-f" id="nt" value="${esc(l.note)}"></label>
@@ -1484,17 +1489,44 @@ function loanForm(l){
     <div class="foot">${isNew?'':`<button type="button" class="btn danger" id="del">${t('del')}</button>`}<button class="btn pri grow">${t('save')}</button></div>
   </form>`,r=>{
     bindSeg(r,'dr',v=>dir=v);let plan=l.plan||'once';
-    const liHint=()=>{const a=numv(r,'amt'),q=numv(r,'lia');r.querySelector('#liH').textContent=a>0&&q>0?t('instCount').replace('%n',Math.ceil(a/q-1e-9)).replace('%m',monthLbl(ymAdd(val(r,'lis')||TODAY_YM,Math.ceil(a/q-1e-9)-1))):''};
+    /* installments spread what is still left: total (with moves and drops) minus what was paid */
+    const leftOf=()=>Math.max(0,Math.round((numv(r,'amt')+(isNew?0:loanAdj(l))-(isNew?0:loanPaid(l)))*100)/100);
+    /* unchanged plan: show the months still open on the current schedule; changed plan: the new spread of what is left */
+    const sameAsNow=()=>!isNew&&(l.plan||'once')==='inst'&&numv(r,'amt')===+l.amount&&numv(r,'lia')===+l.instAmt&&val(r,'lis')===l.instStart;
+    const openMonths=()=>{let paid=loanPaid(l);return loanSched(l).filter(x=>{const take=Math.min(paid,x.amount);paid-=take;return x.amount-take>0.004})};
+    const liHint=()=>{const a=leftOf(),q=numv(r,'lia');let n=q>0?Math.ceil(a/q-1e-9):0,last=ymAdd(val(r,'lis')||TODAY_YM,n-1),lastV=Math.round((a-q*(n-1))*100)/100;
+      if(sameAsNow()){const om=openMonths();n=om.length;if(n){last=om[n-1].m;lastV=om[n-1].amount}}
+      if(document.activeElement!==r.querySelector('#lic'))r.querySelector('#lic').value=n||'';
+      r.querySelector('#liH').textContent=a>0&&q>0&&n>0?(isNew?'':t('instOfLeft').replace('%v',fmt(a))+' ')+t('instCount').replace('%n',n).replace('%m',monthLbl(last))+(lastV<q-0.004?' · '+t('lastInst')+' '+fmt(lastV):''):''};
     bindSeg(r,'lp',v=>{plan=v;r.querySelector('#liW').hidden=v!=='inst';r.querySelector('#liH').hidden=v!=='inst';r.querySelector('#ldW').hidden=v==='inst';liHint()});
-    ['amt','lia','lis'].forEach(id=>r.querySelector('#'+id).addEventListener('input',liHint));liHint();
+    ['amt','lia','lis'].forEach(id=>r.querySelector('#'+id).addEventListener('input',liHint));
+    r.querySelector('#lic').addEventListener('input',()=>{const n=Math.round(numv(r,'lic'));if(n>0){r.querySelector('#lia').value=Math.ceil(leftOf()/n*100)/100;liHint()}});liHint();
+    if(!isNew)r.querySelector('#topup').onclick=()=>loanTopUp(l.id);
     r.querySelectorAll('[data-pay]').forEach(b=>b.onclick=()=>{const o=S.loans.find(x=>x.id===l.id);o.pays=o.pays.filter(p=>p.id!==b.dataset.pay);S.tx=S.tx.filter(x=>!(x.link&&x.link.k==='loan'&&x.link.pay===b.dataset.pay));save();render();loanForm(o)});
     if(!isNew)r.querySelector('#del').onclick=()=>confirmSheet(t('confirmDel'),t('del'),()=>{S.loans=S.loans.filter(x=>x.id!==l.id);commit(t('deleted'))});
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const pr=val(r,'pr'),a=numv(r,'amt');if(!pr){toast(t('needName'));return}if(a<=0){toast(t('needAmt'));return}
       const o={dir,person:pr,group:val(r,'gp'),amount:a,currency:val(r,'lc'),date:val(r,'dt')||TODAY,due:plan==='once'?(val(r,'ld')||''):'',plan,instAmt:plan==='inst'?numv(r,'lia'):0,instStart:plan==='inst'?(val(r,'lis')||ymAdd(TODAY_YM,1)):'',note:val(r,'nt')};
       if(plan==='inst'&&!(o.instAmt>0)){toast(t('needAmt'));return}
-      if(isNew)S.loans.push(Object.assign({id:uid(),pays:[]},o));else Object.assign(S.loans.find(x=>x.id===l.id),o);
+      if(isNew)S.loans.push(Object.assign({id:uid(),pays:[]},o));else{const L=S.loans.find(x=>x.id===l.id);
+        /* a new plan applies to what is left now: moves and drops are folded into the amount and what was already paid stays as paid */
+        const replan=o.plan!==(L.plan||'once')||+o.amount!==+L.amount||(o.plan==='inst'&&(+o.instAmt!==+L.instAmt||o.instStart!==L.instStart))||(o.plan==='once'&&o.due!==(L.due||''));
+        if(replan){o.amount=Math.round((o.amount+loanAdj(L))*100)/100;o.adj=[];o.instBase=o.plan==='inst'?Math.min(loanPaid(L),o.amount):0}
+        Object.assign(L,o)}
       closeSheet();commit(t('saved'))};
   });
+}
+function loanTopUp(id){
+  const l=S.loans.find(x=>x.id===id);if(!l)return;const cc=l.currency||BASE(),accs=S.accounts.filter(a=>a.currency===cc&&a.type!=='card');
+  openSheet((l.dir==='borrowed'?t('loanMoreB'):t('loanMoreL'))+' · '+l.person,`<form class="form" id="f">
+    <div class="two"><label class="fld"><span>${t('amount')}</span><input class="in-f amt num" id="amt" inputmode="decimal"></label>
+    <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${TODAY}"></label></div>
+    <label class="fld"><span>${l.dir==='borrowed'?t('loanIntoAcc'):t('loanFromAcc')}</span><select class="in-f" id="ac">${accs.map(a=>`<option value="${a.id}" ${a.id===payAcc(cc)?'selected':''}>${esc(a.name)}</option>`).join('')}<option value="">${t('loanNoAcc')}</option></select></label>
+    <p class="hint">${t('loanMoreHint')}</p>
+    <div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
+    r.querySelector('#f').onsubmit=e=>{e.preventDefault();const a=numv(r,'amt');if(!(a>0)){toast(t('needAmt'));return}const L=S.loans.find(x=>x.id===id),date=val(r,'dt')||TODAY,acc=val(r,'ac');
+      if(acc){const tx={id:uid(),acc,type:L.dir==='borrowed'?'income':'expense',cat:L.dir==='borrowed'?'loanrecv':'loangive',amount:a,date,note:(L.dir==='borrowed'?t('loanMoreB'):t('loanMoreL'))+' · '+L.person};S.tx.push(tx);relink(tx,{k:'loanadd',id:L.id})}
+      else{L.adds=(L.adds||[]).concat({id:uid(),amount:a,date});L.amount=Math.round((+L.amount+a)*100)/100}
+      save();render();toast(t('loanMoreDone'));loanForm(L)}});
 }
 function repayForm(l){
   openSheet(t('repay')+' · '+l.person,`<form class="form" id="f">
@@ -3072,7 +3104,7 @@ if(!(window.crypto&&crypto.subtle)){$('#lkT').textContent='This browser cannot e
 else showLock();
 
 /* automated checks only: exposed on a local test server, never on the real site */
-if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,commit,render,migrate,blank,save};
+if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,loanForm,loanTopUp,loanPaid,loanAdj,commit,render,migrate,blank,save};
 })();
 </script>
 
