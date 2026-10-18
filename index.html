@@ -249,7 +249,7 @@ details.box>.list{margin-top:8px}
 .totbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .totbar>div{padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .totbar>div+div{border-inline-start:1px solid var(--line)}
-.totbar>div.on{background:var(--accent-soft)}.totbar>div.tap{cursor:pointer}
+.totbar>div.on{background:var(--accent-soft)}.balchip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}.totbar>div.tap{cursor:pointer}
 .totbar b{font-family:var(--f-display);font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qbox{position:relative;flex:1;min-width:0}
 .qbox .in-f{padding-inline-end:40px}
@@ -319,7 +319,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.63';
+const APP_VER='0.64';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -523,7 +523,7 @@ netMonthOnly:['صافي الشهر لوحده','This month only'],
 needOnline:['أول مرة محتاج إنترنت علشان تسجّل بجوجل وتربط Drive.','The first time you need internet to sign in with Google and link Drive.'],
 regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Google Drive علشان تكمّل.','Sign in with Google and allow Google Drive to continue.'],
 regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],newVer:['فيه نسخة جديدة من البرنامج، وهتتحدث لوحدها أول ما يتقفل. أو حدّثها دلوقتي:','A new version is ready. It installs itself next time the app locks, or update now:'],
-cashIn:['دخل','In'],avgIn:['متوسط الدخل','Avg in'],avgOut:['متوسط المصروف','Avg out'],dueNow:['مستحق لحد الشهر ده','Due up to this month'],oblSearch:['دوّر بالاسم أو الملاحظة…','Search by name or note…'],finTitle:['سلف وجمعيات','Loans & gam\'eyas'],finHint:['فلوس داخلة وخارجة، مش دخل ولا مصروف','Money in and out, not income or spending'],finIn:['داخل','In'],finOut:['خارج','Out'],xferTo:['تحويل إلى','Transfer to'],xferFrom:['تحويل من','Transfer from'],xferNet:['تحويلات بين حساباتك (مش دخل ولا مصروف)','Moves between your accounts (not income or spending)'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
+cashIn:['دخل','In'],avgIn:['متوسط الدخل','Avg in'],avgOut:['متوسط المصروف','Avg out'],dueLbl:['المستحق','Due'],plusLate:['ومعاه متأخر','plus overdue'],noLate:['مفيش متأخر','nothing overdue'],sinceStart:['من الأول لحد','to date'],ofTotal:['من إجمالي','of'],gotInPer:['اتحصّل في الفترة','collected in period'],paidInPer:['اتسدد في الفترة','paid in period'],dueThisPer:['مستحق الفترة','due in period'],payCash:['كاش','Cash'],payBank:['بنك','Bank'],payCard:['كارت','Card'],oblSearch:['دوّر بالاسم أو الملاحظة…','Search by name or note…'],finTitle:['سلف وجمعيات','Loans & gam\'eyas'],finHint:['فلوس داخلة وخارجة، مش دخل ولا مصروف','Money in and out, not income or spending'],finIn:['داخل','In'],finOut:['خارج','Out'],xferTo:['تحويل إلى','Transfer to'],xferFrom:['تحويل من','Transfer from'],xferNet:['تحويلات بين حساباتك (مش دخل ولا مصروف)','Moves between your accounts (not income or spending)'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
 cardsOwe:['عليك للكروت','Owed on cards'],nextPay:['أقرب سداد','Next payment'],payWith:['بيتدفع من','Paid from'],anyAcc:['أي حساب','Any account'],
 loanPlan:['طريقة السداد','Repayment'],planOnce:['مرة واحدة','In one go'],planInst:['أقساط شهرية','Monthly installments'],instFrom:['أول قسط','First installment'],perMonthFrom:['في الشهر من','a month from'],
 instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],instMonths:['عدد الشهور','Months'],instOfLeft:['الباقي %v:','Left %v:'],lastInst:['آخر قسط','last one'],loanPaidSoFar:['اتدفع','Paid'],loanMoreB:['زوّد السلفة','Borrow more'],loanMoreL:['سلّفته تاني','Lend more'],loanAdded:['زيادة','Added'],loanIntoAcc:['الفلوس دخلت في','Money went into'],loanFromAcc:['الفلوس طلعت من','Money came from'],loanNoAcc:['مش هسجلها في حساب','Don\'t record in an account'],loanMoreHint:['المبلغ هيتضاف على نفس السلفة. بعد الحفظ هتفتح السلفة عشان تعدّل طريقة السداد لو عايز، والأقساط بتتحسب على الباقي.','The amount is added to the same loan. After saving the loan opens so you can change the repayment; installments are worked out on what is left.'],loanMoreDone:['اتضافت على السلفة','Added to the loan'],
@@ -1166,6 +1166,11 @@ function perLabel(){
   if(per.mode==='half'){const h=m<=6?1:2;return en?'H'+h+' '+y:'النص '+(h===1?'الأول':'التاني')+' '+y}
   if(per.mode==='year')return y;
   const [a,b]=perRange();
+  /* whole months: name them */
+  if(a.slice(8)==='01'&&b===monthEnd(b.slice(0,7))){const ma=a.slice(0,7),mb=b.slice(0,7),ya=a.slice(0,4),yb=b.slice(0,4),mn=m2=>new Intl.DateTimeFormat(L(),{month:'long'}).format(dsDate(m2+'-01'));
+    if(ma===ya+'-01'&&mb===yb+'-12')return ya===yb?ya:ya+' – '+yb;
+    if(ma===mb)return monthLbl(ma);
+    return ya===yb?mn(ma)+' – '+mn(mb)+' '+ya:monthLbl(ma)+' – '+monthLbl(mb)}
   const A=dsDate(a),B=dsDate(b),sh=d=>'\u200E'+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'\u200E';
   return A.getFullYear()===B.getFullYear()?sh(A)+' – '+sh(B)+'/'+B.getFullYear():dmyOf(A)+' – '+dmyOf(B);
 }
@@ -1337,6 +1342,12 @@ new MutationObserver(()=>document.querySelectorAll('input[type=date]:not([data-d
 (()=>{const set=()=>{const a=document.querySelector('.top'),b=document.querySelector('.shh');if(a)document.documentElement.style.setProperty('--topH',a.getBoundingClientRect().height+'px');if(b&&b.offsetHeight)document.documentElement.style.setProperty('--shH',b.getBoundingClientRect().height+'px')};
   try{const ro=new ResizeObserver(set);const go=()=>{const a=document.querySelector('.top'),b=document.querySelector('.shh');if(a)ro.observe(a);if(b)ro.observe(b);set()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go()}catch(e){}window.addEventListener('resize',set)})();
 /* every box starts closed showing its totals; the ones you open stay open next time */
+/* the period at the top shows in full: smaller type first, then the app name steps aside */
+function fitHeader(){const b=$('#mLbl'),br=$('#brand');if(!b)return;const fits=()=>b.scrollWidth<=b.clientWidth+1;
+  br.style.display='';b.style.maxWidth='';b.style.fontSize='';
+  for(const f of [14,13,12]){b.style.fontSize=f+'px';if(fits())return}
+  br.style.display='none';b.style.maxWidth='none';for(const f of [14,13,12,11,10]){b.style.fontSize=f+'px';if(fits())return}}
+window.addEventListener('resize',()=>{try{fitHeader()}catch(e){}});
 function boxStates(v){let st={};try{st=JSON.parse(localStorage.getItem('daftari-open')||'{}')}catch(e){}
   v.querySelectorAll('details.box').forEach(d=>{const h=d.querySelector('summary h2');const k=tab+':'+(d.dataset.k||(h?h.textContent.trim():''));d.open=!!st[k];
     d.addEventListener('toggle',()=>{try{const s2=JSON.parse(localStorage.getItem('daftari-open')||'{}');if(d.open)s2[k]=1;else delete s2[k];localStorage.setItem('daftari-open',JSON.stringify(s2))}catch(e){}})});
@@ -1796,23 +1807,60 @@ function payCard(id){const a=accById(id);if(!a)return;const c=cardInfo(a),due=c.
       closeSheet();commit(t('saved'))}});
 }
 
-let oblF='',oblQ='';
-/* which items each total stands for (tap a total to show only those) */
-function oblList(k){const q=oblQ.trim().toLowerCase(),has=x=>!q||x.toLowerCase().includes(q);
-  if(k==='inst')return S.inst.filter(o=>has([o.name,o.note,o.group,catName(o.cat||'inst')].join(' '))&&(oblF==='due'?owedUpTo('inst',o,TODAY_YM)>0.004:oblF==='paid'?paidAmt('inst',o)>0:oblF==='left'?oblLeft('inst',o)>0.004:true));
-  if(k==='gam')return S.gam.filter(o=>has([o.name,o.note,o.group].join(' '))&&(oblF==='due'?owedUpTo('gam',o,TODAY_YM)>0.004:oblF==='paid'?paidAmt('gam',o)>0:oblF==='left'?oblLeft('gam',o)>0.004:true));
-  if(k==='loan')return S.loans.filter(l=>has([l.person,l.note,l.group].join(' '))&&(oblF==='lent'?l.dir==='lent'&&loanLeft(l)>0.004:oblF==='borrowed'?l.dir==='borrowed'&&loanLeft(l)>0.004:true));
-  if(k==='card')return cards().filter(a=>{const c=cardInfo(a);return has(a.name)&&(oblF==='owed'?c.owed>0:oblF==='cdue'?c.due>0:true)});
+let oblF=new Set(),oblC=new Set(),oblQ='';
+/* figures for one installment / gam'eya over the period chosen at the top */
+function oblStats(k,o){
+  const [PA,PE]=perRange(),am=PA.slice(0,7),em=PE.slice(0,7),per=oblPer(k,o),ms=oblMonths(k,o),cc=o.currency||BASE();
+  let due=0,late=0;ms.forEach(m=>{if(o.paid.includes(m))return;const v=per-partOf(o,m),e=effM(o,m);if(e<am)late+=v;else if(e<=em)due+=v});
+  const lk=S.tx.filter(x=>x.link&&x.link.k===k&&x.link.id===o.id),sumIn=(a,b)=>lk.filter(x=>x.date>=a&&x.date<=b).reduce((v,x)=>v+(+x.amount||0),0);
+  const paidP=sumIn(PA,PE),paidCum=Math.max(0,paidAmt(k,o)-lk.filter(x=>x.date>PE).reduce((v,x)=>v+(+x.amount||0),0));
+  const B=v=>toBase(v,cc);return {due:B(due),late:B(late),paidP:B(paidP),paidCum:B(paidCum),left:B(oblLeftAt(k,o,PE)),total:B(per*ms.length)};
+}
+const payType=o=>{const a=accById(o.payWith)||accById(S.defAcc);return a&&a.type==='card'?'card':a&&a.type==='cash'?'cash':'bank'};
+function oblStatus(k,o){
+  if(k==='loan'){const em=perRange()[1].slice(0,7);return loanLeft(o)<=0.004?'done':loanOwedUpTo(o,ymAdd(TODAY_YM,-1))>0.004?'late':loanOwedUpTo(o,em)>0.004?'due':''}
+  if(oblLeft(k,o)<=0.004)return 'done';
+  if(oblMonths(k,o).some(m=>!o.paid.includes(m)&&effM(o,m)<TODAY_YM))return 'late';
+  const st=oblStats(k,o);return st.due>0.004?'due':'';
+}
+/* search and the filter chips (same kind: any of them; different kinds: all of them) */
+function oblBase(k){const q=oblQ.trim().toLowerCase(),has=x=>!q||x.toLowerCase().includes(q);
+  const kinds={};oblC.forEach(c=>{const [g,v]=c.split(':');(kinds[g]=kinds[g]||[]).push(v)});
+  const chip=(k2,o)=>Object.entries(kinds).every(([g,vs])=>g==='st'?vs.includes(oblStatus(k2,o)):g==='pay'?vs.includes(payType(o)):g==='grp'?vs.includes(o.group||''):true);
+  if(k==='inst')return S.inst.filter(o=>has([o.name,o.note,o.group,catName(o.cat||'inst')].join(' '))&&chip('inst',o));
+  if(k==='gam')return S.gam.filter(o=>has([o.name,o.note,o.group].join(' '))&&chip('gam',o));
+  if(k==='loan')return S.loans.filter(l=>has([l.person,l.note,l.group].join(' '))&&chip('loan',l));
+  if(k==='card')return cards().filter(a=>has(a.name));
   if(k==='goal')return S.goals.filter(g=>has([g.name,g.note].join(' ')));
   return [];}
+/* tapping totals narrows the list further (any of the totals you picked) */
+function oblList(k){const L=oblBase(k);if(!oblF.size)return L;const E=perRange()[1];
+  return L.filter(o=>{
+    if(k==='inst'||k==='gam'){const st=oblStats(k,o);return (oblF.has('due')&&st.due+st.late>0.004)||(oblF.has('paid')&&st.paidP>0.004)||(oblF.has('left')&&st.left>0.004)}
+    if(k==='loan'){const v=loanLeftAt(o,E);return (oblF.has('lent')&&o.dir==='lent'&&v>0.004)||(oblF.has('borrowed')&&o.dir==='borrowed'&&v>0.004)}
+    if(k==='card'){const c=cardInfo(o,E);return (oblF.has('owed')&&c.owed>0)||(oblF.has('cdue')&&c.due>0)}
+    return true})}
 function oblSum(){
-  const box=(a,b,c)=>`<div class="totbar">${[a,b,c].map(([l,v,cl,f])=>`<div class="${f?'tap':''} ${f&&oblF===f?'on':''}" ${f?`data-of="${f}"`:''}><span class="label">${l}${f&&oblF===f?' ✓':''}</span><b class="${cl||''}">${typeof v==='string'?esc(v):fmt(Math.round(v))}</b></div>`).join('')}</div>`;
-  if(oblTab==='inst'){return S.inst.length?box([t('dueNow'),S.inst.reduce((v,o)=>v+toBase(owedUpTo('inst',o,TODAY_YM),o.currency||BASE()),0),'','due'],[t('paidLbl'),S.inst.reduce((v,o)=>v+toBase(paidAmt('inst',o),o.currency||BASE()),0),'','paid'],[t('remaining'),S.inst.reduce((v,o)=>v+toBase(oblLeft('inst',o),o.currency||BASE()),0),'neg','left']):''}
-  if(oblTab==='gam'){return S.gam.length?box([t('dueNow'),S.gam.reduce((v,o)=>v+toBase(owedUpTo('gam',o,TODAY_YM),o.currency||BASE()),0),'','due'],[t('paidLbl'),S.gam.reduce((v,o)=>v+toBase(paidAmt('gam',o),o.currency||BASE()),0),'','paid'],[t('remaining'),S.gam.reduce((v,o)=>v+toBase(oblLeft('gam',o),o.currency||BASE()),0),'','left']):''}
-  if(oblTab==='loan'){const r=S.loans.filter(l=>l.dir==='lent').reduce((v,l)=>v+toBase(loanLeft(l),l.currency||BASE()),0),p=S.loans.filter(l=>l.dir==='borrowed').reduce((v,l)=>v+toBase(loanLeft(l),l.currency||BASE()),0);return S.loans.length?box([t('owedToMe'),r,'pos','lent'],[t('iOwe'),p,'neg','borrowed'],[t('netShort'),r-p,r-p<0?'neg':'pos']):''}
-  if(oblTab==='card'){const cs=cards();if(!cs.length)return '';const inf=cs.map(a=>({a,c:cardInfo(a)}));const nd=inf.map(z=>z.c.dueDate).filter(Boolean).sort()[0];
-    return box([t('cardsOwe'),inf.reduce((v,z)=>v+toBase(z.c.owed,z.a.currency),0),'neg','owed'],[t('cardDue'),inf.reduce((v,z)=>v+toBase(z.c.due||0,z.a.currency),0),'','cdue'],[t('nextPay')+(nd?' · '+wdOf(dsDate(nd)):''),nd?'\u200E'+nd.slice(8,10)+'/'+nd.slice(5,7)+'\u200E':'—'])}
+  const [PA,PE]=perRange(),endLbl=dmyOf(dsDate(PE)).replace(/\/\d{4}/,'');
+  const box=(...cells)=>`<div class="totbar">${cells.map(([l,v,cl,f,sm])=>`<div class="${f?'tap':''} ${f&&oblF.has(f)?'on':''}" ${f?`data-of="${f}"`:''}><span class="label">${l}${f&&oblF.has(f)?' ✓':''}</span><b class="${cl||''}">${typeof v==='string'?esc(v):fmt(Math.round(v))}</b>${sm?`<small class="muted" style="font-size:11px;line-height:1.3">${sm}</small>`:''}</div>`).join('')}</div>`;
+  if(oblTab==='inst'||oblTab==='gam'){const L=oblBase(oblTab);if(!(oblTab==='inst'?S.inst:S.gam).length)return '';const T={due:0,late:0,paidP:0,paidCum:0,left:0,total:0};L.forEach(o=>{const st=oblStats(oblTab,o);for(const x in T)T[x]+=st[x]});
+    return box([t('dueLbl'),T.due,'','due',T.late>0.5?t('plusLate')+' '+fmt(Math.round(T.late)):t('noLate')],[t('paidLbl'),T.paidP,'','paid',t('sinceStart')+' '+esc(endLbl)+': '+fmt(Math.round(T.paidCum))],[t('remaining'),T.left,'neg','left',t('ofTotal')+' '+fmt(Math.round(T.total))])}
+  if(oblTab==='loan'){if(!S.loans.length)return '';const L=oblBase('loan'),sm=d=>L.filter(l=>l.dir===d),left=d=>sm(d).reduce((v,l)=>v+toBase(loanLeftAt(l,PE),l.currency||BASE()),0),paidP=d=>sm(d).reduce((v,l)=>v+toBase(l.pays.filter(p=>p.date>=PA&&p.date<=PE).reduce((a,p)=>a+(+p.amount||0),0),l.currency||BASE()),0);
+    const r=left('lent'),p=left('borrowed');return box([t('owedToMe'),r,'pos','lent',t('gotInPer')+' '+fmt(Math.round(paidP('lent')))],[t('iOwe'),p,'neg','borrowed',t('paidInPer')+' '+fmt(Math.round(paidP('borrowed')))],[t('netShort'),r-p,r-p<0?'neg':'pos'])}
+  if(oblTab==='card'){const cs=cards();if(!cs.length)return '';const inf=cs.map(a=>({a,c:cardInfo(a,PE)}));const nd=inf.map(z=>z.c.dueDate).filter(Boolean).sort()[0];
+    const paid=cs.reduce((v,a)=>v+S.tx.filter(x=>x.date>=PA&&x.date<=PE&&((x.type==='transfer'&&x.toAcc===a.id)||(x.type==='income'&&x.acc===a.id))).reduce((s2,x)=>s2+toBase(+(x.type==='transfer'?(x.toAmount??x.amount):x.amount)||0,a.currency),0),0);
+    return box([t('cardsOwe'),inf.reduce((v,z)=>v+toBase(z.c.owed,z.a.currency),0),'neg','owed',t('paidInPer')+' '+fmt(Math.round(paid))],[t('cardDue'),inf.reduce((v,z)=>v+toBase(z.c.due||0,z.a.currency),0),'','cdue'],[t('nextPay')+(nd?' · '+wdOf(dsDate(nd)):''),nd?'‎'+nd.slice(8,10)+'/'+nd.slice(5,7)+'‎':'—'])}
   return '';
+}
+/* the chip row: status, how it is paid, group */
+function oblChips(){
+  if(!['inst','gam','loan'].includes(oblTab))return '';
+  const all=oblTab==='inst'?S.inst:oblTab==='gam'?S.gam:S.loans;if(!all.length)return '';
+  const ch=(id,l)=>`<button type="button" class="balchip ${oblC.has(id)?'on':''}" data-oc="${id}">${esc(l)}</button>`;
+  const st=[['st:late',t('overdue')],['st:due',t('dueThisPer')],['st:done',t('done')]].map(([i,l])=>ch(i,l)).join('');
+  const pays=oblTab==='loan'?'':[...new Set(all.map(payType))].map(p=>ch('pay:'+p,{cash:t('payCash'),bank:t('payBank'),card:t('payCard')}[p])).join('');
+  const gs=[...new Set(all.map(o=>o.group||'').filter(Boolean))].map(g=>ch('grp:'+g,g)).join('');
+  return `<div class="qchips" style="margin-top:0;flex-wrap:wrap">${st}${pays?'<span class="muted" style="align-self:center">·</span>'+pays:''}${gs?'<span class="muted" style="align-self:center">·</span>'+gs:''}</div>`;
 }
 function vObl(){
   if(oblTab==='rec')oblTab='inst';
@@ -1851,7 +1899,8 @@ function vObl(){
   const addLbl={inst:t('addInst'),gam:t('addGam'),loan:t('addLoan'),rec:t('addRec'),goal:t('addGoal'),card:t('addCard')}[oblTab];
   return `<div class="stickbar">${segHTML('obf',[['inst',t('installments')],['gam',t('gameyas')],['card',t('cardsT')],['loan',t('loans')],['goal',t('goals')]],oblTab)}${oblSum()}
     <div class="search"><div class="qbox"><input class="in-f" id="oq" placeholder="${t('oblSearch')}" value="${esc(oblQ)}" autocomplete="off">${oblQ?`<button class="qx" id="oqx" type="button" aria-label="clear">✕</button>`:''}</div></div>
-    ${oblF||oblQ?`<button class="link" id="ofx" style="align-self:flex-start">✕ ${t('clearFilters')}</button>`:''}</div>${body}<button class="btn block" data-act="addObl">+ ${addLbl}</button>`;
+    ${oblChips()}
+    ${oblF.size||oblC.size||oblQ?`<button class="link" id="ofx" style="align-self:flex-start">✕ ${t('clearFilters')}</button>`:''}</div>${body}<button class="btn block" data-act="addObl">+ ${addLbl}</button>`;
 }
 const dayBefore=d=>iso(new Date(dOf(d).getTime()-864e5));
 const monthEnd=ym=>{const [y,m]=ym.split('-').map(Number);return ym+'-'+pad(new Date(y,m,0).getDate())};
@@ -2291,7 +2340,7 @@ const ICONS={home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-
 function render(){
   if(S)migrate();
   const de=document.documentElement;de.lang=S.lang;de.dir=S.lang==='en'?'ltr':'rtl';
-  $('#brand').textContent=ACT==='me'?t('app'):'👥 '+(SHM&&SHM.name||'');document.title=t('app');document.querySelector('.top').classList.toggle('shared',ACT!=='me');$('#mLbl').textContent=perLabel();
+  $('#brand').textContent=ACT==='me'?t('app'):'👥 '+(SHM&&SHM.name||'');document.title=t('app');document.querySelector('.top').classList.toggle('shared',ACT!=='me');$('#mLbl').textContent=perLabel();fitHeader();
   $('#nav').innerHTML=['home','tx','obl','rep','set'].map(k=>`<button data-tab="${k}" class="${tab===k?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>${t(k)}</button>`).join('');
   const v=$('#view');
   v.innerHTML=tab==='home'?vHome():tab==='tx'?vTx():tab==='obl'?vObl():tab==='rep'?vRep():vSet();
@@ -2300,10 +2349,11 @@ function render(){
   if(tab==='home'){const f=v.querySelector('#qadd');if(f){f.onsubmit=e=>{e.preventDefault();const q=v.querySelector('#qtext').value.trim();if(q)quickFromText(q);else txForm()};const mic=v.querySelector('#qmic');if(mic)mic.onclick=()=>listen(txt=>{v.querySelector('#qtext').value=txt;quickFromText(txt)})}}
   if(tab==='tx'&&txView==='rec')bindSeg(v,'tv',x=>{txView=x;txDay='';render()});
   if(tab==='tx'&&txView!=='rec'){bindSeg(v,'txf',x=>{txFilter=x;render()});const cf=v.querySelector('#cf'),af=v.querySelector('#af'),qx=v.querySelector('#qx');cf.value=txCat;af.value=txAcc;cf.onchange=()=>{txCat=cf.value;render()};const tgf=v.querySelector('#tgf');if(tgf)tgf.onchange=()=>{txTag=tgf.value;render()};bindSeg(v,'tv',x=>{txView=x;txDay='';render()});af.onchange=()=>{txAcc=af.value;render()};if(qx)qx.onclick=()=>{txQuery='';render();$('#q').focus()};const q=v.querySelector('#q');q.oninput=()=>{txQuery=q.value;const p=q.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(p,p)}}
-  if(tab==='obl'){bindSeg(v,'obf',x=>{oblTab=x;oblF='';render()});
-    v.querySelectorAll('[data-of]').forEach(el=>el.onclick=()=>{oblF=oblF===el.dataset.of?'':el.dataset.of;render()});
+  if(tab==='obl'){bindSeg(v,'obf',x=>{oblTab=x;oblF.clear();oblC.clear();render()});
+    v.querySelectorAll('[data-of]').forEach(el=>el.onclick=()=>{const f=el.dataset.of;if(oblF.has(f))oblF.delete(f);else oblF.add(f);render()});
+    v.querySelectorAll('[data-oc]').forEach(el=>el.onclick=()=>{const f=el.dataset.oc;if(oblC.has(f))oblC.delete(f);else oblC.add(f);render()});
     const oq=v.querySelector('#oq');if(oq){oq.oninput=()=>{oblQ=oq.value;const p=oq.selectionStart;render();const n=$('#view #oq');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(e){}}}}
-    const oqx=v.querySelector('#oqx');if(oqx)oqx.onclick=()=>{oblQ='';render()};const ofx=v.querySelector('#ofx');if(ofx)ofx.onclick=()=>{oblQ='';oblF='';render()}}
+    const oqx=v.querySelector('#oqx');if(oqx)oqx.onclick=()=>{oblQ='';render()};const ofx=v.querySelector('#ofx');if(ofx)ofx.onclick=()=>{oblQ='';oblF.clear();oblC.clear();render()}}
   if(tab==='rep'){const zs=(id,k,isSel)=>{const el=v.querySelector(id);if(el)el.onchange=()=>{S.zakat[k]=isSel?el.value:el.checked;commit()}};zs('#zkK','karat',1);zs('#zkG','gold');zs('#zkR','recv');zs('#zkD','debt')}
   if(tab==='set'&&drv.linked&&!drv.email&&hasToken()&&!fetchDriveEmail.busy){fetchDriveEmail.busy=1;fetchDriveEmail().then(e=>{fetchDriveEmail.busy=0;if(e&&tab==='set')render()})}
   if(tab==='set'){const rh=v.querySelector('#remHm'),rl=v.querySelector('#remLead');if(rh){const go=()=>{const [h,m]=(rh.value||'09:00').split(':').map(Number);remTimeSave(h*60+(m||0),+rl.value)};rh.onchange=go;rl.onchange=go}}
