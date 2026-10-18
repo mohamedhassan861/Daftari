@@ -201,6 +201,7 @@ input[type=date].in-f,input[type=month].in-f,input[type=time].in-f{min-width:0;m
 .cur{font-size:.72em;font-weight:500;color:var(--muted)}
 .tblw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
 .stmt{width:100%;border-collapse:collapse;font-size:13px}
+#privacy{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;font-size:44px}#privacy[hidden]{display:none}
 /* headers stay on screen while you scroll through what they head */
 :root{--topH:64px;--shH:48px}
 #view .sec-h,#view details.box>summary{position:sticky;top:var(--topH);z-index:3;background:var(--bg);padding:8px 2px 6px;margin:-8px -2px 0}
@@ -283,7 +284,7 @@ details.box>.list{margin-top:8px}
 <body>
 
 
-<header class="top"><div class="wrap">
+<div id="privacy" hidden aria-hidden="true">🔒</div><header class="top"><div class="wrap">
   <div style="display:flex;align-items:center;gap:4px"><button class="iconbtn" id="lockBtn" aria-label="lock"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></button><button class="iconbtn" id="shareBtn" aria-label="share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button><div class="brand" id="brand">دفتري</div></div>
   <div class="month">
     <button class="iconbtn" id="mPrev" aria-label="prev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="flip"><path d="M9 6l6 6-6 6"/></svg></button>
@@ -311,7 +312,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.59';
+const APP_VER='0.60';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -3150,9 +3151,14 @@ $('#brand').onclick=()=>{if(S&&PS)ledgersSheet()};
 /* leaving the app locks it at once; when you leave from inside it (picking a file, sharing, Google sign-in, printing, the fingerprint prompt) it stays open if you come back within 5 minutes */
 document.addEventListener('click',e=>{const x=e.target.closest&&e.target;if(!x)return;const l=x.closest('label');if(x.closest('input[type=file],a[target=_blank],a[href^="mailto:"],a[href^="tel:"],a[href^="https://wa.me"]')||(l&&l.querySelector('input[type=file]')))goingOut()},true);
 try{if(navigator.share){const sh=navigator.share.bind(navigator);navigator.share=(...a)=>{goingOut();return sh(...a)}}}catch(e){}
+/* black cover the moment the app loses focus (app switcher, notifications, another app), so the phone's recent-apps picture shows nothing */
+const cover=on=>{const c=$('#privacy');if(c)c.hidden=!on};
+window.addEventListener('blur',()=>{if(S)cover(true)});
+window.addEventListener('focus',()=>{if(!document.hidden)cover(false)});
+window.addEventListener('pagehide',()=>{if(S){cover(true);if(Date.now()-EXT>=20000)lockNow()}});
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){hiddenAt=Date.now();hiddenOut=Date.now()-EXT<20000;if(S&&!hiddenOut)lockNow()}
-  else{if(S&&hiddenAt&&(!hiddenOut||Date.now()-hiddenAt>300000))lockNow();EXT=0;checkUpdate()}
+  if(document.hidden){cover(true);hiddenAt=Date.now();hiddenOut=Date.now()-EXT<20000;if(S&&!hiddenOut)lockNow()}
+  else{if(S&&hiddenAt&&(!hiddenOut||Date.now()-hiddenAt>300000))lockNow();EXT=0;cover(false);checkUpdate()}
 });
 /* updates: the published version is in version.json; while locked the app reloads itself, while open it shows a banner and updates at the next lock */
 let NEWVER=null;
