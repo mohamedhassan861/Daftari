@@ -504,7 +504,7 @@ netMonthOnly:['صافي الشهر لوحده','This month only'],
 needOnline:['أول مرة محتاج إنترنت علشان تسجّل بجوجل وتربط Drive.','The first time you need internet to sign in with Google and link Drive.'],
 regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Google Drive علشان تكمّل.','Sign in with Google and allow Google Drive to continue.'],
 regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],
-cashIn:['دخل','In'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
+cashIn:['دخل','In'],cashOut:['خرج','Out'],availEnd:['المتاح آخر الفترة','Available at end'],projEnd:['المتوقع آخر الفترة (كاش وبنوك)','Expected at end (cash & banks)'],projEndMonth:['المتوقع آخر الشهر (كاش وبنوك)','Expected at month end (cash & banks)'],availNow:['المتاح النهارده (فعلي)','Available today (actual)'],projStart:['المتوقع أول الفترة','Expected at start'],actWord:['فعلي','actual'],expWord:['متوقع','expected'],expShort:['(فعلي + متوقع)','(actual + expected)'],availEndMonth:['المتاح آخر الشهر (كاش وبنوك)','Available at month end (cash & banks)'],
 cardsOwe:['عليك للكروت','Owed on cards'],nextPay:['أقرب سداد','Next payment'],payWith:['بيتدفع من','Paid from'],anyAcc:['أي حساب','Any account'],
 loanPlan:['طريقة السداد','Repayment'],planOnce:['مرة واحدة','In one go'],planInst:['أقساط شهرية','Monthly installments'],instFrom:['أول قسط','First installment'],perMonthFrom:['في الشهر من','a month from'],
 instCount:['%n قسط، وآخر قسط في %m','%n installments, the last in %m'],
@@ -1588,15 +1588,17 @@ function vHome(){
   ${S.quick.length?`<div class="qchips">${S.quick.map(q=>{const a=accOf(q.acc);return `<button class="balchip" data-act="useQuick" data-id="${q.id}">${esc(q.note||catName(q.cat))} <small class="cur">${fmt(q.amount)}${a&&a.currency!==BASE()?' '+esc(curSym(a.currency)):''}</small></button>`}).join('')}</div>`:''}
   ${past?'':(()=>{const x=safeToSpend();return `<div class="slip tile" data-act="safe"><div class="net"><span class="label">${t('safeTitle')}${future?' <small class="muted">('+t('fromToday')+')</small>':''} ›</span><span class="mid ${x.safe<0?'neg':''}">${money(x.safe)} <small class="muted">${esc(curSym(BASE()))}</small></span><span class="label">${x.safe>0?fmt(x.perDay)+' '+esc(curSym(BASE()))+' '+t('perDay')+' · ':''}${x.daysLeft} ${t('daysLeft')}</span></div></div>`})()}
   <section class="slip">
-    ${(()=>{const [a,b]=perRange(),o=liqAll(dayBefore(a)),c=liqAll(b),cf=cashActual(tx),ci=Object.entries(cf).filter(([k])=>k.startsWith('in:')).reduce((v,[,x])=>v+x.v,0),co=Object.entries(cf).filter(([k])=>k.startsWith('out:')).reduce((v,[,x])=>v+x.v,0);
+    ${(()=>{const [a,b]=perRange(),P=perCash(),o=P.o,c=P.c,ci=P.ai+P.pi,co=P.ao+P.po;
       const owe=cards().map(x=>({x,c:cardInfo(x,b)})).filter(z=>z.c.owed>0),oweT=owe.reduce((v,z)=>v+toBase(z.c.owed,z.x.currency),0),nextD=owe.map(z=>z.c.dueDate||cardDueFor(z.x,b)).sort()[0];
-      return `<div class="net tile" data-act="goAcc"><span class="label">${per.mode==='month'?t('availEndMonth'):t('availEnd')} ›</span><span class="big ${c<0?'neg':''}">${money(c)}<small>${esc(curSym(BASE()))}</small></span></div>
+      const sub=(x,y)=>P.proj&&!P.fut&&x>0.5&&y>0.5?`<small class="muted" style="display:block;font-size:11px">${t('actWord')} ${money(x)} + ${t('expWord')} ${money(y)}</small>`:'';
+      return `<div class="net tile" data-act="${P.proj?'cashSheet':'goAcc'}"><span class="label">${P.proj?(per.mode==='month'?t('projEndMonth'):t('projEnd')):(per.mode==='month'?t('availEndMonth'):t('availEnd'))} ›</span><span class="big ${c<0?'neg':''}">${money(c)}<small>${esc(curSym(BASE()))}</small></span></div>
+    ${P.proj&&!P.fut?`<div class="row tap" data-act="goAcc" style="padding:4px 14px 8px"><div class="main"><span class="t">${t('availNow')}</span></div><b class="amt ${P.now<0?'neg':''}">${money(P.now)}</b></div>`:''}
     <div class="perf"></div>
-    <div class="flowb"><div><span>${t('carried')}</span><b class="${o<0?'neg':''}">${money(o)}</b></div><div><span>+ ${t('cashIn')}</span><b class="pos">${money(ci)}</b></div><div><span>− ${t('cashOut')}</span><b>${money(co)}</b></div></div>
+    <div class="flowb"><div><span>${P.fut?t('projStart'):t('carried')}</span><b class="${o<0?'neg':''}">${money(o)}</b></div><div><span>+ ${t('cashIn')}</span><b class="pos">${money(ci)}</b>${sub(P.ai,P.pi)}</div><div><span>− ${t('cashOut')}</span><b>${money(co)}</b>${sub(P.ao,P.po)}</div></div>
     ${oweT>0?`<div class="row tap" data-act="goCards" style="padding:8px 14px"><div class="main"><span class="t">💳 ${t('cardsOwe')}</span><span class="s">${nextD?t('nextPay')+' '+esc(shortDate(nextD)):''}</span></div><b class="amt neg">${money(oweT)}</b></div>`:''}
     <div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(exp)}</span></div></div>
     <div class="net tile" data-act="stmtFlow" data-ty="net" style="padding-top:6px"><span class="label">${per.mode==='month'?t('netMonthOnly'):t('netPer')} ›</span><span class="mid ${net<0?'neg':'pos'}">${money(net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div>
-    ${Math.abs(c-o-(ci-co))>1?`<p class="hint" style="padding:0 14px 8px;margin:0">${t('fxDiff')} ${money(c-o-(ci-co))}</p>`:''}`})()}
+    ${Math.abs(P.fx)>1?`<p class="hint" style="padding:0 14px 8px;margin:0">${t('fxDiff')} ${money(P.fx)}</p>`:''}`})()}
   </section>
   <section class="sec"><div class="sec-h"><h2>${per.mode==='month'?t('dueMonth'):t('dueUntil')+' '+esc(monthLbl(DM))}</h2>${dueTotal?`<span class="muted">${money(dueTotal)} ${esc(curSym(BASE()))}</span>`:''}</div>
     <div class="list">${due.length?due.map(d=>`<div class="row"><div class="glyph ${d.k==='gamr'?'in':''}">${esc(initial(d.name))}</div>
@@ -2050,6 +2052,22 @@ function monthLines(m){
   const out=[],agg={};ev.forEach(e=>{if(e.kind==='bud'||e.kind==='rec'){const k=e.dir+e.kind;if(!agg[k])agg[k]={label:e.dir==='in'?t('regularIn'):e.kind==='bud'?t('monthlySpend'):t('regularOut'),amt:0,dir:e.dir};agg[k].amt+=e.amt}else out.push(e)});
   return [...Object.values(agg),...out].sort((a,b)=>(a.dir==='in'?0:1)-(b.dir==='in'?0:1)||b.amt-a.amt);
 }
+/* planned cash in/out still to come from today up to date d: whole future months use the month plan (as in the forecast), a part month uses the dated plan lines */
+function projFlows(d){
+  let i=0,o=0;if(d<=TODAY)return {i,o};
+  for(let m=TODAY_YM;m<=d.slice(0,7);m=ymAdd(m,1)){
+    if(m>TODAY_YM&&d>=monthEnd(m)){const r=monthCash(m);i+=r.i;o+=r.e;continue}
+    remainingPlan(m).forEach(e=>{if(e.date>d)return;if(e.dir==='in')i+=e.amt;else o+=e.amt})}
+  return {i,o};
+}
+/* cash & banks over the period: actual up to today, plan after it */
+function perCash(){
+  const [a,b]=perRange(),proj=b>TODAY,now=liqAll(TODAY);
+  if(a>TODAY){const p0=projFlows(dayBefore(a)),p1=projFlows(b),o=now+p0.i-p0.o,pi=p1.i-p0.i,po=p1.o-p0.o;return {a,b,proj,fut:true,o,ai:0,ao:0,pi,po,c:o+pi-po,now,fx:0}}
+  const o=liqAll(dayBefore(a)),cf=cashActual(S.tx.filter(x=>x.date>=a&&x.date<=(proj?TODAY:b))),sm=p=>Object.entries(cf).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
+  const ai=sm('in:'),ao=sm('out:'),endA=proj?now:liqAll(b),p=proj?projFlows(b):{i:0,o:0};
+  return {a,b,proj,fut:false,o,ai,ao,pi:p.i,po:p.o,c:endA+p.i-p.o,now,fx:endA-o-(ai-ao)};
+}
 function fcSeries(endM){
   const out=[];let bal=liqAll(monthEnd(ymAdd(TODAY_YM,-1)));
   for(let m=TODAY_YM;m<=endM&&out.length<60;m=ymAdd(m,1)){const r=monthCash(m),open=bal;bal+=r.kind==='cur'?r.iMax-r.eMax:r.i-r.e;out.push(Object.assign({m,open,bal},r))}
@@ -2147,7 +2165,7 @@ function vSet(){
     <p class="hint">${t('shareHint')}</p>`}
     <div class="acts"><button class="btn" data-act="export">${t('dlNow')}</button><button class="btn" data-act="copyBackup">${t('copyText')}</button><button class="btn" data-act="import">${t('importB')}</button><button class="btn" data-act="importX">${t('importX')}</button></div></section>
   <section class="sec"><button class="btn danger block" data-act="reset">${t('reset')}</button></section>
-  <p class="hint" style="text-align:center">Daftari v0.48 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
+  <p class="hint" style="text-align:center">Daftari v0.49 · <button class="link" data-act="appUpdate" style="font-size:inherit">${t('appUpdate')}</button> · <a href="privacy.html" style="color:var(--accent)">${lng()==='en'?'Privacy policy':'سياسة الخصوصية'}</a></p>`;
 }
 
 /* ---------- render ---------- */
@@ -3041,7 +3059,7 @@ if(!(window.crypto&&crypto.subtle)){$('#lkT').textContent='This browser cannot e
 else showLock();
 
 /* automated checks only: exposed on a local test server, never on the real site */
-if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,commit,render,migrate,blank,save};
+if(location.hostname==='localhost')window.__T={get S(){return S},set S(v){S=v},get per(){return per},setPer(p,c){per=p;if(c)cur=c},accBalance,accBalanceAt,balAll,liqAll,cashActual,cashPlan,monthCash,planItems,planVsActual,remainingPlan,cashTimeline,safeToSpend,fcSeries,lateItems,cardInfo,cardDueFor,dateIn,loanSched,loanOwedUpTo,loanLeft,owedUpTo,oblLeft,allocate,unlink,relink,dueFor,netWorth,perRange,monthEnd,ymAdd,advance,runRecurring,closeRows,txOf,TODAY,TODAY_YM,projFlows,perCash,commit,render,migrate,blank,save};
 })();
 </script>
 
