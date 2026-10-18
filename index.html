@@ -178,6 +178,7 @@ textarea.in-f{min-height:90px;font-family:ui-monospace,monospace;font-size:12px;
 .addrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.addrow .btn{padding-inline:6px;white-space:nowrap}
 .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .two>*{min-width:0}
+.dwrap{position:relative;display:block;min-width:0}.dwrap .dshow{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:44px;white-space:nowrap;overflow:hidden}.dwrap .dshow::after{content:'📅';font-size:14px;opacity:.6}.dwrap>input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 input[type=date].in-f,input[type=month].in-f,input[type=time].in-f{min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;min-height:44px;text-align:start}
 .flowb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:10px 14px;border-top:1px dashed var(--line)}.flowb>div>span{display:block;font-size:12px;color:var(--muted)}.flowb b{font-size:15px;font-variant-numeric:tabular-nums}
 .cmp.fc{grid-template-columns:minmax(0,.9fr) repeat(4,minmax(0,1fr));font-size:12px;padding-inline:10px}
@@ -301,7 +302,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.53';
+const APP_VER='0.54';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -623,7 +624,7 @@ const money=(n,cls)=>`<span class="num ${cls||''}">${fmt(n)}</span>`;
 const monthLbl=ym=>{const [y,m]=ym.split('-').map(Number);return new Intl.DateTimeFormat(L(),{month:'long',year:'numeric'}).format(new Date(y,m-1,1))};
 const monthShort=ym=>{const [y,m]=ym.split('-').map(Number);return new Intl.DateTimeFormat(L(),{month:'short'}).format(new Date(y,m-1,1))};
 const wdOf=dt=>new Intl.DateTimeFormat(L(),{weekday:'short'}).format(dt);
-const dmyOf=dt=>pad(dt.getDate())+'/'+pad(dt.getMonth()+1)+'/'+dt.getFullYear();
+const dmyOf=dt=>'\u2066'+pad(dt.getDate())+'/'+pad(dt.getMonth()+1)+'/'+dt.getFullYear()+'\u2069';
 const dateOf=dt=>wdOf(dt)+' '+dmyOf(dt);
 const hmOf=dt=>pad(dt.getHours())+':'+pad(dt.getMinutes());
 const dsDate=ds=>{const [y,m,d]=ds.split('-').map(Number);return new Date(y,m-1,d)};
@@ -812,6 +813,9 @@ async function deliverFile(blob,name){
 }
 const fileBase=title=>('daftari_'+title).replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_').slice(0,60)+'_'+TODAY;
 function exportSheet(d){
+  const isD=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v),dmyTxt=v=>v.slice(8,10)+'/'+v.slice(5,7)+'/'+v.slice(0,4);
+  const clean=v=>typeof v==='string'?v.replace(/[\u2066-\u2069]/g,''):v,asTxt=rows=>rows.map(r=>r.map(v=>isD(v)?dmyTxt(v):clean(v))),asDate=rows=>rows.map(r=>r.map(v=>isD(v)?new Date(+v.slice(0,4),+v.slice(5,7)-1,+v.slice(8,10)):v));
+  const asTxtKeep=rows=>rows.map(r=>r.map(v=>isD(v)?v:clean(v)));const D0=d;d=Object.assign({},D0,{rows:asTxt(D0.rows),foot:D0.foot&&asTxt(D0.foot),title:clean(D0.title),sub:isD(D0.sub)?dmyTxt(D0.sub):clean(D0.sub)});
   /* d: {title, sub, cols:[...], rows:[[...]], num:[col indexes], foot:[[...]]} */
   openSheet(t('export')+' · '+d.title,`<div class="form"><p class="hint">${esc(d.sub||'')} · ${d.rows.length} ${t('rowsWord')}</p>
     <button class="btn pri block" id="xx">Excel (.xlsx)</button><button class="btn block" id="xc">CSV</button><button class="btn block" id="xp">PDF</button>
@@ -820,7 +824,7 @@ function exportSheet(d){
       const lines=[[d.title],[d.sub||''],[],d.cols,...d.rows,...(d.foot||[])].map(r=>r.map(q).join(','));
       deliverFile(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),fileBase(d.title)+'.csv')};
     r.querySelector('#xx').onclick=async()=>{try{const X=await loadXLSX();
-      const ws=X.utils.aoa_to_sheet([[d.title],[d.sub||''],[],d.cols,...d.rows,...(d.foot||[])]);ws['!cols']=d.cols.map((c,i)=>({wch:(d.num||[]).includes(i)?14:Math.max(12,Math.min(40,String(c).length+8))}));
+      const ws=X.utils.aoa_to_sheet([[d.title],[d.sub||''],[],d.cols,...asDate(asTxtKeep(D0.rows)),...asDate(asTxtKeep(D0.foot||[]))],{cellDates:true,dateNF:'dd/mm/yyyy'});ws['!cols']=d.cols.map((c,i)=>({wch:(d.num||[]).includes(i)?14:Math.max(12,Math.min(40,String(c).length+8))}));
       const wb=X.utils.book_new();wb.Workbook={Views:[{RTL:lng()!=='en'}]};X.utils.book_append_sheet(wb,ws,'Daftari');
       deliverFile(new Blob([X.write(wb,{type:'array',bookType:'xlsx'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),fileBase(d.title)+'.xlsx')}
       catch(e){toast(t('exportFail'))}};
@@ -1123,7 +1127,7 @@ function perLabel(){
   if(per.mode==='half'){const h=m<=6?1:2;return en?'H'+h+' '+y:'النص '+(h===1?'الأول':'التاني')+' '+y}
   if(per.mode==='year')return y;
   const [a,b]=perRange();
-  const A=dsDate(a),B=dsDate(b),sh=d=>pad(d.getDate())+'/'+pad(d.getMonth()+1);
+  const A=dsDate(a),B=dsDate(b),sh=d=>'\u2066'+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'\u2069';
   return A.getFullYear()===B.getFullYear()?sh(A)+' – '+sh(B)+'/'+B.getFullYear():dmyOf(A)+' – '+dmyOf(B);
 }
 function perShift(k){
@@ -1282,6 +1286,15 @@ let tt;function toast(m,ms){const el=$('#toast');el.textContent=m;el.hidden=fals
 const toastOff=m=>{const el=$('#toast');if(!m||el.textContent===m)el.hidden=true};
 
 /* ---------- sheet ---------- */
+/* the phone shows date fields in its own order (often month/day); show them as ddd dd/mm/yyyy and keep the phone's calendar for picking */
+const LRI='\u2066',PDI='\u2069';
+function dateField(el){if(el.dataset.dw)return;el.dataset.dw='1';const w=document.createElement('span');w.className='dwrap';const sh=document.createElement('span');sh.className='in-f dshow';
+  el.parentNode.insertBefore(w,el);w.appendChild(sh);w.appendChild(el);
+  const d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  const upd=()=>{const v=d.get.call(el);sh.textContent=!v?'—':el.type==='month'?monthLbl(v):dayLbl(v)};
+  Object.defineProperty(el,'value',{configurable:true,get(){return d.get.call(el)},set(v){d.set.call(el,v);upd()}});
+  el.addEventListener('input',upd);el.addEventListener('change',upd);el.addEventListener('click',()=>{try{el.showPicker&&el.showPicker()}catch(e){}});upd()}
+new MutationObserver(()=>document.querySelectorAll('input[type=date]:not([data-dw]),input[type=month]:not([data-dw])').forEach(dateField)).observe(document.documentElement,{childList:true,subtree:true});
 function openSheet(title,html,ready){$('#shT').textContent=title;$('#shB').innerHTML=html;$('#sheet').hidden=false;if(ready)ready($('#shB'))}
 function closeSheet(){$('#sheet').hidden=true;$('#shB').innerHTML=''}
 $('#scrim').onclick=closeSheet;$('#shX').onclick=closeSheet;
