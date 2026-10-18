@@ -201,6 +201,15 @@ input[type=date].in-f,input[type=month].in-f,input[type=time].in-f{min-width:0;m
 .cur{font-size:.72em;font-weight:500;color:var(--muted)}
 .tblw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
 .stmt{width:100%;border-collapse:collapse;font-size:13px}
+/* headers stay on screen while you scroll through what they head */
+:root{--topH:64px;--shH:48px}
+#view .sec-h,#view details.box>summary{position:sticky;top:var(--topH);z-index:3;background:var(--bg);padding:8px 2px 6px;margin:-8px -2px 0}
+#view details.box[open]>summary{box-shadow:0 1px 0 var(--line)}
+#view .grp,#view .cmp.h{position:sticky;top:calc(var(--topH) + 40px);z-index:2}
+#view .cmp.h{background:var(--surface)}
+.panel .grp,.panel .cmp.h{position:sticky;top:calc(var(--shH) - 6px);z-index:1}
+.panel .cmp.h{background:var(--surface)}
+.tblw{max-height:62vh;overflow:auto}.stmt thead th{position:sticky;top:0;z-index:1}
 .stmt th{font-weight:600;color:var(--muted);text-align:start;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
 .stmt td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
 .stmt td.n{white-space:nowrap;text-align:end;font-variant-numeric:tabular-nums;direction:ltr}
@@ -302,7 +311,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.58';
+const APP_VER='0.59';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -1317,6 +1326,8 @@ function dateField(el){if(el.dataset.dw)return;el.dataset.dw='1';const w=documen
   Object.defineProperty(el,'value',{configurable:true,get(){return d.get.call(el)},set(v){d.set.call(el,v);upd()}});
   el.addEventListener('input',upd);el.addEventListener('change',upd);el.addEventListener('click',()=>{try{el.showPicker&&el.showPicker()}catch(e){}});upd()}
 new MutationObserver(()=>document.querySelectorAll('input[type=date]:not([data-dw]),input[type=month]:not([data-dw])').forEach(dateField)).observe(document.documentElement,{childList:true,subtree:true});
+(()=>{const set=()=>{const a=document.querySelector('.top'),b=document.querySelector('.shh');if(a)document.documentElement.style.setProperty('--topH',a.getBoundingClientRect().height+'px');if(b&&b.offsetHeight)document.documentElement.style.setProperty('--shH',b.getBoundingClientRect().height+'px')};
+  try{const ro=new ResizeObserver(set);const go=()=>{const a=document.querySelector('.top'),b=document.querySelector('.shh');if(a)ro.observe(a);if(b)ro.observe(b);set()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go()}catch(e){}window.addEventListener('resize',set)})();
 function openSheet(title,html,ready){$('#shT').textContent=title;$('#shB').innerHTML=html;$('#sheet').hidden=false;if(ready)ready($('#shB'))}
 function closeSheet(){$('#sheet').hidden=true;$('#shB').innerHTML=''}
 $('#scrim').onclick=closeSheet;$('#shX').onclick=closeSheet;
