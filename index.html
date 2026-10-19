@@ -325,7 +325,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.70';
+const APP_VER='0.71';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -727,7 +727,9 @@ function migrate(){
   const addCat=(ty,id,ar,en,sys,before)=>{if(!S.cats[ty].some(c=>c.id===id)){const i=S.cats[ty].findIndex(c=>c.id===before);S.cats[ty].splice(i<0?S.cats[ty].length:i,0,{id,ar,en,sys})}};
   addCat('expense','bankfees','رسوم ومصاريف بنكية','Bank fees',false,'inst');addCat('expense','adjust','فروقات تسوية','Reconciliation difference',true,'other');
   addCat('income','interest','فوايد وعوائد','Interest & returns',false,'gamin');
-  addCat('expense','loanpay','سداد سلف','Loan repayments',true,'other');addCat('income','loanback','تحصيل سلف','Loan collections',true,'iother');addCat('income','loanrecv','سلف استلمتها','Loans received',true,'iother');addCat('expense','loangive','سلف ادّيتها','Loans given',true,'other');addCat('income','iadjust','فروقات تسوية','Reconciliation difference',true,'iother');
+  addCat('expense','loanpay','سداد سلف','Loan repayments',true,'other');addCat('income','loanback','تحصيل سلف','Loan collections',true,'iother');addCat('income','loanrecv','سلف استلمتها','Loans received',true,'iother');addCat('expense','loangive','سلف ادّيتها','Loans given',true,'other');
+  /* a "loan received" category made by the Excel import counted borrowed money as income: fold it into the loans category */
+  {const ix=S.cats.income.findIndex(c=>c.id==='loanin');if(ix>=0&&!S.cats.income.some(c=>c.parent==='loanin')){const mv=x=>{if(x&&x.cat==='loanin')x.cat='loanrecv'};S.tx.forEach(mv);(S.planAdj||[]).forEach(mv);(S.recur||[]).forEach(r=>mv(r.tpl));S.cats.income.splice(ix,1)}}addCat('income','iadjust','فروقات تسوية','Reconciliation difference',true,'iother');
   if(!S.defAcc||!ids.has(S.defAcc))S.defAcc=S.accounts[0].id;
   {const cd=S.accounts.find(a=>a.type==='card');for(const o of S.inst)if(o.payWith===undefined)o.payWith=cd&&/كريديت|كارت|credit|card/i.test(o.name)?cd.id:''}
   if('currency' in S)delete S.currency;
