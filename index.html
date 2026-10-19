@@ -325,7 +325,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.71';
+const APP_VER='0.72';
 (function(){
 'use strict';
 const KEY='daftar-elbeit-v1';
@@ -1366,8 +1366,16 @@ function boxStates(v){let st={};try{st=JSON.parse(localStorage.getItem('daftari-
   v.querySelectorAll('details.box').forEach(d=>{const h=d.querySelector('summary h2');const k=tab+':'+(d.dataset.k||(h?h.textContent.trim():''));d.open=!!st[k];
     d.addEventListener('toggle',()=>{try{const s2=JSON.parse(localStorage.getItem('daftari-open')||'{}');if(d.open)s2[k]=1;else delete s2[k];localStorage.setItem('daftari-open',JSON.stringify(s2))}catch(e){}})});
   const sb=v.querySelector('.stickbar');document.documentElement.style.setProperty('--stickH',sb?sb.getBoundingClientRect().height+'px':'0px')}
-function openSheet(title,html,ready){$('#shT').textContent=title;$('#shB').innerHTML=html;$('#sheet').hidden=false;if(ready)ready($('#shB'))}
-function closeSheet(){$('#sheet').hidden=true;$('#shB').innerHTML=''}
+function openSheet(title,html,ready){$('#shT').textContent=title;$('#shB').innerHTML=html;$('#sheet').hidden=false;navSync();if(ready)ready($('#shB'))}
+/* the phone's back button closes the open sheet first, then goes back to the home tab, and only then leaves the app */
+/* one extra history entry stands for "something to go back from" (an open sheet or a tab other than home) */
+function navSync(){try{const want=!$('#sheet').hidden?'sheet':(S&&tab!=='home')?'tab':null,cur=history.state&&history.state.nav;
+  if(want){if(!cur)history.pushState({nav:want},'');else if(cur!==want)history.replaceState({nav:want},'')}else if(cur&&cur!=='idle')history.replaceState({nav:'idle'},'')}catch(e){}}
+function closeSheet(){$('#sheet').hidden=true;$('#shB').innerHTML='';navSync()}
+window.addEventListener('popstate',()=>{
+  if(!$('#sheet').hidden){closeSheet();return}
+  if(S&&tab!=='home'){tab='home';render();window.scrollTo(0,0);return}
+  try{history.back()}catch(e){}});
 $('#scrim').onclick=closeSheet;$('#shX').onclick=closeSheet;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet()});
 function confirmSheet(msg,yesLbl,onYes){
@@ -2464,7 +2472,7 @@ function render(){
   $('#nav').innerHTML=['home','tx','obl','rep','set'].map(k=>`<button data-tab="${k}" class="${tab===k?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>${t(k)}</button>`).join('');
   const v=$('#view');
   v.innerHTML=tab==='home'?vHome():tab==='tx'?vTx():tab==='obl'?vObl():tab==='rep'?vRep():vSet();
-  boxStates(v);
+  boxStates(v);navSync();
   $('#fab').hidden=!(tab==='home'||tab==='tx')||(ACT!=='me'&&SHM&&SHM.role==='reader');
   if(tab==='home'){const f=v.querySelector('#qadd');if(f){f.onsubmit=e=>{e.preventDefault();const q=v.querySelector('#qtext').value.trim();if(q)quickFromText(q);else txForm()};const mic=v.querySelector('#qmic');if(mic)mic.onclick=()=>listen(txt=>{v.querySelector('#qtext').value=txt;quickFromText(txt)})}}
   if(tab==='tx'&&txView==='rec')bindSeg(v,'tv',x=>{txView=x;txDay='';render()});
