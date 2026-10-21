@@ -204,6 +204,10 @@ input[type=date].in-f,input[type=month].in-f,input[type=time].in-f{min-width:0;m
 .cur{font-size:.72em;font-weight:500;color:var(--muted)}
 .tblw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
 .stmt{width:100%;border-collapse:collapse;font-size:13px}
+.stmtf{gap:8px}.stmtbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stmtsum{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important}.stmtsum>div{padding:6px 8px!important;min-width:0}.stmtsum .label{font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}.stmtsum b.num{font-size:13px!important;white-space:nowrap}.stmtsum small.cur{display:none}
+.stmtf [data-eq]{font-size:11px}
+.srow .main .t{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.srow .s{font-size:12px;white-space:normal}.srow.open{background:var(--sunk)}.srow.open .amt{font-size:13px}
 details.box>summary{flex-wrap:wrap}
 .sumline{flex-basis:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;font-size:12px;color:var(--muted);margin-top:8px;border:1px solid var(--line);border-radius:12px;background:var(--bg);align-items:stretch}.sumline>div{padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}.sumline>div+div{border-inline-start:1px solid var(--line)}.sumline>div>span{display:block}.sumline b{display:block;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}.sumline small{display:block;font-size:11px}
 #view .list:has(>.cmp.h) .grp{top:calc(var(--topH) + 72px)}
@@ -349,7 +353,7 @@ details.box>.list{margin-top:8px}
 </div></div>
 
 <script>
-const APP_VER='0.83';
+const APP_VER='0.84';
 setTimeout(()=>{const sp=document.getElementById('splash');if(sp)sp.remove()},2200);
 (function(){
 'use strict';
@@ -554,7 +558,7 @@ netMonthOnly:['صافي الشهر لوحده','This month only'],
 needOnline:['أول مرة محتاج إنترنت علشان تسجّل بجوجل وتربط Drive.','The first time you need internet to sign in with Google and link Drive.'],
 regDriveFail:['لازم تسجّل بحساب جوجل وتوافق على Google Drive علشان تكمّل.','Sign in with Google and allow Google Drive to continue.'],
 regDriveBtn:['سجّل بجوجل واربط Drive','Sign in with Google and link Drive'],appUpdate:['حدّث البرنامج','Update app'],newVer:['فيه نسخة جديدة من البرنامج، وهتتحدث لوحدها أول ما يتقفل. أو حدّثها دلوقتي:','A new version is ready. It installs itself next time the app locks, or update now:'],
-cashIn:['دخل','In'],reconAll:['مطابقة الأرصدة','Reconcile balances'],reconAllHint:['اكتب الرصيد اللي في أبلكيشن البنك، واللي في محفظتك فعلًا، والمستحق على الكارت من أبلكيشن الكارت. اللي تسيبه فاضي مش هيتطابق. أي فرق بيتسجّل حركة تسوية بتاريخ النهارده على البند اللي تختاره (مصاريف بنكية، فوايد، فروقات تسوية).','Type the balance your bank app shows, the cash you actually have, and what the card app says you owe. Leave a box empty to skip it. Any difference is recorded today as an adjustment under the category you pick (bank fees, interest, reconciliation difference).'],reconCardBook:['عليك في الدفتر','Owed in the book'],reconCardAct:['المستحق الفعلي','Actually owed'],reconCardMore:['عليك في الحقيقة أكتر (رسوم أو فوايد أو حركة متسجلتش)','You actually owe more (fees, interest or an unrecorded charge)'],reconCardLess:['عليك في الحقيقة أقل (استرداد أو سداد متسجلش)','You actually owe less (a refund or an unrecorded payment)'],reconLast:['آخر مطابقة','last'],reconSave:['طابق وسجّل الفروق','Reconcile and record differences'],reconHist:['المطابقات اللي فاتت','Past reconciliations'],reconDoneOk:['كله متطابق ✓','Everything matches ✓'],reconDoneAdj:['اتسجّل %n فرق تسوية','%n adjustments recorded'],remLoan:['سلفة','Loan'],remCard:['سداد الكارت','Card payment'],willGoOut:['هيطلع','Going out'],inclFin:['شامل السلف والجمعيات','incl. loans & gam\'eyas'],lowWhy:['أقل رصيد = أقل مبلغ هيبقى معاك في أي يوم قبل آخر الفترة (%v يوم %d)، علشان حاجات بتطلع قبل ما الدخل ييجي. لو بالسالب يبقى في اليوم ده الفلوس مش هتكفي حتى لو آخر الشهر موجب.','Lowest = the least you will have on any day before the end (%v on %d), because some payments come before the income. If it is negative, money runs short that day even if the month ends positive.'],plIn:['إيرادات','Income'],plOut:['مصاريف ومدفوعات','Spending & payments'],xferShort:['تحويلات','Transfers'],ofWhich:['منها','of which'],cashVsPL:['ده كل اللي دخل/طلع من الكاش والبنوك، بما فيه السلف والجمعيات والتحويلات. في قائمة الإيرادات والمصروفات السلف والجمعيات مش بتتحسب، لأنها التزامات مش إيراد ولا مصروف.','Everything that came into / left cash and banks, including loans, gam\'eyas and transfers. The income & spending statement leaves loans and gam\'eyas out — they are obligations, not income or spending.'],sumNow:['معاك النهارده %a.','You have %a today.'],sumCur:['لحد آخر %m: هيدخل %i وهيطلع %o (شامل السلف والجمعيات)%f، ويفضل %c.','By the end of %m: %i comes in, %o goes out%f, leaving %c.'],sumFut:['هتبدأ %m بـ %a، هيدخل %i وهيطلع %o (شامل السلف والجمعيات)%f، ويفضل %c.','%m starts with %a: %i in, %o out%f, leaving %c.'],sumPast:['بدأ %m بـ %a، دخل %i وطلع %o (شامل السلف والجمعيات)%f، وخلص بـ %c.','%m started with %a: %i in, %o out%f, ending with %c.'],sumFin:['، وسلف وجمعيات وتحويلات %v',', loans, gam\'eyas and transfers %v'],sumFx:['، وفروق عملة %v',', currency differences %v'],sumLow:['أقل رصيد في الـ 3 شهور الجاية %v يوم %d.','Lowest balance in the next 3 months: %v on %d.'],sumTitle:['الفترة في سطرين','The period at a glance'],
+cashIn:['دخل','In'],stOwe:['عليك','You owe'],stCredit:['ليك','In credit'],reconAll:['مطابقة الأرصدة','Reconcile balances'],reconAllHint:['اكتب الرصيد اللي في أبلكيشن البنك، واللي في محفظتك فعلًا، والمستحق على الكارت من أبلكيشن الكارت. اللي تسيبه فاضي مش هيتطابق. أي فرق بيتسجّل حركة تسوية بتاريخ النهارده على البند اللي تختاره (مصاريف بنكية، فوايد، فروقات تسوية).','Type the balance your bank app shows, the cash you actually have, and what the card app says you owe. Leave a box empty to skip it. Any difference is recorded today as an adjustment under the category you pick (bank fees, interest, reconciliation difference).'],reconCardBook:['عليك في الدفتر','Owed in the book'],reconCardAct:['المستحق الفعلي','Actually owed'],reconCardMore:['عليك في الحقيقة أكتر (رسوم أو فوايد أو حركة متسجلتش)','You actually owe more (fees, interest or an unrecorded charge)'],reconCardLess:['عليك في الحقيقة أقل (استرداد أو سداد متسجلش)','You actually owe less (a refund or an unrecorded payment)'],reconLast:['آخر مطابقة','last'],reconSave:['طابق وسجّل الفروق','Reconcile and record differences'],reconHist:['المطابقات اللي فاتت','Past reconciliations'],reconDoneOk:['كله متطابق ✓','Everything matches ✓'],reconDoneAdj:['اتسجّل %n فرق تسوية','%n adjustments recorded'],remLoan:['سلفة','Loan'],remCard:['سداد الكارت','Card payment'],willGoOut:['هيطلع','Going out'],inclFin:['شامل السلف والجمعيات','incl. loans & gam\'eyas'],lowWhy:['أقل رصيد = أقل مبلغ هيبقى معاك في أي يوم قبل آخر الفترة (%v يوم %d)، علشان حاجات بتطلع قبل ما الدخل ييجي. لو بالسالب يبقى في اليوم ده الفلوس مش هتكفي حتى لو آخر الشهر موجب.','Lowest = the least you will have on any day before the end (%v on %d), because some payments come before the income. If it is negative, money runs short that day even if the month ends positive.'],plIn:['إيرادات','Income'],plOut:['مصاريف ومدفوعات','Spending & payments'],xferShort:['تحويلات','Transfers'],ofWhich:['منها','of which'],cashVsPL:['ده كل اللي دخل/طلع من الكاش والبنوك، بما فيه السلف والجمعيات والتحويلات. في قائمة الإيرادات والمصروفات السلف والجمعيات مش بتتحسب، لأنها التزامات مش إيراد ولا مصروف.','Everything that came into / left cash and banks, including loans, gam\'eyas and transfers. The income & spending statement leaves loans and gam\'eyas out — they are obligations, not income or spending.'],sumNow:['معاك النهارده %a.','You have %a today.'],sumCur:['لحد آخر %m: هيدخل %i وهيطلع %o (شامل السلف والجمعيات)%f، ويفضل %c.','By the end of %m: %i comes in, %o goes out%f, leaving %c.'],sumFut:['هتبدأ %m بـ %a، هيدخل %i وهيطلع %o (شامل السلف والجمعيات)%f، ويفضل %c.','%m starts with %a: %i in, %o out%f, leaving %c.'],sumPast:['بدأ %m بـ %a، دخل %i وطلع %o (شامل السلف والجمعيات)%f، وخلص بـ %c.','%m started with %a: %i in, %o out%f, ending with %c.'],sumFin:['، وسلف وجمعيات وتحويلات %v',', loans, gam\'eyas and transfers %v'],sumFx:['، وفروق عملة %v',', currency differences %v'],sumLow:['أقل رصيد في الـ 3 شهور الجاية %v يوم %d.','Lowest balance in the next 3 months: %v on %d.'],sumTitle:['الفترة في سطرين','The period at a glance'],
 cStmts:['الكشوفات','Statements'],cStOpen:['كشف %c · لسه بيتجمع','Statement %c · still open'],cStDue:['كشف %c · اتقفل','Statement %c · closed'],cStPrev:['كشف %c · اللي قبله','Statement %c · previous'],cStPay:['سداده %d','Due %d'],cStLeft:['فاضل منه %v','%v still due'],cStPaid:['اتسدد','Paid'],cStNone:['مفيش مشتريات','No purchases'],
 altName:['الاسم بالإنجليزي (اختياري)','Name in Arabic (optional)'],
 msSaved:['اتحفظ ملخص الشهر على Drive','Month summary saved to Drive'],msBtn:['احفظ ملخص الشهر ده على Drive','Save this month\'s summary to Drive'],msTitle:['ملخص شهر %m','Summary of %m'],msOpen:['رصيد أول الشهر (كاش وبنوك)','Opening balance (cash & banks)'],msIn:['دخل','Money in'],msOut:['صرف','Money out'],msFin:['سلف وجمعيات (صافي)','Loans & gam\'eyas (net)'],msX:['تحويلات مع حسابات تانية (صافي)','Transfers with other accounts (net)'],msFx:['فروق عملة وتسويات','Currency & other differences'],msClose:['رصيد آخر الشهر (كاش وبنوك)','Closing balance (cash & banks)'],msNW:['صافي الثروة آخر الشهر','Net worth at month end'],msHint:['آخر كل شهر بيتحفظ ملخص الشهر لوحده في فولدر Daftari على Drive (ملف تفتحه وتطبعه PDF).','At each month end a summary is saved to the Daftari folder on Drive (a file you can open and print as PDF).'],
@@ -919,8 +923,9 @@ function printDoc(d){goingOut();const html=docHTML(d);
 let lastStmt=null;
 function exportStmt(){
   const o=lastStmt;if(!o)return;
-  exportSheet({title:o.title,sub:o.sub+(o.cur&&o.cur!==BASE()?' · '+curName(o.cur):' · '+curName(BASE())),cols:[t('date'),t('desc'),t('dr'),t('cr'),t('balCol'),''],num:[2,3,4],
-    rows:o.out.map(r=>[r.date,r.desc,r.dr||'',r.cr||'',Math.abs(r.bal),r.lbl]),foot:[['',t('total'),o.tdr,o.tcr,Math.abs(o.bal),o.lblEnd]]});
+  const av=o.out.some(r=>r.av!=null),lim=o.acc&&+o.acc.limit||0;
+  exportSheet({title:o.title,sub:o.sub+(o.cur&&o.cur!==BASE()?' · '+curName(o.cur):' · '+curName(BASE())),cols:[t('date'),t('desc'),t('dr'),t('cr'),t('balCol'),''].concat(av?[t('cardAvail')]:[]),num:av?[2,3,4,6]:[2,3,4],
+    rows:o.out.map(r=>[r.date,r.desc,r.dr||'',r.cr||'',Math.abs(r.bal),r.lbl].concat(av?[r.av!=null?r.av:lim+Math.min(0,r.bal)]:[])),foot:[['',t('total'),o.tdr,o.tcr,Math.abs(o.bal),o.lblEnd].concat(av?[lim+Math.min(0,o.bal)]:[])]});
 }
 function exportTx(list,title){
   const rows=list.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(x=>{const a=accOf(x.acc),b=x.toAcc?accOf(x.toAcc):null;
@@ -935,18 +940,20 @@ function stmtSheet(o){
   o.rows.sort(byDate);
   let bal=o.opening||0,tdr=0,tcr=0;
   const lbl=v=>o.kind==='acc'?(v>=0?t('crBal'):t('drBal')):o.kind==='person'?(v>0.004?t('drPerson'):v<-0.004?t('crPerson'):t('settledBal')):'';
-  const out=[];
+  const out=[],lim=o.acc&&o.acc.type==='card'&&+o.acc.limit>0?+o.acc.limit:0,avail=v=>lim?lim+Math.min(0,v)+Math.max(0,v):null,dm=d=>d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4);
+  const isCard=o.acc&&o.acc.type==='card';
+  const balTxt=v=>isCard?`<span class="balaft">${v<0?t('stOwe'):t('stCredit')} ${fmt(Math.abs(v))}</span>${lim?` · <span class="gnum">${t('cardAvail')} ${fmt(avail(v))}</span>`:''}`
+    :o.kind==='person'?`<span class="balaft">${t('balCol')} ${fmt(Math.abs(v))} · ${esc(lbl(v).split(' · ').pop())}</span>`:`<span class="balaft">${o.kind==='flow'?t('total'):t('balCol')} ${v<0?'−':''}${fmt(Math.abs(v))}</span>`;
   const body=o.rows.map(r=>{tdr+=r.dr||0;tcr+=r.cr||0;
     bal=o.kind==='acc'?bal+(r.cr||0)-(r.dr||0):o.kind==='person'?bal+(r.dr||0)-(r.cr||0):bal+(r.dr||0)+(r.cr||0);
-    out.push({date:r.date,desc:r.desc,dr:r.dr,cr:r.cr,bal,lbl:lbl(bal)});
-    return `<tr class="${r.tx?'tap':''}" ${r.tx?`data-sact="tx" data-id="${r.tx}"`:''}><td class="d">${esc(shortDate(r.date))}</td><td>${esc(r.desc)}</td><td class="n">${r.dr?fmt(r.dr):''}</td><td class="n">${r.cr?fmt(r.cr):''}</td><td class="n">${fmt(Math.abs(bal))}</td></tr>`}).join('');
+    out.push({date:r.date,desc:r.desc,dr:r.dr,cr:r.cr,bal,lbl:lbl(bal),av:avail(bal)});
+    return `<div class="row srow ${r.tx?'tap':''}" ${r.tx?`data-sact="tx" data-id="${r.tx}"`:''}><div class="main"><span class="t">${esc(r.desc)}</span><span class="s">${esc(dm(r.date))}</span><span class="s">${balTxt(bal)}</span></div><b class="amt ${r.cr?'pos':'neg'}">${r.cr?'+'+fmt(r.cr):'−'+fmt(r.dr||0)}</b></div>`}).join('');
   const sym=esc(curSym(o.cur||BASE()));
   lastStmt=Object.assign({},o,{out,tdr,tcr,bal,lblEnd:lbl(bal)});
   if(o.kind!=='flow')out.unshift({date:'',desc:t('openBal'),dr:'',cr:'',bal:o.opening||0,lbl:lbl(o.opening||0)});
-  openSheet(o.title,`<div class="form">
-    <div class="acts"><button type="button" class="btn sm" data-sact="export">⤓ ${t('export')}</button></div>
-    <p class="hint">${esc(o.sub||'')}${o.cur&&o.cur!==BASE()?' · '+esc(curName(o.cur)):''}</p>
-    <div class="sumgrid">
+  openSheet(o.title,`<div class="form stmtf">
+    <div class="stmtbar"><span class="hint" style="margin:0">${esc(o.sub||'')}${o.cur&&o.cur!==BASE()?' · '+esc(curName(o.cur)):''}</span><button type="button" class="btn sm" data-sact="export">⤓ ${t('export')}</button></div>
+    <div class="sumgrid stmtsum">
       ${o.kind==='flow'?'':`<div><span class="label">${t('openBal')}</span><b class="num">${fmt(Math.abs(o.opening||0))} <small class="cur">${sym}</small></b><span class="label">${lbl(o.opening||0)}</span></div>`}
       <div><span class="label">${t('totDr')}</span><b class="num">${fmt(tdr)} <small class="cur">${sym}</small></b></div>
       <div><span class="label">${t('totCr')}</span><b class="num">${fmt(tcr)} <small class="cur">${sym}</small></b></div>
@@ -954,9 +961,8 @@ function stmtSheet(o){
       ${o.extra||''}
     </div>
     ${o.kind==='acc'?`<p class="hint" data-eq="1" style="margin:0">${t('stmtEq')}: ${fmt(o.opening||0)} + ${fmt(tcr)} − ${fmt(tdr)} = <b>${fmt(bal)}</b></p>`:o.kind==='person'?`<p class="hint" data-eq="1" style="margin:0">${t('stmtEqP')}: ${fmt(o.opening||0)} + ${fmt(tdr)} − ${fmt(tcr)} = <b>${fmt(bal)}</b></p>`:''}
-    ${o.acc?`<button type="button" class="btn block" data-sact="recon" data-id="${o.acc.id}">${t('reconcile')}</button>`:''}
-    <div class="tblw"><table class="stmt"><thead><tr><th>${t('date')}</th><th>${t('desc')}</th><th>${t('dr')}</th><th>${t('cr')}</th><th>${t('balCol')}</th></tr></thead>
-    <tbody>${o.kind!=='flow'?`<tr class="open"><td class="d"></td><td>${t('openBal')}</td><td class="n"></td><td class="n"></td><td class="n">${fmt(Math.abs(o.opening||0))}</td></tr>`:''}${body||`<tr><td colspan="5" class="d" style="text-align:center;padding:16px">${t('noMoves')}</td></tr>`}</tbody></table></div>
+    ${o.acc?`<button type="button" class="btn sm" style="align-self:flex-start" data-sact="recon" data-id="${o.acc.id}">⚖️ ${t('reconcile')}</button>`:''}
+    <div class="list stmtl">${o.kind!=='flow'?`<div class="row srow open"><div class="main"><span class="t">${t('openBal')}</span><span class="s">${balTxt(o.opening||0)}</span></div></div>`:''}${body||`<div class="empty">${t('noMoves')}</div>`}</div>
   </div>`);
 }
 const shortDate=ds=>dateOf(dsDate(ds));
@@ -2335,6 +2341,10 @@ function remainingPlan(m){
   const items=planItems(m).concat(lateItems(m)).filter(it=>{const a=accById(it.acc);return !(a&&a.type==='card')}).sort((a,b)=>(a.src&&a.src.startsWith('bud:'))-(b.src&&b.src.startsWith('bud:'))||(a.date||'').localeCompare(b.date||''));
   items.forEach(it=>{if(isObl(it)){it.rem=it.done?0:it.src.startsWith('loan:')?Math.min(it.amount,it.owed??it.amount):it.amount-(it.part||0);return}const k=it.type+'|'+it.cat,u=Math.min(it.amount,leaf[k]||0);leaf[k]=(leaf[k]||0)-u;it.rem=it.amount-u});
   items.forEach(it=>{if(it.rem<=0.5||isObl(it))return;const r=catRoot(it.cat);for(const k of Object.keys(leaf)){const [ty,c]=k.split('|');if(ty!==it.type||catRoot(c)!==r||leaf[k]<=0||(it.cat!==r&&c!==r))continue;const u=Math.min(it.rem,leaf[k]);leaf[k]-=u;it.rem-=u;if(it.rem<=0.5)break}});
+  /* spending put on a credit card also uses up the month's limit for its category: the money leaves later, as the card payment, so it is not counted twice */
+  const leafC={};tx.forEach(x=>{const ac=accById(x.acc);if(!ac||ac.type!=='card'||x.type!=='expense'||(x.link&&['inst','gam','loan','gamr'].includes(x.link.k)))return;const k='expense|'+x.cat;leafC[k]=(leafC[k]||0)+baseAmt(x)});
+  items.forEach(it=>{if(it.rem<=0.5||!(it.src&&it.src.startsWith('bud:')))return;const r=catRoot(it.cat);
+    for(const k of Object.keys(leafC)){const c=k.split('|')[1];if(leafC[k]<=0||!(c===it.cat||(catRoot(c)===r&&(it.cat===r||c===r))))continue;const u=Math.min(it.rem,leafC[k]);leafC[k]-=u;it.rem-=u;if(it.rem<=0.5)break}});
   for(const it of items){if(it.rem<=0.5||it.done)continue;
     const label=it.label||catName(it.cat),dir=it.type==='income'?'in':'out',kind=it.src?it.src.split(':')[0]:'adj';
     if(kind==='bud'){
