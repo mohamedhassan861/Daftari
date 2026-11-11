@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v0.98 | `62de429904` | 2026-11-11 | 0.98: calculations separated from screens (move only, no logic change) |
 | v0.97 | `307a834871` | 2026-11-11 | 0.97: split the app into files by section (exact move, no logic change) |
 | v0.96 | `469db61993` | 2026-11-11 | v0.96: repeats due or in their reminder window pop up when the app opens (record, remind o |
 | v0.95 | `1add9e691d` | 2026-11-11 | v0.95: repeats are no longer recorded by themselves — on their day they wait on home to be |
