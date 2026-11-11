@@ -15,7 +15,7 @@ def sub(path, pattern, repl, count=1):
     assert n >= count, f'{path}: {pattern} not found'
     p.write_text(s2, encoding='utf-8')
 
-sub('js/core/start.js', r"const APP_VER='[^']*';", f"const APP_VER='{v}';")
+sub('js/core/start.js', r"const APP_VER\s*=\s*'[^']*';", f"const APP_VER = '{v}';")
 sub('js/boot.js', r"var V='[^']*';", f"var V='{v}';")
 sub('index.html', r'\?v=[0-9.]+"', f'?v={v}"', 3)
 (R / 'version.json').write_text(json.dumps({'v': v}) + '\n', encoding='utf-8')

@@ -1,0 +1,160 @@
+/* Styles, part 8 of 8 (order matters: later rules win). Sections: lock screen. */
+/* lock screen */
+.lock {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  --fpB: 5vh;
+  background: radial-gradient(120% 70% at 50% 0%, var(--accent-soft), var(--bg) 60%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: max(9vh, env(safe-area-inset-top, 0px)) !important;
+  padding-bottom: calc(26vh + 80px) !important;
+  overflow: auto;
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.lockbox {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+.lockmark {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto;
+  border-radius: 22px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 24px -10px var(--accent);
+  display: grid;
+  place-items: center;
+}
+.lockmark svg {
+  width: 30px;
+  height: 30px;
+}
+.lockbox .brand {
+  font-size: 24px;
+  max-width: none;
+  cursor: default;
+}
+.lockbox .brand::after {
+  content: none;
+}
+.fpbtn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--fpB, 5vh) + env(safe-area-inset-bottom, 0px));
+  touch-action: none;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.15s;
+}
+.fpbtn svg {
+  width: 40px;
+  height: 40px;
+}
+.fpbtn.on {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.fpbtn.wait {
+  color: var(--accent);
+  border-color: var(--accent);
+  animation: fpP 1.4s ease-in-out infinite;
+}
+.fpbtn.move {
+  outline: 2px dashed var(--accent);
+  outline-offset: 6px;
+  color: var(--accent);
+}
+@keyframes fpP {
+  50% {
+    box-shadow: 0 0 0 10px var(--accent-soft);
+  }
+}
+.err.ok {
+  color: var(--accent);
+}
+.lock.typing .fpbtn {
+  opacity: 0;
+  pointer-events: none;
+}
+.lockbox h3 {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+.pin {
+  font-family: var(--f-display);
+  font-size: 24px;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+.err {
+  color: var(--neg);
+  font-size: 14px;
+  min-height: 21px;
+  margin: 0;
+}
+.lockbox .form {
+  text-align: start;
+}
+.acct {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.acct .em {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  text-align: start;
+}
+.acct .ok {
+  color: var(--accent);
+  font-weight: 700;
+}
+.g {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  font:
+    700 14px/1 Arial,
+    sans-serif;
+  color: #fff;
+  background: conic-gradient(#ea4335 0 25%, #fbbc05 0 50%, #34a853 0 75%, #4285f4 0);
+  flex: none;
+}
+.gbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}

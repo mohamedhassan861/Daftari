@@ -1,0 +1,277 @@
+/* Styles, part 5 of 8 (order matters: later rules win). Continues the previous part. */
+.cmp {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 4px 8px;
+  padding: 8px 14px;
+  align-items: center;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+}
+.cmp.h {
+  font-size: 12px;
+  color: var(--muted);
+}
+.cmp.t {
+  font-weight: 600;
+}
+.cmp b,
+.cmp span:not(:first-child) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.cmp > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chk input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.foot {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.foot .grow {
+  flex: 1;
+}
+
+.toast {
+  max-width: min(92vw, 520px);
+  text-align: center;
+  line-height: 1.6;
+  cursor: pointer;
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--nav-h) + 90px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink);
+  color: var(--bg);
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.setrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  flex-wrap: wrap;
+}
+.setrow > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.setrow > .btn {
+  flex: none;
+  margin-inline-start: auto;
+}
+.setrow.stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.setrow.stack .label {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.setrow + .setrow {
+  border-top: 1px solid var(--line);
+}
+.catrow {
+  height: 52px;
+  padding: 0 14px;
+  box-sizing: border-box;
+}
+.catrow.sub {
+  background: var(--sunk);
+  padding-inline-start: 28px;
+  height: 44px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 14px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 6px 3px 10px;
+  font-size: 13.5px;
+}
+[dir="rtl"] .chip {
+  padding: 3px 10px 3px 6px;
+}
+.chip button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 99px;
+}
+.chip button:hover {
+  background: var(--neg-soft);
+  color: var(--neg);
+}
+.search {
+  display: flex;
+  gap: 8px;
+}
+.cur {
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--muted);
+}
+.tblw {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.stmt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.stmtf {
+  gap: 8px;
+}
+.stmtbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.stmtsum {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+}
+.stmtsum > div {
+  padding: 6px 8px !important;
+  min-width: 0;
+}
+.stmtsum .label {
+  font-size: 10.5px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.stmtsum b.num {
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+.stmtsum small.cur {
+  display: none;
+}
+.stmtf [data-eq] {
+  font-size: 11px;
+}
+.srow .main .t {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.srow .s {
+  font-size: 12px;
+  white-space: normal;
+}
+.srow.open {
+  background: var(--sunk);
+}
+.srow.open .amt {
+  font-size: 13px;
+}
+details.box > summary {
+  flex-wrap: wrap;
+}
+.sumline {
+  flex-basis: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  align-items: stretch;
+}
+.sumline > div {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sumline > div + div {
+  border-inline-start: 1px solid var(--line);
+}
+.sumline > div > span {
+  display: block;
+}
+.sumline b {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.sumline small {
+  display: block;
+  font-size: 11px;
+}
+#view .list:has(> .cmp.h) .grp {
+  top: calc(var(--topH) + 72px);
+}
+details.box[open] > summary .sumline {
+  display: none;
+}
+.stickbar {
+  position: sticky;
+  top: var(--topH);
+  z-index: 4;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 0;
+  margin: -6px 0;
+}
+#view .daylbl {
+  position: sticky;
+  top: calc(var(--topH) + var(--stickH, 0px));
+  z-index: 1;
+}
+#privacy {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+}
+#privacy[hidden] {
+  display: none;
+}

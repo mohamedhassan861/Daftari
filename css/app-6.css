@@ -1,0 +1,296 @@
+/* Styles, part 6 of 8 (order matters: later rules win). Sections: headers stay on screen while you scroll . */
+/* headers stay on screen while you scroll through what they head; once scrolled they shrink so the content keeps most of the screen */
+body.scr .top .wrap {
+  padding-block: 4px;
+}
+body.scr .stickbar .seg {
+  display: none;
+}
+body.scr .stickbar {
+  gap: 4px;
+  padding: 4px 0;
+}
+body.scr .totbar > div {
+  padding: 5px 10px;
+  gap: 0;
+}
+body.scr .totbar > div > span {
+  font-size: 11px;
+}
+body.scr .totbar b {
+  font-size: 14px;
+}
+body.scr #view details.box > summary {
+  padding: 6px 2px 4px;
+}
+body.scr #view details.box > summary h2 {
+  font-size: 14.5px;
+}
+body.scr #view details.box > summary .sumline {
+  display: none;
+}
+body.scr #view .grp {
+  padding: 5px 14px;
+  font-size: 12px;
+}
+body.scr #view .cmp.h {
+  padding-block: 4px;
+}
+body.scr #view .sec-h {
+  padding: 4px 2px 3px;
+}
+body.scr #view .daylbl {
+  padding-block: 3px;
+  font-size: 11.5px;
+}
+:root {
+  --topH: 64px;
+  --shH: 48px;
+}
+#view .sec-h {
+  position: sticky;
+  top: var(--topH);
+  z-index: 3;
+  background: var(--bg);
+  padding: 8px 2px 6px;
+  margin: -8px -2px 0;
+}
+#view details.box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 0 12px 12px;
+}
+#view details.box > summary {
+  position: sticky;
+  top: var(--topH);
+  z-index: 3;
+  background: var(--surface);
+  padding: 12px 2px 8px;
+  border-radius: var(--r) var(--r) 0 0;
+}
+#view details.box > summary h2 {
+  font-size: 16px;
+}
+#view details.box > .list,
+#view details.box .list {
+  border-radius: 12px;
+}
+#view details.box[open] > summary {
+  box-shadow: 0 1px 0 var(--line);
+}
+#view .grp,
+#view .cmp.h {
+  position: sticky;
+  top: calc(var(--topH) + 40px);
+  z-index: 2;
+}
+#view .cmp.h {
+  background: var(--surface);
+}
+.panel .grp,
+.panel .cmp.h {
+  position: sticky;
+  top: calc(var(--shH) - 6px);
+  z-index: 1;
+}
+.panel .cmp.h {
+  background: var(--surface);
+}
+.tblw {
+  max-height: 62vh;
+  overflow: auto;
+}
+.stmt thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.stmt th {
+  font-weight: 600;
+  color: var(--muted);
+  text-align: start;
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  background: var(--surface);
+}
+.stmt td {
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.stmt td.n {
+  white-space: nowrap;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.stmt td.d {
+  white-space: nowrap;
+  color: var(--muted);
+}
+.stmt tr.tap {
+  cursor: pointer;
+}
+.stmt tr.tap:hover td {
+  background: var(--sunk);
+}
+.stmt tr.open td {
+  color: var(--muted);
+  font-style: italic;
+}
+.sumgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.sumgrid div {
+  background: var(--sunk);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+details.box > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+details.box > summary::-webkit-details-marker {
+  display: none;
+}
+details.box > summary h2 {
+  margin: 0;
+  font-family: var(--f-display);
+  font-size: 17.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sumv {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sumv small {
+  font-family: var(--f-body);
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.75em;
+}
+details.box > summary h2::before {
+  content: "▸";
+  display: inline-block;
+  margin-inline-end: 6px;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+[dir="rtl"] details.box > summary h2::before {
+  transform: scaleX(-1);
+}
+details.box[open] > summary h2::before {
+  transform: rotate(90deg);
+}
+details.box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+details.box > .list {
+  margin-top: 8px;
+}
+.grp {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--sunk);
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+}
+.grp:first-child {
+  border-top: 0;
+}
+.grp .num {
+  font-family: var(--f-display);
+}
+.grp + .row {
+  border-top: 0;
+}
+.tile {
+  cursor: pointer;
+}
+.tile:hover {
+  background: var(--sunk);
+}
+.sub {
+  padding-inline-start: 30px;
+}
+.row.sub .t {
+  font-size: 14px;
+  color: var(--muted);
+}
+.balchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.balchip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 14.5px;
+  cursor: pointer;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.balchip:hover {
+  border-color: var(--accent);
+}
+.balchip.add {
+  font-family: var(--f-body);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--accent);
+  border-style: dashed;
+}
+.totbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.totbar > div {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.totbar > div + div {
+  border-inline-start: 1px solid var(--line);
+}
+.why {
+  text-decoration: underline dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
