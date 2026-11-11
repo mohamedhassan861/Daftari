@@ -1,5 +1,4 @@
-/* ---------- render ---------- */
-const ICONS={home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',tx:'<path d="M4 6h16M4 12h16M4 18h10"/>',obl:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',rep:'<path d="M5 20V10M12 20V4M19 20v-7"/>',set:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'};
+
 function render(){
   if(S)migrate();
   const de=document.documentElement;de.lang=S.lang;de.dir=S.lang==='en'?'ltr':'rtl';
@@ -22,16 +21,6 @@ function render(){
   if(tab==='set'){const rh=v.querySelector('#remHm'),rl=v.querySelector('#remLead');if(rh){const go=()=>{const [h,m]=(rh.value||'09:00').split(':').map(Number);remTimeSave(h*60+(m||0),+rl.value)};rh.onchange=go;rl.onchange=go}}
   if(tab==='set'){bindSeg(v,'lg',x=>{applyNames(x);S.lang=x;LANG=x;if(PS&&PS!==S){PS.lang=x;vaultSave(PS)}commit()});const ad=v.querySelector('#autoDl');ad.onchange=()=>{S.autoDl=ad.checked;commit(t('saved'))};const c=v.querySelector('#cur');c.onchange=()=>{S.base=c.value;S.rates={};S.ratesAt=null;commit(t('saved'));updateRates(false)};const da=v.querySelector('#defAcc');da.onchange=()=>{S.defAcc=da.value;commit(t('saved'))}}
 }
-$('#nav').onclick=e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;render();window.scrollTo(0,0)}};
-$('#mPrev').onclick=()=>{perShift(-1);render()};
-$('#mLbl').onclick=()=>{if(S)periodForm()};
-$('#shareBtn').onclick=()=>shareApp();
-$('#mNext').onclick=()=>{perShift(1);render()};
-$('#fab').onclick=()=>txForm();
-
-/* buttons inside a bottom sheet (e.g. "edit" in a warning) use the same actions as the main screen */
-$('#shB').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b&&$('#shB').contains(b))actClick(e)});
-$('#view').addEventListener('click',e=>actClick(e));
 function actClick(e){
   const r=e.target.closest('#view [data-tx]');if(r){txForm(S.tx.find(x=>x.id===r.dataset.tx));return}
   const b=e.target.closest('[data-act]');if(!b)return;const id=b.dataset.id,a=b.dataset.act;if(b.closest('summary')&&b.tagName!=='SUMMARY')e.preventDefault();if(a==='why'){e.preventDefault();e.stopPropagation();whySheet(b.dataset.w);return}if(a==='openTx'){const x=S.tx.find(y=>y.id===id);if(x)txForm(x);return}
@@ -77,4 +66,3 @@ function actClick(e){
   };
   if(A[a])A[a]();
 }
-

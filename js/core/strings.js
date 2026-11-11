@@ -1,3 +1,5 @@
+
+
 /* ---------- strings ---------- */
 const T={
 app:['دفتري','Daftari'],home:['الرئيسية','Home'],tx:['الحركات','Activity'],obl:['الالتزامات','Obligations'],rep:['التقارير','Reports'],set:['الإعدادات','Settings'],
@@ -226,6 +228,3 @@ remindBk:['عدّى أكتر من يوم على آخر نسخة احتياطية
 shareUnsupported:['المتصفح ده مش بيدعم المشاركة، هننزّل الملف بدالها.','This browser cannot share files, so the file will download instead.'],loading:['بيحمّل...','Loading...'],lockNow:['اقفل البرنامج دلوقتي','Lock now'],
 };
 let LANG='ar';try{LANG=localStorage.getItem('daftar-elbeit-lang')||'ar'}catch(e){}
-const lng=()=>(S&&S.lang)||LANG;
-const t=k=>(T[k]||[k,k])[lng()==='en'?1:0];
-

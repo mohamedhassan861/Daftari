@@ -1,20 +1,10 @@
-/* ---------- Google Drive (drive.file scope: the app sees only files it created) ---------- */
-const CFG=window.DAFTARI_CONFIG||{};
-const DRV_KEY='daftari-drive', DKEEP=100, GAPI='https://www.googleapis.com';
-let drv={linked:false,folderId:null,lastUp:null,email:'',needAuth:false,busy:false};
-try{Object.assign(drv,JSON.parse(localStorage.getItem(DRV_KEY)||'{}'))}catch(e){}
+
 const drvSave=()=>{try{localStorage.setItem(DRV_KEY,JSON.stringify({linked:drv.linked,folderId:drv.folderId,lastUp:drv.lastUp,email:drv.email}))}catch(e){}};
-let gToken=null,gExp=0,gClient=null,drvTimer=null;
-const TOK_KEY='daftari-gtoken';
-try{const o=JSON.parse(localStorage.getItem(TOK_KEY)||'null');if(o&&o.exp>Date.now()){gToken=o.t;gExp=o.exp}}catch(e){}
 const keepToken=()=>{try{gToken?localStorage.setItem(TOK_KEY,JSON.stringify({t:gToken,exp:gExp})):localStorage.removeItem(TOK_KEY)}catch(e){}};
 const driveConfigured=()=>!!CFG.googleClientId;
 const driveReady=()=>driveConfigured()&&!!(window.google&&google.accounts&&google.accounts.oauth2);
 const hasToken=()=>!!gToken&&Date.now()<gExp;
-const SCOPE='https://www.googleapis.com/auth/drive.file';
 const useWorker=()=>!!CFG.authWorker;
-/* long-lived Google grant: kept encrypted with the PIN key, never in backups */
-const RT_KEY='daftari-rt';let RT=null;
 async function saveRT(){if(!KEYOBJ)return;try{if(RT){localStorage.setItem(RT_KEY,JSON.stringify(await seal(KEYOBJ,{rt:RT})))}else localStorage.removeItem(RT_KEY)}catch(e){}}
 async function loadRT(){RT=null;try{const o=JSON.parse(localStorage.getItem(RT_KEY)||'null');if(o&&KEYOBJ)RT=(await unseal(KEYOBJ,o.iv,o.ct)).rt||null}catch(e){}}
 function setAccess(j){gToken=j.access_token;gExp=Date.now()+((+j.expires_in||3600)-120)*1000;keepToken();drv.needAuth=false}
@@ -88,15 +78,6 @@ async function pruneOld(folder){
   const all=(await driveList(folder,DKEEP+50)).filter(f=>!isSysFile(f.name));
   for(const f of all.slice(DKEEP)){await gfetch('/drive/v3/files/'+f.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:true})})}
 }
-function monthSummary(m){
-  const s0=m+'-01',open=liqAll(dayBefore(s0)),close=liqAll(monthEnd(m)>TODAY?TODAY:monthEnd(m)),ca=cashActual(txOf(m).filter(x=>x.date<=TODAY)),rows=[];
-  const grp=(p,sign)=>Object.entries(ca).filter(([k])=>k.startsWith(p)).sort((a,b)=>b[1].v-a[1].v).map(([,x])=>['   '+x.label,sign*Math.round(x.v)]);
-  const sm=p=>Object.entries(ca).filter(([k])=>k.startsWith(p)).reduce((v,[,x])=>v+x.v,0);
-  const ii=sm('in:'),oo=sm('out:'),fi=sm('fi:')-sm('fo:'),xx=sm('xin:')-sm('xout:'),fx=close-open-(ii-oo)-fi-xx;
-  rows.push([t('msOpen'),Math.round(open)],[t('msIn'),Math.round(ii)],...grp('in:',1),[t('msOut'),-Math.round(oo)],...grp('out:',-1));
-  if(Math.abs(fi)>=1)rows.push([t('msFin'),Math.round(fi)]);if(Math.abs(xx)>=1)rows.push([t('msX'),Math.round(xx)]);if(Math.abs(fx)>=1)rows.push([t('msFx'),Math.round(fx)]);
-  return {title:t('msTitle').replace('%m',monthLbl(m)),sub:BASE(),cols:[t('item'),t('amount')],rows,num:[1],foot:[[t('msClose'),Math.round(close)],[t('msNW'),Math.round(netWorth(monthEnd(m)>TODAY?TODAY:monthEnd(m)).net)]]};
-}
 async function saveMonthSummary(m,manual){
   if(!drv.linked){if(manual)toast(t('driveOff'));return}
   try{if(!(await ensureAccess())){if(manual)toast(t('driveErr'));return}
@@ -162,4 +143,3 @@ async function driveRestore(){
   }catch(e){toast(t('driveErr'))}
 }
 const driveLastLbl=()=>drv.lastUp?dateOf(new Date(drv.lastUp))+' '+hmOf(new Date(drv.lastUp)):t('never');
-

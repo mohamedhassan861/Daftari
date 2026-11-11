@@ -1,3 +1,5 @@
+
+
 /* ---------- views ---------- */
 const txRow=x=>{
   const a=accOf(x.acc),multi=S.accounts.length>1;
@@ -7,11 +9,6 @@ const txRow=x=>{
   return `<div class="row tap" data-tx="${x.id}"><div class="glyph ${x.type==='income'?'in':''}">${esc(initial(catName(x.cat)))}</div>
   <div class="main"><span class="t">${esc(x.note||catName(x.cat))}</span><span class="s">${(x.tags||[]).map(g=>'#'+esc(g)+' ').join('')}${ACT!=='me'&&x.by?'👤 '+esc(x.by.split('@')[0])+' · ':''}${x.rcpt?'🧾 ':''}${x.rec?'↻ ':''}${esc(x.note?catName(x.cat)+' · ':'')}${multi?esc(a.name)+' · ':''}${esc(dayLbl(x.date))}</span></div>
   <span class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${moneyC(x.amount,a.currency)}</span></div>`};
-
-function budgetState(){
-  const tx=txIn().filter(x=>x.type==='expense'),f=perFactor();
-  return Object.entries(S.budgets).map(([id,l])=>{const lim=Math.round(l*f),sp=sumB(tx.filter(x=>inCat(x,id)));return{id,lim,sp,p:sp/lim}});
-}
 function accountsHTML(){
   const pEnd=perRange()[1],AB=a=>accBalanceAt(a,pEnd);
   const total=S.accounts.reduce((v,a)=>v+valAt(a,pEnd),0),miss=missingRates();
@@ -35,7 +32,6 @@ function catTotalsHTML(ty){
   return `<details class="box"><summary><h2>${ty==='expense'?t('expByCat'):t('incByCat')}</h2><span class="sumv">${`<span class="why" data-act="why" data-w="${ty==='expense'?'catExp':'catInc'}">${fmt(tot)}</span>`} <small>${esc(curSym(BASE()))}</small></span></summary>
     <div class="list">${rows.map(([id,v])=>{const kids=catKids(ty,id).length;return `<div class="catbar tile" data-act="${kids?'catGroup':'stmtCat'}" data-ty="${ty}" data-id="${id}"><div class="l"><span>${esc(catName(id))}${kids?' ›':''}</span><span>${fmt(v)}<span class="pct">${Math.round(v/tot*100)}%</span></span></div><div class="bar"><i style="width:${v/rows[0][1]*100}%;${ty==='income'?'':'background:var(--neg)'}"></i></div></div>`}).join('')}</div></details>`;
 }
-const SHOW_DONE={};
 function loansHTML(){
   if(!S.loans.length)return '';const E=perRange()[1],loanLeft=l=>loanLeftAt(l,E);
   const people=groupsOf(S.loans,l=>l.person);
@@ -113,15 +109,6 @@ function calendarHTML(){
   return `<div class="cal"><div class="cwd">${wd.map(w=>`<span>${w}</span>`).join('')}</div><div class="cgrid">${cells}</div>
     <div class="legend" style="padding:8px 4px 0"><span style="--c:var(--neg)">${t('expense')}</span><span style="--c:var(--accent)">${t('income')}</span><span style="--c:var(--warn)">${t('dueSoon')}</span></div></div>`;
 }
-function txFiltered(){
-  let tx=txIn();if(txFilter!=='all')tx=tx.filter(x=>x.type===txFilter);
-  if(txCat)tx=tx.filter(x=>inCat(x,txCat));
-  if(txAcc)tx=tx.filter(x=>x.acc===txAcc||x.toAcc===txAcc);
-  if(txTag)tx=tx.filter(x=>(x.tags||[]).includes(txTag));
-  if(txDay)tx=tx.filter(x=>x.date===txDay);
-  if(txQuery){const q=txQuery.toLowerCase();tx=tx.filter(x=>((x.note||'')+' '+catPath(x.cat)+' '+x.amount+' '+(accOf(x.acc)||{}).name+' '+(x.tags||[]).join(' ')).toLowerCase().includes(q))}
-  return tx;
-}
 function totalsBar(tx){
   const pl=x=>txCat&&FIN_CATS.has(catRoot(txCat))?true:isPL(x),inc=sumB(tx.filter(x=>x.type==='income'&&pl(x))),exp=sumB(tx.filter(x=>x.type==='expense'&&pl(x))),trs=tx.filter(x=>x.type==='transfer');
   if(txFilter==='transfer')return `<div class="totbar"><div><span class="label">${t('countWord')}</span><b>${trs.length}</b></div><div style="grid-column:span 2"><span class="label">${t('transfers')} (${BASE()})</span><b>${fmt(trs.reduce((v,x)=>v+baseAmt(x),0))}</b></div></div>`;
@@ -148,4 +135,3 @@ function vTx(){
   ${txCat||txAcc||txQuery||txTag?`<button class="link" data-act="clearFilt" style="align-self:flex-start">✕ ${t('clearFilters')}</button>`:''}
   <div class="list" style="overflow:clip">${tx.length?Object.keys(groups).map(d=>`<div class="daylbl">${esc(dayLbl(d))}</div>${groups[d].map(txRow).join('')}`).join(''):`<div class="empty">${t('noTx')}</div>`}</div>`;
 }
-

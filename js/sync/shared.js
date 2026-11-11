@@ -1,9 +1,4 @@
-/* ---------- shared ledgers (a Drive file, encrypted with the ledger's own key) ---------- */
-const SH_COLS=['tx','accounts','inst','gam','loans','recur','goals','settles'],SETK=['base','rates','ratesAt','goldManual','zakat','rk','name','members'],LOCALK=['lang','defAcc','autoDl','sample'];
-let ACT='me',PS=null,SHM=null,shadow={},shTimer=null,shPoll=null,shBusy=false,shDirty=false,pendingJoin=null;
-const toB64u=b=>toB64(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-const fromB64u=x=>fromB64(x.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-x.length%4)%4));
-const ledKeys=new Map();
+
 async function ledKey(m){if(!ledKeys.has(m.key))ledKeys.set(m.key,await crypto.subtle.importKey('raw',fromB64u(m.key),'AES-GCM',false,['encrypt','decrypt']));return ledKeys.get(m.key)}
 const colsOf=D=>[...SH_COLS.map(k=>[k,D[k]||[]]),['cx',(D.cats||{}).expense||[]],['ci',(D.cats||{}).income||[]]];
 const strip=r=>{const o=Object.assign({},r);delete o.u;return JSON.stringify(o)};
@@ -125,9 +120,6 @@ function inviteForm(m){
       }catch(x){toast(t('inviteFail'))}};
   });
 }
-/* joining: the invite link carries the file id and key in the # part, which never leaves the phone */
-(function(){const m=location.hash.match(/^#join\.([\w-]+)\.([\w-]+)$/);if(m){pendingJoin={fileId:m[1],key:m[2]};try{history.replaceState(null,'',location.pathname)}catch(e){}}})();
-let gapiP=null;
 function loadPicker(){if(gapiP)return gapiP;gapiP=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://apis.google.com/js/api.js';sc.onload=()=>window.gapi.load('picker',{callback:res,onerror:rej});sc.onerror=()=>{gapiP=null;rej(new Error('gapi'))};document.head.appendChild(sc)});return gapiP}
 function pickFile(fileId){
   return loadPicker().then(()=>new Promise((res,rej)=>{
@@ -177,5 +169,3 @@ function leaveLedger(){
     shDirty=false;await switchLedger('me');vaultSave(PS);
   });
 }
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ACT!=='me')shPull(false)});
-

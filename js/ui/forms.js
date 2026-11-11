@@ -1,3 +1,5 @@
+
+
 /* ---------- forms ---------- */
 function txForm(tx,repeat,pre){
   const isNew=!tx;tx=tx||Object.assign({type:'expense',cat:'food',acc:S.defAcc,amount:'',date:(cur===TODAY_YM?TODAY:cur+'-01'),note:'',repeat:repeat||''},pre||{});
@@ -277,4 +279,3 @@ function budgetForm(){
     <div class="foot"><button class="btn pri grow">${t('save')}</button></div></form>`,r=>{
     r.querySelector('#f').onsubmit=e=>{e.preventDefault();const b={};r.querySelectorAll('[data-b]').forEach(i=>{const v=parseFloat(i.value);if(v>0)b[i.dataset.b]=v});S.budgets=b;closeSheet();commit(t('saved'))}});
 }
-

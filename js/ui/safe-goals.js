@@ -1,13 +1,4 @@
-/* ---------- safe to spend this month ---------- */
-function safeToSpend(){
-  const liquid=liqAll(TODAY),ev=remainingPlan(TODAY_YM),sm=f=>ev.filter(f).reduce((v,e)=>v+e.amt,0);
-  const obl=sm(e=>e.dir==='out'&&['inst','gam','loan','card','adj','tx','xfer'].includes(e.kind)),recOut=sm(e=>e.dir==='out'&&e.kind==='rec'),recIn=sm(e=>e.dir==='in');
-  const goals=S.goals.reduce((v,g)=>v+toBase(goalMonthly(g),g.currency||BASE()),0);
-  const safe=liquid-obl-recOut-goals;
-  const last=new Date(+TODAY.slice(0,4),+TODAY.slice(5,7),0).getDate(),daysLeft=last-+TODAY.slice(8,10)+1;
-  const bud=sm(e=>e.dir==='out'&&e.kind==='bud'),other=sm(e=>e.dir==='out'&&!['inst','gam','loan','card','adj','tx','xfer','rec','bud'].includes(e.kind));
-  return {liquid,obl,recOut,recIn,goals,safe,bud,other,end:safe+goals+recIn-bud-other,daysLeft,perDay:safe>0?safe/daysLeft:0};
-}
+
 function safeSheet(){
   const x=safeToSpend(),row=(l,v,c)=>`<div class="row"><div class="main"><span class="t">${l}</span></div><b class="amt ${c||''}">${money(v)}</b></div>`;
   openSheet(t('safeTitle'),`<div class="form"><div class="list">
@@ -16,10 +7,6 @@ function safeSheet(){
     </div><div class="list">${x.goals?row(t('goalsKeep'),x.goals):''}${row(t('budStill'),-x.bud,x.bud?'neg':'')}${x.other?row(t('otherOut'),-x.other,'neg'):''}${x.recIn?row(t('inToEnd'),x.recIn,'pos'):''}
     <div class="row mend"><div class="main"><span class="t">${t('safeToEnd')}</span><span class="s">${esc(shortDate(monthEnd(TODAY_YM)))}</span></div><b class="amt balaft">${money(x.end)}</b></div></div><p class="hint">${t('safeHint')}</p></div>`);
 }
-
-/* ---------- savings goals ---------- */
-const goalSaved=g=>g.acc&&S.accounts.some(a=>a.id===g.acc)?Math.max(0,accBalance(accOf(g.acc))):(g.saved||[]).reduce((v,p)=>v+(+p.amount||0),0);
-function goalMonthly(g){const left=Math.max(0,(+g.target||0)-goalSaved(g));if(!left||!g.due)return 0;const months=Math.max(1,ymDiff(TODAY_YM,g.due.slice(0,7))+(g.due.slice(8,10)>=TODAY.slice(8,10)?1:0));return left/months}
 function goalForm(g){
   const isNew=!g;g=g||{name:'',target:'',currency:BASE(),due:'',acc:'',saved:[]};
   openSheet(isNew?t('addGoal'):g.name,`<form class="form" id="f">
@@ -51,4 +38,3 @@ function goalsBody(){
       <span class="muted">${g.acc?t('goalLinked')+' '+esc(accOf(g.acc).name):''}${mo?(g.acc?' · ':'')+t('goalPerMonth')+' '+fmt(mo)+' '+esc(curSym(cc)):''}</span>
       <div class="acts">${g.acc?'':`<button class="btn sm pri" data-act="goalAdd" data-id="${g.id}">${t('goalAdd')}</button>`}<button class="btn sm" data-act="editGoal" data-id="${g.id}">${t('edit')}</button></div></div>`}).join(''):`<div class="list"><div class="empty">${t('noItems')}</div></div>`);
 }
-

@@ -1,5 +1,4 @@
-/* ---------- export: Excel, CSV, PDF ---------- */
-let XLSXP=null;
+
 function loadXLSX(){if(window.XLSX)return Promise.resolve(window.XLSX);if(XLSXP)return XLSXP;
   XLSXP=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=()=>res(window.XLSX);sc.onerror=()=>{XLSXP=null;rej(new Error('xlsx'))};document.head.appendChild(sc)});return XLSXP}
 async function deliverFile(blob,name){goingOut();
@@ -46,7 +45,6 @@ function printDoc(d){goingOut();const html=docHTML(d);
   const w=fr.contentWindow;w.document.open();w.document.write(html);w.document.close();
   setTimeout(()=>{try{w.focus();w.print()}catch(e){const u=URL.createObjectURL(new Blob([html],{type:'text/html'}));window.open(u,'_blank')}},300);
 }
-let lastStmt=null;
 function exportStmt(){
   const o=lastStmt;if(!o)return;
   const av=o.out.some(r=>r.av!=null),lim=o.acc&&+o.acc.limit||0;
@@ -58,4 +56,3 @@ function exportTx(list,title){
     return [x.date,x.type==='income'?t('inc1'):x.type==='expense'?t('exp1'):t('transfer'),a.name,a.currency,x.type==='transfer'?(b?b.name+' '+b.currency:''):catPath(x.cat),x.note||'',+x.amount,x.type==='transfer'?'':Math.round(baseAmt(x)*100)/100]});
   exportSheet({title,sub:perLabel(),cols:[t('date'),t('typeCol'),t('account'),t('currency'),t('category'),t('note'),t('amount'),t('amount')+' ('+BASE()+')'],num:[6,7],rows});
 }
-

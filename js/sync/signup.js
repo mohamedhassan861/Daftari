@@ -1,11 +1,4 @@
-/* ---------- share to Google Drive (system share sheet, no Google Cloud needed) ---------- */
-const LASTCHG='daftari-lastchange';
-function markChange(){try{localStorage.setItem(LASTCHG,new Date().toISOString())}catch(e){}}
-function backupDue(){
-  let lc=null,lb=null;try{lc=localStorage.getItem(LASTCHG);lb=localStorage.getItem('daftar-elbeit-lastbackup')}catch(e){}
-  if(!lc)return false;if(!lb)return Date.now()-new Date(lc).getTime()>3600e3;
-  return new Date(lc)>new Date(lb)&&Date.now()-new Date(lb).getTime()>864e5;
-}
+
 async function shareBackup(){
   if(!KEYOBJ)return;
   const data=await makeBackup(),name=backupName().replace(/\.json$/,'.txt');
@@ -18,11 +11,6 @@ async function shareBackup(){
   toast(t('shareUnsupported'));
   if(await saveToPhone(true))render();
 }
-
-/* ---------- sign-up with Google, once: the email goes to the owner's list ---------- */
-const REG_KEY='daftari-reg';
-let REG=null;try{REG=JSON.parse(localStorage.getItem(REG_KEY)||'null')}catch(e){}
-let idClient=null;
 function idToken(prompt,hint){goingOut();
   return new Promise((res,rej)=>{
     if(!driveReady()){rej(new Error('notready'));return}
@@ -32,7 +20,6 @@ function idToken(prompt,hint){goingOut();
   });
 }
 const workerPost=async(path,body)=>{const r=await fetch(CFG.authWorker.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error(j.error||'http '+r.status);return j};
-let PENDING_RT=null,FRESH_DRIVE=false;
 /* one Google tap: sign up and link Drive together */
 async function signUpWithDrive(){
   const j=await workerCall('/exchange',{code:await requestCode(!REG,true,REG&&REG.email)});
@@ -49,10 +36,8 @@ async function doRegister(){
   const j=await workerPost('/register',{access_token:tok,lang:lng()});
   REG={email:j.email,name:j.name,admin:!!j.admin,at:new Date().toISOString()};try{localStorage.setItem(REG_KEY,JSON.stringify(REG))}catch(x){}
   return REG;
-}
-const DRVASK='daftari-drvask';const drvAsked=()=>{try{return !!localStorage.getItem(DRVASK)}catch(e){return true}};
+}const drvAsked=()=>{try{return !!localStorage.getItem(DRVASK)}catch(e){return true}};
 const needDriveAtSignIn=()=>!!(REG&&useWorker()&&!drv.linked&&!drvAsked());
-let LOCKSETUP=false;
 const acctHTML=()=>REG&&!needDriveAtSignIn()&&!(LOCKSETUP&&useWorker()&&!drv.linked)?`<div class="acct"><span class="g">G</span><span class="em" dir="ltr">${esc(REG.email)}</span><span class="ok">✓</span></div>`:`<button type="button" class="btn block gbtn" id="gbtn"><span class="g">G</span>${LOCKSETUP?t('regDriveBtn'):t('regBtn')}</button>`;
 function regGate(done){
   const box=$('#lock');box.hidden=false;
@@ -86,4 +71,3 @@ function unregister(){
     catch(e){toast(t('regFail'))}
   });
 }
-

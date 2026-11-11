@@ -1,3 +1,5 @@
+
+
 /* ---------- receipt photos: shrunk, encrypted on the phone, stored in the Drive folder ---------- */
 async function rcptKey(){if(!S.rk)S.rk=toB64(crypto.getRandomValues(new Uint8Array(32)));return crypto.subtle.importKey('raw',fromB64(S.rk),'AES-GCM',false,['encrypt','decrypt'])}
 async function shrinkImage(file){
@@ -29,4 +31,3 @@ async function showReceipt(id){
     openSheet(t('receipt'),`<div class="form"><img src="${u}" alt="" style="width:100%;border-radius:12px"><button type="button" class="btn block" data-sact="tx" data-id="${x.id}">${t('back')}</button></div>`);
   }catch(e){toast(t('rcptFail'))}
 }
-

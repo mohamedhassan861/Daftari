@@ -1,3 +1,5 @@
+
+
 /* ---------- import from Excel / CSV ---------- */
 function parseCSV(text){
   text=text.replace(/^﻿/,'');const first=text.split(/\r?\n/)[0]||'',delim=(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':(first.includes('\t')?'\t':',');
@@ -56,4 +58,3 @@ function importForm(){
     };
   });
 }
-

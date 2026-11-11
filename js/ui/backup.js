@@ -1,14 +1,4 @@
-/* ---------- backup ---------- */
-const fileStamp=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'_'+pad(d.getHours())+'-'+pad(d.getMinutes())+'-'+pad(d.getSeconds())};
-const backupName=()=>'daftari_'+fileStamp()+'.json';
-function lastBackupLbl(){let v=null;try{v=localStorage.getItem('daftar-elbeit-lastbackup')}catch(e){}
-  if(!v)return t('never');return dateOf(new Date(v))+' '+hmOf(new Date(v))}
-function markBackup(){try{localStorage.setItem('daftar-elbeit-lastbackup',new Date().toISOString())}catch(e){}}
-async function makeBackup(){
-  await saving;const {iv,ct}=await seal(KEYOBJ,PS||S);
-  return JSON.stringify({app:'daftar-elbeit',enc:1,v:2,created:new Date().toISOString(),salt:toB64(SALT),iter:ITER,iv,ct});
-}
-async function getDownloads(){try{return window.claude&&window.claude.use?await window.claude.use('downloads'):null}catch(e){return null}}
+
 /* a readable copy for a review: asks for the PIN again and warns that the file is not encrypted */
 function reviewExport(){
   openSheet(t('reviewExport'),`<form class="form" id="f"><p class="hint" style="color:var(--neg)">⚠️ ${t('reviewWarn')}</p>
@@ -25,7 +15,6 @@ async function saveToPhone(quiet){
   if(window.claude){if(!quiet)toast(t('dlUnavailable'));return false}
   try{const u=URL.createObjectURL(new Blob([data],{type:'application/json'}));const a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000);markBackup();return true}catch(e){return false}
 }
-let bkTimer;
 function afterChange(){
   clearTimeout(bkTimer);
   if(S&&S.autoDl)bkTimer=setTimeout(()=>{saveToPhone(true).then(ok=>{if(ok&&tab==='set')render()})},4000);
@@ -80,4 +69,3 @@ function changePinForm(known){
     };
   });
 }
-
