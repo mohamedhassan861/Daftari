@@ -1,5 +1,5 @@
 // Network first, cache as fallback, so updates show up right away and the app still opens offline.
-const CACHE = 'daftari-v100';
+const CACHE = 'daftari-v101';
 const SHELL = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
@@ -24,7 +24,7 @@ self.addEventListener('push', e => {
   e.waitUntil((async () => {
     const list = (await idbGet('reminders')) || [], shown = (await idbGet('shown')) || {};
     const lead = +((await idbGet('lead')) ?? 1), now = new Date(), today = localDay(now), last = localDay(new Date(now.getTime() + lead * 864e5));
-    const due = list.filter(r => r.date >= today && r.date <= last && !shown[r.id + '@' + today]);
+    const due = list.filter(r => r.date >= today && (r.from ? r.from <= today : r.date <= last) && !shown[r.id + '@' + today]);
     const title = (await idbGet('title')) || 'دفتري';
     if (!due.length) { if ((await idbGet('test')) === 1) { await idbSet('test', 0); return self.registration.showNotification(title, { body: '✓', tag: 'daftari-test', icon: 'icon-192.png', badge: 'icon-192.png' }); } return; }
     for (const r of due.slice(0, 5)) {
