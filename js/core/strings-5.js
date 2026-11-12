@@ -51,7 +51,17 @@
       'بياناتك محفوظة في المتصفح ده ومش هتنتقل لوحدها. قبل ما تفتح من متصفح تاني: ارفع نسخة على Drive، وبعدين من المتصفح الجديد سجّل بنفس الإيميل ورجّعها بنفس الرقم السري.',
       'Your data is kept in this browser and will not move by itself. Before switching: upload a copy to Drive, then in the new browser sign in with the same email and restore it with the same PIN.'
     ],
-    openChrome: ['افتح في Chrome', 'Open in Chrome']
+    openChrome: ['افتح في Chrome', 'Open in Chrome'],
+    lowsT: ['أقل سعر', 'Lowest price'],
+    lowsM3: ['3 شهور', '3 months'],
+    lowsY1: ['سنة', '1 year'],
+    lowsY2: ['سنتين', '2 years'],
+    lowsY3: ['3 سنين', '3 years'],
+    lowsHint: [
+      'أقل سعر إقفال يومي في كل فترة، وتحته اليوم اللي حصل فيه. الأسعار من نفس المصدر اليومي لحد %d. الذهب محسوب من سعر الأوقية العالمي بالدولار، زي باقي البرنامج، مش سعر الصاغة.',
+      'The lowest daily close in each period, with the day it happened. Daily prices up to %d. Gold is worked out from the world ounce price, like the rest of the app, not the jewellers price.'
+    ],
+    lowsFail: ['معرفناش نجيب الأسعار القديمة دلوقتي، جرّب تاني بعدين.', 'Could not load past prices now; try again later.']
   };
   let LANG = 'ar';
   try {

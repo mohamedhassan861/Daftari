@@ -23,7 +23,7 @@ boot = (R / 'js/boot.js').read_text(encoding='utf-8')
 files = json.loads(re.search(r'var FILES=(\[[\s\S]*?\]);', boot).group(1))
 css = re.findall(r'href="(css/[^"?]+)\?v=', (R / 'index.html').read_text(encoding='utf-8'))
 shell = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png',
-         f'./js/boot.js?v={v}'] + [f'./{c}?v={v}' for c in css] + [f'./js/{f}?v={v}' for f in files]
+         f'./js/boot.js?v={v}', f'./data/rates-history.json?v={v}'] + [f'./{c}?v={v}' for c in css] + [f'./js/{f}?v={v}' for f in files]
 sw = (R / 'sw.js').read_text(encoding='utf-8')
 n = int(re.search(r"const CACHE = 'daftari-v(\d+)';", sw).group(1)) + 1
 sw = re.sub(r"const CACHE = 'daftari-v\d+';", f"const CACHE = 'daftari-v{n}';", sw)

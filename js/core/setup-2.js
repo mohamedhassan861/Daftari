@@ -77,3 +77,6 @@
   const DRVASK = 'daftari-drvask';
   let LOCKSETUP = false;
   const REMT_KEY = 'daftari-remtime';
+  /* daily price history for the lowest-price table; loaded once per session when the rates section is shown */
+  let RLOW = null,
+    RLOW_BUSY = false;

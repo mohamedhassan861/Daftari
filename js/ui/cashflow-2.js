@@ -39,7 +39,7 @@
     }
     <div class="acts"><button class="btn sm pri" data-act="ratesNow">↻ ${t('ratesNow')}</button><button class="btn sm" data-act="rates">✎ ${t('ratesManual')}</button></div>
     ${days.length ? `<div class="tblw" style="max-height:50vh"><table class="stmt"><thead><tr><th>${t('date')}</th>${cs.map(c => `<th>${esc(nm(c))}</th>`).join('')}<th>${t('goldG')} 21 $</th></tr></thead><tbody>${days.map(d => `<tr><td class="d">${esc(shortDate(d))}</td>${cs.map(c => `<td class="n">${cell(d, c)}</td>`).join('')}<td class="n">${(H[d] || {}).G21 && usd(d) ? fmt(Math.round((H[d].G21 / usd(d)) * 100) / 100) : '—'}</td></tr>`).join('')}</tbody></table></div>` : `<p class="hint">${t('ratesNoHist')}</p>`}
-    <p class="hint">${t('ratesMidNote')}</p></section>`;
+    <p class="hint">${t('ratesMidNote')}</p>${lowsHTML()}</section>`;
   }
   function vSet() {
     const chip = (ty, c) =>
