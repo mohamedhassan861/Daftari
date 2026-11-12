@@ -72,7 +72,10 @@
     bmAgain: ['طابق تاني على آخر كشف', 'Match the last statement again'],
     bmPdfFail: ['معرفناش نلاقي جدول الحركات في الـ PDF ده. لو البنك بيدّي الكشف Excel جرّبه، أو لو الـ PDF صورة متصوّرة مش هينفع يتقري.', 'Could not find the transactions table in this PDF. Try the Excel statement if your bank offers it; a scanned PDF cannot be read.'],
     bmCols: ['الأعمدة', 'Columns'],
-    bmColsHint: ['اختار سطر العناوين في الكشف، وبعدين قول كل عمود فيه إيه. لازم التاريخ، والمبلغ (أو عمودين مدين ودائن).', 'Pick the heading row, then say what each column holds. A date and an amount (or debit and credit columns) are needed.'],
+    bmColsHint: [
+      'دي أول سطور من الملف. اختار فوق كل عمود هو إيه: التاريخ، والمبلغ (أو خارج وداخل)، والوصف والرصيد لو موجودين.',
+      'These are the first lines of the file. Above each column, choose what it is: the date, the amount (or out and in), and the description and balance if there.'
+    ],
     bmHead: ['سطر العناوين', 'Heading row'],
     bmDesc: ['الوصف', 'Description'],
     bmOut: ['مدين (خارج)', 'Debit (out)'],

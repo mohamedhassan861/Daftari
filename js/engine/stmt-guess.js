@@ -3,20 +3,13 @@
      number column that moves by each row's amount; two number columns that are never both filled are out / in */
   function stmtGuessByContent(rows) {
     const width = rows.reduce((m, r) => Math.max(m, r.length), 0);
-    const isNum = v =>
-      typeof v === 'number'
-        ? isFinite(v)
-        : v !== '' && v != null && pdfKind(String(v)) === 'n' && isFinite(stmtNum(v).v);
-    const isDate = v => {
-      const p = stmtDateParts(v);
-      return !!p && (typeof v !== 'number' || (v > 30000 && v < 80000));
-    };
+    const isNum = v => stmtIsAmt(v) && isFinite(stmtNum(v).v);
+    /* Excel dates arrive as dates, so a plain number (an amount like 45,000) is never taken for one */
+    const isDate = v => typeof v !== 'number' && !!stmtDateParts(v);
     let dateCol = -1,
       best = 0;
     for (let j = 0; j < width; j++) {
-      const n = rows.filter(
-        r => isDate(r[j]) && !(typeof r[j] === 'number' && rows.every(q => typeof q[j] === 'number'))
-      ).length;
+      const n = rows.filter(r => isDate(r[j])).length;
       if (n > best) {
         best = n;
         dateCol = j;

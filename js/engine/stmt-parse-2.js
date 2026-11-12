@@ -1,137 +1,4 @@
-/* Reading a bank or card statement from any bank: find the columns, then turn each row into {date, desc, amt, bal}. */
-  /* amt is the effect on the account in the app's terms: money in is +, money out (or a card purchase) is − */
-  const stmtNorm = s =>
-    normDigits(String(s == null ? '' : s).normalize('NFKC'))
-      .toLowerCase()
-      .replace(/[أإآ]/g, 'ا')
-      .replace(/ة/g, 'ه')
-      .replace(/ى/g, 'ي')
-      .replace(/[^\p{L}\p{N}/ ]+/gu, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  /* a piece of text that is a number or a date (digits and separators only), as against words */
-  const pdfKind = s => (/^[\s\d.,()+\-/٠-٩٫٬]+$/.test(normDigits(s)) && /\d/.test(normDigits(s)) ? 'n' : 't');
-  /* words that name each column; a cell scores for the role whose word it contains, the best cell wins the role */
-  const STMT_ROLES = {
-    date: [
-      ['تاريخ', 3],
-      ['date', 3],
-      ['حركه', 1],
-      ['عمليه', 1],
-      ['معامله', 1],
-      ['transaction', 1],
-      ['trans', 1],
-      ['txn', 1],
-      ['posting', 1],
-      ['post', 1],
-      ['booking', 1],
-      ['قيمه', -2],
-      ['value', -2],
-      ['استحقاق', -2],
-      ['due', -2]
-    ],
-    desc: [
-      ['بيان', 3],
-      ['وصف', 3],
-      ['الوصف', 3],
-      ['تفاصيل', 3],
-      ['شرح', 3],
-      ['description', 3],
-      ['details', 3],
-      ['narrative', 3],
-      ['particulars', 3],
-      ['remarks', 2],
-      ['merchant', 2],
-      ['memo', 2]
-    ],
-    debit: [
-      ['مدين', 3],
-      ['مسحوب', 3],
-      ['مسحوبات', 3],
-      ['سحب', 2],
-      ['خصم', 2],
-      ['debit', 3],
-      ['debits', 3],
-      ['withdrawal', 3],
-      ['withdrawals', 3],
-      ['dr', 2],
-      ['paid out', 3],
-      ['money out', 3]
-    ],
-    credit: [
-      ['دائن', 3],
-      ['ايداع', 3],
-      ['ايداعات', 3],
-      ['اضافه', 2],
-      ['credit', 3],
-      ['credits', 3],
-      ['deposit', 3],
-      ['deposits', 3],
-      ['cr', 2],
-      ['paid in', 3],
-      ['money in', 3]
-    ],
-    amount: [
-      ['مبلغ', 3],
-      ['المبلغ', 3],
-      ['القيمه', 2],
-      ['amount', 3]
-    ],
-    balance: [
-      ['رصيد', 3],
-      ['الرصيد', 3],
-      ['balance', 3]
-    ],
-    dc: [
-      ['dr/cr', 3],
-      ['cr/dr', 3],
-      ['d/c', 3],
-      ['نوع الحركه', 3],
-      ['مدين/دائن', 3],
-      ['type', 1]
-    ]
-  };
-  function stmtRoleScore(cell, role) {
-    const n = stmtNorm(cell);
-    if (!n || n.length > 40) return 0;
-    const words = ' ' + n + ' ';
-    let s = 0;
-    STMT_ROLES[role].forEach(([w, v]) => {
-      if (w.length <= 3 ? words.includes(' ' + w + ' ') : n.includes(w)) s += v;
-    });
-    return s > 0 ? s : 0;
-  }
-  /* best cell for each role in one row; a cell serves one role only */
-  function stmtGuessCols(row) {
-    const cols = {},
-      taken = new Set();
-    const all = [];
-    Object.keys(STMT_ROLES).forEach(role =>
-      row.forEach((c, i) => {
-        const s = stmtRoleScore(c, role);
-        if (s) all.push([s, role, i]);
-      })
-    );
-    all.sort((a, b) => b[0] - a[0]);
-    all.forEach(([, role, i]) => {
-      if (cols[role] == null && !taken.has(i)) {
-        cols[role] = i;
-        taken.add(i);
-      }
-    });
-    return cols;
-  }
-  const stmtColsOk = c => c.date != null && (c.amount != null || c.debit != null || c.credit != null);
-  /* the header is the row among the first 40 that names the most columns and has a date and an amount */
-  function stmtFindHeader(rows) {
-    let best = null;
-    rows.slice(0, 40).forEach((r, i) => {
-      const c = stmtGuessCols(r),
-        n = Object.keys(c).length;
-      if (stmtColsOk(c) && (!best || n > best.n)) best = {i, cols: c, n};
-    });
-    return best;
-  }
+/* Reading a bank or card statement: numbers, dates and rows → {date, desc, amt, bal}. (part 2 of 2; continues from stmt-parse-1.js) */
   /* "1,234.50", "(1,234.50)", "1.234,50", "1234.5-", "1,234.50 DR", "٣٬٤٥٠٫٥٠" → number; flag tells DR/CR when written */
   function stmtNum(v) {
     if (typeof v === 'number') return {v, f: ''};
@@ -183,7 +50,11 @@
   /* one date cell → [y, m, d] or for a/b/y strings the raw parts, decided later for the whole file (day first unless it can't be) */
   function stmtDateParts(v) {
     if (v == null || v === '') return null;
-    if (v instanceof Date && !isNaN(v)) return {ymd: [v.getFullYear(), v.getMonth() + 1, v.getDate()]};
+    /* Excel date cells: whether the reader made them at local or UTC midnight, noon UTC is the same day */
+    if (v instanceof Date && !isNaN(v)) {
+      const n = new Date(v.getTime() + 432e5);
+      return {ymd: [n.getUTCFullYear(), n.getUTCMonth() + 1, n.getUTCDate()]};
+    }
     if (typeof v === 'number') {
       if (v > 20000 && v < 80000) {
         const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(v) * 864e5);
@@ -201,12 +72,21 @@
     if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return {ymd: [+m[1], +m[2], +m[3]]};
     if ((m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b/)))
       return {ab: [+m[1], +m[2]], y: m[3].length === 2 ? 2000 + +m[3] : +m[3]};
+    /* card statements often leave out the year ("12/11", "12 NOV"): year 0 here, filled in from today later */
+    if ((m = s.match(/^(\d{1,2})[-/](\d{1,2})$/))) return {ab: [+m[1], +m[2]], y: 0};
+    const mon = Object.keys(STMT_MONTHS).find(k => new RegExp('(^|[^\\p{L}])' + k, 'u').test(x)),
+      nums = x.match(/\b\d{1,4}\b/g) || [];
+    if (mon && nums.length === 1 && +nums[0] >= 1 && +nums[0] <= 31) return {ymd: [0, STMT_MONTHS[mon], +nums[0]]};
     const yr = (x.match(/\b(\d{4})\b/) || x.match(/\b(\d{2})$/) || [])[1],
-      mon = Object.keys(STMT_MONTHS).find(k => new RegExp('(^|[^\\p{L}])' + k, 'u').test(x)),
       day = (x.replace(/\b\d{4}\b/, '').match(/\b(\d{1,2})\b/) || [])[1];
     if (yr && mon && day) return {ymd: [yr.length === 2 ? 2000 + +yr : +yr, STMT_MONTHS[mon], +day]};
     return null;
   }
+  /* a date written without a year is the latest such day that is not in the future */
+  const stmtYear = (m, d) => {
+    const y = +TODAY.slice(0, 4);
+    return y + '-' + pad(m) + '-' + pad(d) > TODAY ? y - 1 : y;
+  };
   const stmtYmd = ([y, m, d]) =>
     m >= 1 && m <= 12 && d >= 1 && d <= 31 && y > 1990 && y < 2200 ? y + '-' + pad(m) + '-' + pad(d) : null;
   /* rows: arrays of cells (header found here); isCard: card statements show purchases as debit / positive */
@@ -217,7 +97,8 @@
     const lines = [];
     body.forEach((r, k) => {
       const p = dp[k],
-        date = p ? stmtYmd(p.ymd || (mdy ? [p.y, p.ab[0], p.ab[1]] : [p.y, p.ab[1], p.ab[0]])) : null;
+        ymd = p ? p.ymd || (mdy ? [p.y, p.ab[0], p.ab[1]] : [p.y, p.ab[1], p.ab[0]]) : null,
+        date = ymd ? stmtYmd(ymd[0] ? ymd : [stmtYear(ymd[1], ymd[2]), ymd[1], ymd[2]]) : null;
       const desc =
         cols.desc != null
           ? String(r[cols.desc] == null ? '' : r[cols.desc])

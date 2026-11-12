@@ -169,7 +169,7 @@
     let sheets;
     if (/\.(xlsx|xls|xlsm|ods)$/i.test(f.name)) {
       const X = await loadXLSX(),
-        wb = X.read(await f.arrayBuffer(), {type: 'array'});
+        wb = X.read(await f.arrayBuffer(), {type: 'array', cellDates: true});
       sheets = wb.SheetNames.map(n => X.utils.sheet_to_json(wb.Sheets[n], {header: 1, raw: true, defval: ''}));
     } else sheets = [parseCSV(await f.text())];
     /* the sheet that holds the statement, else the first */

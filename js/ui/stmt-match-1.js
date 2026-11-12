@@ -67,25 +67,20 @@
       }
     );
   }
-  /* when the columns could not be found (or were found wrong): pick the header row and each column by hand */
+  /* when the columns could not be found (or were found wrong): the file's own lines are shown as a table, and a
+     choice above each column says what it is; no heading row to look for, any line with a date counts */
   function bankMatchCols() {
     const C = STMT_CUR,
       rows = C.rows,
-      cut = s => String(s == null ? '' : s).slice(0, 18);
-    const headOpts = rows
-      .slice(0, 25)
-      .map(
-        (rw, i) =>
-          `<option value="${i}" ${i === C.hdr ? 'selected' : ''}>${i + 1}: ${esc(
-            rw
-              .filter(v => v !== '')
-              .map(cut)
-              .join(' | ')
-              .slice(0, 70)
-          )}</option>`
-      )
-      .join('');
+      cell = v => String(v instanceof Date ? dmyOf(new Date(v.getTime() + 432e5)) : v == null ? '' : v).slice(0, 22),
+      isD = v => typeof v !== 'number' && !!stmtDateParts(v),
+      isN = v => stmtIsAmt(v) && !isD(v);
+    let sample = rows.filter(r => r.some(isD) && r.some((v, j) => isN(v) && !isD(v))).slice(0, 6);
+    if (!sample.length) sample = rows.filter(r => r.some(v => String(v).trim())).slice(0, 6);
+    const width = sample.reduce((m, r) => Math.max(m, r.length), 0),
+      roleOf = j => Object.keys(C.cols).find(k => C.cols[k] === j) || '';
     const roles = [
+      ['', '—'],
       ['date', t('date')],
       ['desc', t('bmDesc')],
       ['debit', t('bmOut')],
@@ -93,37 +88,34 @@
       ['amount', t('bmAmt')],
       ['balance', t('balCol')]
     ];
-    const sels = () => {
-      const head = rows[C.hdr] || [];
-      return roles
-        .map(
-          ([k, l]) =>
-            `<label class="fld"><span>${l}</span><select class="in-f" data-r="${k}"><option value="">—</option>${head.map((h, i) => `<option value="${i}" ${C.cols[k] === i ? 'selected' : ''}>${esc(cut(h) || '#' + (i + 1))}</option>`).join('')}</select></label>`
-        )
-        .join('');
-    };
+    const head = Array.from(
+      {length: width},
+      (_, j) =>
+        `<th style="min-width:110px;padding:4px"><select class="in-f" style="padding:6px;font-size:13px" data-j="${j}">${roles.map(([k, l]) => `<option value="${k}" ${roleOf(j) === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></th>`
+    ).join('');
+    const body = sample
+      .map(
+        r =>
+          `<tr>${Array.from({length: width}, (_, j) => `<td style="font-size:12px;white-space:nowrap">${esc(cell(r[j]))}</td>`).join('')}</tr>`
+      )
+      .join('');
     openSheet(
       t('bmCols'),
       `<div class="form"><p class="hint">${t('bmColsHint')}</p>
-    <label class="fld"><span>${t('bmHead')}</span><select class="in-f" id="bmh">${headOpts}</select></label>
-    <div id="bms" class="two" style="flex-wrap:wrap">${sels()}</div><p class="err" id="bme"></p>
-    <button type="button" class="btn pri block" id="bmgo">${t('bmMatch')}</button></div>`,
+    <div class="tblw" style="overflow-x:auto"><table class="stmt"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
+    <p class="err" id="bme"></p><button type="button" class="btn pri block" id="bmgo">${t('bmMatch')}</button></div>`,
       r => {
-        r.querySelector('#bmh').onchange = e => {
-          C.hdr = +e.target.value;
-          C.cols = stmtGuessCols(rows[C.hdr] || []);
-          r.querySelector('#bms').innerHTML = sels();
-        };
         r.querySelector('#bmgo').onclick = () => {
           const c = {};
-          r.querySelectorAll('[data-r]').forEach(s => {
-            if (s.value !== '') c[s.dataset.r] = +s.value;
+          r.querySelectorAll('[data-j]').forEach(s => {
+            if (s.value) c[s.value] = +s.dataset.j;
           });
           if (!stmtColsOk(c)) {
             r.querySelector('#bme').textContent = t('needCols');
             return;
           }
           C.cols = c;
+          C.hdr = -1;
           bankMatchRun();
         };
       }
