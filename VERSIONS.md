@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v1.05 | `b092b652ae` | 2026-11-12 | 1.05: statement upload without the column screen |
 | v1.04 | `729f4fedcc` | 2026-11-12 | 1.04: match with a bank or card statement (Excel, CSV or PDF, any bank) |
 | v1.03 | `7a1c2c0f15` | 2026-11-12 | 1.03: lowest price of USD, SAR, EUR and gold over 3 months / 1 / 2 / 3 years |
 | v1.02 | `6bbd5a4fbe` | 2026-11-12 | 1.02: fingerprint help names only Chrome and Edge |
