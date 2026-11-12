@@ -16,7 +16,9 @@
     await Promise.all(
       want.map(async ([s, v]) => {
         try {
-          const j = await (await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + v + '/v1/currencies/egp.min.json')).json();
+          const j = await (
+            await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@' + v + '/v1/currencies/egp.min.json')
+          ).json();
           const e = j && j.egp,
             inv = (k, n) => (e && e[k] ? Math.round((1 / e[k]) * 10 ** n) / 10 ** n : null);
           if (e) cache[j.date || s] = [inv('usd', 4), inv('sar', 4), inv('eur', 4), inv('xau', 2)];
@@ -53,7 +55,8 @@
     }
     if (RLOW === 'fail') return `<p class="hint">${t('lowsFail')}</p>`;
     const L = rateLows(RLOW, TODAY),
-      grid = 'style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;text-align:center;padding:6px 10px"',
+      grid =
+        'style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;text-align:center;padding:6px 10px"',
       nm = c => (isGold(c) ? t('goldG') + ' ' + c.slice(1) + ' / ' + t('gram') : c),
       /* gold is shown in whole pounds so four prices fit across a phone screen */
       val = (c, v) => fmt(isGold(c) ? Math.round(v) : Math.round(v * 100) / 100),

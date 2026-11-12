@@ -101,6 +101,7 @@
       if (x) txForm(x);
     } else if (b.dataset.sact === 'cat') catStmt(id);
     else if (b.dataset.sact === 'recon') recForm(accOf(id));
+    else if (b.dataset.sact === 'bmatch') bankMatchForm(accOf(id));
     else if (b.dataset.sact === 'export') exportStmt();
     else if (b.dataset.sact === 'led') switchLedger(id);
     else if (b.dataset.sact === 'ledInvite' && SHM) inviteForm(SHM);
