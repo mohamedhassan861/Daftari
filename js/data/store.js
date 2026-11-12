@@ -18,6 +18,7 @@
     sample: false
   });
 
+  /* sample ledger for the automated checks only (window.__T.seed on the local test server); users never get it */
   function seed() {
     const s = blank();
     s.sample = true;

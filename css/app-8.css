@@ -108,6 +108,12 @@
   letter-spacing: 0.3em;
   text-align: center;
 }
+/* the wide spacing is for the dots of the PIN; on the Arabic hint it breaks the letters apart */
+.pin::placeholder {
+  font-family: var(--f-body);
+  font-size: 17px;
+  letter-spacing: normal;
+}
 .err {
   color: var(--neg);
   font-size: 14px;

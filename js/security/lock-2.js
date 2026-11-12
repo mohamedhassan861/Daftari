@@ -216,7 +216,8 @@
           const r = localStorage.getItem(KEY);
           if (r) legacy = JSON.parse(r);
         } catch (x) {}
-        S = legacy && legacy.v ? Object.assign(blank(), legacy) : seed();
+        /* a new user starts with an empty ledger: sample entries looked like real data and confused people */
+        S = legacy && legacy.v ? Object.assign(blank(), legacy) : blank();
         S.lang = S.lang || LANG;
         save();
         await saving;

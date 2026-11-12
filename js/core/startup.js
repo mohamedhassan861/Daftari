@@ -139,6 +139,7 @@
   /* automated checks only: exposed on a local test server, never on the real site */
   if (location.hostname === 'localhost')
     window.__T = {
+      seed,
       get S() {
         return S;
       },
