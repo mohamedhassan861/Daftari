@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v1.01 | `64453f1c28` | 2026-11-12 | 1.01: clear help when fingerprint is not available in this browser |
 | v1.00 | `ee1493a04c` | 2026-11-12 | 1.00: new users start with an empty ledger; PIN hint letters no longer pulled apart |
 | v0.99 | `4470a554ec` | 2026-11-11 | 0.99: code formatted for reading, every file under 300 lines (no logic change) |
 | v0.98 | `62de429904` | 2026-11-11 | 0.98: calculations separated from screens (move only, no logic change) |
