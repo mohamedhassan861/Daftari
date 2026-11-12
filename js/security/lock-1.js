@@ -39,9 +39,27 @@
     if (!r.prf || !r.prf.results || !r.prf.results.first) throw new Error('noprf');
     return new Uint8Array(r.prf.results.first);
   }
+  /* why a sheet and not a toast: the person needs to know what to do next, and that moving browsers does not move data */
+  function bioHelp(kind) {
+    const android = /Android/i.test(navigator.userAgent),
+      chrome = !!(navigator.userAgentData && navigator.userAgentData.brands.some(b => b.brand === 'Google Chrome'));
+    const url =
+      'intent://' +
+      location.host +
+      location.pathname +
+      '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' +
+      encodeURIComponent('https://play.google.com/store/apps/details?id=com.android.chrome') +
+      ';end';
+    openSheet(
+      t('bioOn'),
+      `<div class="form"><p>${esc(t(kind === 'prf' ? 'bioNoPrf' : 'bioNoBrowser'))}</p>
+    ${chrome ? '' : `<p class="hint">${esc(t('bioMove'))}</p>`}
+    ${android && !chrome ? `<div class="foot"><a class="btn pri grow" style="text-decoration:none" href="${esc(url)}">${esc(t('openChrome'))}</a></div>` : ''}</div>`
+    );
+  }
   function bioEnableForm() {
     if (!bioSupported()) {
-      toast(t('bioUnsupported'));
+      bioHelp('browser');
       return;
     }
     openSheet(
@@ -104,7 +122,10 @@
             toast(t('bioDone'));
             render();
           } catch (x) {
-            err(x && x.message === 'noprf' ? t('bioUnsupported') : t('bioFail'));
+            if (x && x.message === 'noprf') {
+              closeSheet();
+              setTimeout(() => bioHelp('prf'), 250);
+            } else err(t('bioFail'));
           }
         };
       }
