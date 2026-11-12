@@ -18,12 +18,11 @@
     });
     return PDFJSP;
   }
-  const pdfKind = s => (/^[\s\d.,()+\-/٠-٩٫٬]+$/.test(normDigits(s)) && /\d/.test(normDigits(s)) ? 'n' : 't');
   const hasAr = s => /[؀-ۿ]/.test(s);
   /* text pieces of each page → lines (same height on the page) → cells (pieces close together) */
-  async function pdfLines(buf) {
+  async function pdfLines(buf, password) {
     const L = await loadPDFJS(),
-      doc = await L.getDocument({data: buf, isEvalSupported: false}).promise,
+      doc = await L.getDocument({data: buf, isEvalSupported: false, password: password || undefined}).promise,
       out = [];
     for (let p = 1; p <= doc.numPages; p++) {
       const tc = await (await doc.getPage(p)).getTextContent();
@@ -159,19 +158,24 @@
     });
     return rows;
   }
-  /* any file → rows of cells (header somewhere near the top) */
-  async function readStmtFile(f) {
+  /* any file → {rows, hdr: {i, cols}} — headings first, then what the columns hold; password only for locked PDFs */
+  async function readStmtFile(f, password) {
+    const find = rows => stmtFindHeader(rows) || stmtGuessByContent(rows);
     if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') {
-      const rows = pdfTable(await pdfLines(await f.arrayBuffer()));
+      const rows = pdfTable(await pdfLines(await f.arrayBuffer(), password));
       if (!rows) throw new Error('pdfTable');
-      return rows;
+      return {rows, hdr: find(rows)};
     }
+    let sheets;
     if (/\.(xlsx|xls|xlsm|ods)$/i.test(f.name)) {
       const X = await loadXLSX(),
         wb = X.read(await f.arrayBuffer(), {type: 'array'});
-      /* the sheet that has a statement header, else the first */
-      const sheets = wb.SheetNames.map(n => X.utils.sheet_to_json(wb.Sheets[n], {header: 1, raw: true, defval: ''}));
-      return sheets.find(r => stmtFindHeader(r)) || sheets[0] || [];
+      sheets = wb.SheetNames.map(n => X.utils.sheet_to_json(wb.Sheets[n], {header: 1, raw: true, defval: ''}));
+    } else sheets = [parseCSV(await f.text())];
+    /* the sheet that holds the statement, else the first */
+    for (const rows of sheets) {
+      const hdr = find(rows);
+      if (hdr) return {rows, hdr};
     }
-    return parseCSV(await f.text());
+    return {rows: sheets[0] || [], hdr: null};
   }

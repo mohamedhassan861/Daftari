@@ -9,6 +9,8 @@
       .replace(/[^\p{L}\p{N}/ ]+/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+  /* a piece of text that is a number or a date (digits and separators only), as against words */
+  const pdfKind = s => (/^[\s\d.,()+\-/٠-٩٫٬]+$/.test(normDigits(s)) && /\d/.test(normDigits(s)) ? 'n' : 't');
   /* words that name each column; a cell scores for the role whose word it contains, the best cell wins the role */
   const STMT_ROLES = {
     date: [
@@ -189,7 +191,11 @@
       }
       return null;
     }
-    const x = stmtNorm(v).replace(/\//g, ' / ');
+    /* "12NOV26" and "Nov12" are split into words first */
+    const x = stmtNorm(v)
+      .replace(/\//g, ' / ')
+      .replace(/(\d)(\p{L})/gu, '$1 $2')
+      .replace(/(\p{L})(\d)/gu, '$1 $2');
     const s = normDigits(String(v)).trim();
     let m;
     if ((m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/))) return {ymd: [+m[1], +m[2], +m[3]]};
@@ -229,7 +235,7 @@
           ind = cols.dc != null ? stmtNorm(r[cols.dc]) : '';
         if (n.v) {
           const f = /^(dr|d|debit|مدين)$/.test(ind) ? 'dr' : /^(cr|c|credit|دائن)$/.test(ind) ? 'cr' : n.f;
-          amt = f === 'dr' ? -Math.abs(n.v) : f === 'cr' ? Math.abs(n.v) : isCard ? -n.v : n.v;
+          amt = f === 'dr' ? -Math.abs(n.v) : f === 'cr' ? Math.abs(n.v) : isCard !== !!cols.neg ? -n.v : n.v;
         }
       }
       if (!date) {
@@ -255,6 +261,12 @@
     /* statements listed newest first are turned round so "last" means the latest */
     const desc = lines.length > 1 && lines[0].date > lines[lines.length - 1].date;
     if (desc) lines.reverse();
+    /* amounts without signs: the money went in when the balance rose (the first line can only be guessed: out) */
+    if (cols.sb)
+      lines.forEach((l, i) => {
+        const up = i && l.bal != null && lines[i - 1].bal != null ? l.bal > lines[i - 1].bal : false;
+        l.amt = (up ? 1 : -1) * Math.abs(l.amt);
+      });
     lines.forEach((l, i) => (l.i = i));
     const last = lines.filter(l => l.bal != null).pop();
     let endBal = last ? last.bal : null;

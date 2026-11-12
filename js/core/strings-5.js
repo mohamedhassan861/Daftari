@@ -64,7 +64,10 @@
     lowsFail: ['معرفناش نجيب الأسعار القديمة دلوقتي، جرّب تاني بعدين.', 'Could not load past prices now; try again later.'],
     bmBtn: ['طابق مع كشف البنك', 'Match with bank statement'],
     bmTitle: ['مطابقة كشف البنك', 'Statement matching'],
-    bmHint: ['اختار الحساب وملف الكشف اللي نزّلته من البنك (Excel أو CSV أو PDF)، من أي بنك، للحساب أو للكريديت كارد. الملف بيتقري على موبايلك بس، ومش بيتبعت لأي حد.', 'Choose the account and the statement file from your bank (Excel, CSV or PDF), any bank, for an account or a credit card. The file is read on your phone only and is not sent anywhere.'],
+    bmHint: [
+      'اختار ملف الكشف اللي نزّلته من البنك، Excel أو PDF. الملف بيتقري على موبايلك بس.',
+      'Choose the statement file from your bank, Excel or PDF. It is read on your phone only.'
+    ],
     bmFile: ['ملف الكشف', 'Statement file'],
     bmAgain: ['طابق تاني على آخر كشف', 'Match the last statement again'],
     bmPdfFail: ['معرفناش نلاقي جدول الحركات في الـ PDF ده. لو البنك بيدّي الكشف Excel جرّبه، أو لو الـ PDF صورة متصوّرة مش هينفع يتقري.', 'Could not find the transactions table in this PDF. Try the Excel statement if your bank offers it; a scanned PDF cannot be read.'],
@@ -103,6 +106,10 @@
     bmSplitAll: ['اختار توجيه لكل السطور الأول.', 'Choose where every line goes first.'],
     bmSplitQ: ['هنشيل الحركة الإجمالي (%a) ونحط مكانها %n حركات بتفاصيلها. موافق؟', 'The total entry (%a) will be removed and %n detailed entries put in its place. OK?'],
     bmBadFile: ['معرفناش نفتح الملف ده. جرّب ملف Excel أو CSV أو PDF من البنك، واتأكد إن النت شغال أول مرة.', 'Could not open this file. Try an Excel, CSV or PDF statement from the bank (the first time needs internet).'],
+    bmPw: ['باسورد الملف', 'File password'],
+    bmPwNeed: ['الملف ده عليه باسورد (البنوك بتحطه على الكشف اللي بيوصل على الإيميل). اكتبه وكمّل.', 'This file is password protected (banks lock e-mailed statements). Enter the password.'],
+    bmPwWrong: ['الباسورد مش صح، جرّب تاني.', 'Wrong password, try again.'],
+    bmNoCols: ['معرفناش نلاقي التاريخ والمبالغ في الملف ده لوحدنا.', 'Could not find the dates and amounts in this file automatically.'],
     bmSplitDone: ['اتفصّلت', 'Split done']
   };
   let LANG = 'ar';

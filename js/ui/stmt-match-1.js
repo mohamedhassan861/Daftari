@@ -9,28 +9,61 @@
       `<div class="form"><p class="hint">${t('bmHint')}</p>
     <label class="fld"><span>${t('account')}</span><select class="in-f" id="bma">${accs.map(a => `<option value="${a.id}" ${a.id === acc.id ? 'selected' : ''}>${esc(a.name)} · ${a.currency}</option>`).join('')}</select></label>
     <label class="fld"><span>${t('bmFile')}</span><input class="in-f" type="file" id="bmf" accept=".xlsx,.xls,.xlsm,.csv,.txt,.pdf,application/pdf"></label>
-    <p class="err" id="bme"></p>
+    <label class="fld" id="bmpw" hidden><span>${t('bmPw')}</span><input class="in-f" type="password" id="bmpwi" autocomplete="off"></label>
+    <p class="err" id="bme"></p><div id="bmx"></div>
     ${again ? `<button type="button" class="btn block" id="bmr">↻ ${t('bmAgain')} · ${esc(again.name)}</button>` : ''}</div>`,
       r => {
         const err = m => (r.querySelector('#bme').textContent = m);
         if (again) r.querySelector('#bmr').onclick = () => bankMatchRun();
-        r.querySelector('#bmf').onchange = async ev => {
-          const f = ev.target.files[0];
+        /* reading starts as soon as a file is chosen; a locked PDF asks for its password in the same place */
+        const go = async () => {
+          const fi = r.querySelector('#bmf'),
+            accSel = r.querySelector('#bma');
+          /* Enter and leaving the password box can both start a read; only one runs, on this screen only */
+          if (!fi || !fi.isConnected || fi.dataset.busy) return;
+          fi.dataset.busy = '1';
+          try {
+            await goRead(fi, accSel);
+          } finally {
+            delete fi.dataset.busy;
+          }
+        };
+        const goRead = async (fi, accSel) => {
+          const f = fi.files[0];
           if (!f) return;
           err(t('working'));
-          let rows;
+          r.querySelector('#bmx').innerHTML = '';
+          let got;
           try {
-            rows = await readStmtFile(f);
+            got = await readStmtFile(f, r.querySelector('#bmpwi').value);
           } catch (e) {
+            if (e && e.name === 'PasswordException') {
+              r.querySelector('#bmpw').hidden = false;
+              err(r.querySelector('#bmpwi').value ? t('bmPwWrong') : t('bmPwNeed'));
+              r.querySelector('#bmpwi').focus();
+              return;
+            }
             err(e && e.message === 'pdfTable' ? t('bmPdfFail') : t('bmBadFile'));
             return;
           }
-          const a = accOf(r.querySelector('#bma').value),
-            h = stmtFindHeader(rows);
-          STMT_CUR = {acc: a.id, rows, hdr: h ? h.i : 0, cols: h ? h.cols : {}, flip: false, name: f.name};
-          if (!h) bankMatchCols();
-          else bankMatchRun();
+          if (!fi.isConnected) return;
+          const a = accOf(accSel.value),
+            h = got.hdr;
+          STMT_CUR = {acc: a.id, rows: got.rows, hdr: h ? h.i : 0, cols: h ? h.cols : {}, flip: false, name: f.name};
+          if (h) {
+            bankMatchRun();
+            return;
+          }
+          /* the column screen is only a fallback, offered and never forced */
+          err(t('bmNoCols'));
+          r.querySelector('#bmx').innerHTML = `<button type="button" class="btn sm" id="bmman">${t('bmCols')}</button>`;
+          r.querySelector('#bmman').onclick = () => bankMatchCols();
         };
+        r.querySelector('#bmf').onchange = go;
+        r.querySelector('#bmpwi').onkeydown = e => {
+          if (e.key === 'Enter') go();
+        };
+        r.querySelector('#bmpwi').onchange = go;
       }
     );
   }
