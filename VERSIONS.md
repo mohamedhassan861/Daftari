@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v1.03 | `7a1c2c0f15` | 2026-11-12 | 1.03: lowest price of USD, SAR, EUR and gold over 3 months / 1 / 2 / 3 years |
 | v1.02 | `6bbd5a4fbe` | 2026-11-12 | 1.02: fingerprint help names only Chrome and Edge |
 | v1.01 | `64453f1c28` | 2026-11-12 | 1.01: clear help when fingerprint is not available in this browser |
 | v1.00 | `ee1493a04c` | 2026-11-12 | 1.00: new users start with an empty ledger; PIN hint letters no longer pulled apart |
