@@ -40,12 +40,12 @@
     loading: ['بيحمّل...', 'Loading...'],
     lockNow: ['اقفل البرنامج دلوقتي', 'Lock now'],
     bioNoBrowser: [
-      'المتصفح ده مش بيدعم الفتح بالبصمة. افتح دفتري من Google Chrome، أو Microsoft Edge، أو Samsung Internet، وشغّل البصمة من هناك.',
-      'This browser does not support fingerprint unlock. Open Daftari in Google Chrome (or Microsoft Edge or Samsung Internet) and turn it on there.'
+      'المتصفح ده مش بيدعم الفتح بالبصمة. افتح دفتري من Google Chrome أو Microsoft Edge، وشغّل البصمة من هناك.',
+      'This browser does not support fingerprint unlock. Open Daftari in Google Chrome or Microsoft Edge and turn it on there.'
     ],
     bioNoPrf: [
-      'الموبايل مش قادر يربط البصمة بالتشفير. افتح دفتري من Google Chrome، واتأكد من إعدادات الموبايل إن Google هو اللي بيحفظ كلمات السر والمفاتيح (مش Samsung Pass أو برنامج تاني)، وجرّب تاني.',
-      'This phone could not link the fingerprint to the encryption. Open Daftari in Google Chrome, make sure Google is the passwords and passkeys service in the phone settings (not Samsung Pass or another app), and try again.'
+      'الموبايل مش قادر يربط البصمة بالتشفير. افتح دفتري من Google Chrome، واتأكد من إعدادات الموبايل إن Google هو اللي بيحفظ كلمات السر والمفاتيح (مش برنامج تاني)، وجرّب تاني.',
+      'This phone could not link the fingerprint to the encryption. Open Daftari in Google Chrome, make sure Google is the passwords and passkeys service in the phone settings (not another app), and try again.'
     ],
     bioMove: [
       'بياناتك محفوظة في المتصفح ده ومش هتنتقل لوحدها. قبل ما تفتح من متصفح تاني: ارفع نسخة على Drive، وبعدين من المتصفح الجديد سجّل بنفس الإيميل ورجّعها بنفس الرقم السري.',
