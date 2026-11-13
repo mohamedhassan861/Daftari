@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v1.09 | `b1d7e548be` | 2026-11-14 | 1.09: what to pay on the card and by when, on home and in the card statement |
 | v1.08 | `9860086d54` | 2026-11-13 | 1.08: paying more than what is left asks what the extra is |
 | v1.07 | `fa604a65b7` | 2026-11-13 | 1.07: add a category from inside the entry form |
 | v1.06 | `06b21c4920` | 2026-11-12 | 1.06: statement columns by looking at the file, headings anywhere |
