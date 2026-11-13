@@ -58,6 +58,7 @@
       ${o.extra || ''}
     </div>
     ${o.kind === 'acc' ? `<p class="hint" data-eq="1" style="margin:0">${t('stmtEq')}: ${fmt(o.opening || 0)} + ${fmt(tcr)} − ${fmt(tdr)} = <b>${fmt(bal)}</b></p>` : o.kind === 'person' ? `<p class="hint" data-eq="1" style="margin:0">${t('stmtEqP')}: ${fmt(o.opening || 0)} + ${fmt(tdr)} − ${fmt(tcr)} = <b>${fmt(bal)}</b></p>` : ''}
+    ${isCard && o.acc.closeDay ? cardDueBox(o.acc) : ''}
     ${o.acc ? `<button type="button" class="btn sm" style="align-self:flex-start" data-sact="recon" data-id="${o.acc.id}">⚖️ ${t('reconcile')}</button><button type="button" class="btn sm" style="align-self:flex-start" data-sact="bmatch" data-id="${o.acc.id}">🧾 ${t('bmBtn')}</button>` : ''}
     <div class="list stmtl">${o.kind !== 'flow' ? `<div class="row srow open"><div class="main"><span class="t">${t('openBal')}</span><span class="s">${balTxt(o.opening || 0)}</span></div></div>` : ''}${body || `<div class="empty">${t('noMoves')}</div>`}</div>
   </div>`

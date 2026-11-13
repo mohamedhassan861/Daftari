@@ -117,6 +117,11 @@
     ovQ: ['المبلغ أكبر من الباقي كله (%l) بـ %x. الباقي هيتقفل، والفرق هيتسجّل مصروف لوحده. اختار بنده ودوس حفظ تاني، أو عدّل المبلغ.', 'That is %x more than everything left (%l). What is left will be closed and the extra recorded as its own expense. Choose its category and press Save again, or change the amount.'],
     ovCat: ['الفرق يتسجّل في بند', 'Record the extra under'],
     ovNote: ['فرق زيادة عن الباقي', 'extra over what was left'],
+    payBy: ['يرجى السداد قبل %d مبلغ %v', 'Please pay %v by %d'],
+    stmtTo: ['كشف لحد %c', 'statement to %c'],
+    payByStmt: ['ده رصيد كشف الحساب لحد %c.', 'That is the statement balance up to %c.'],
+    payNextCycle: ['الحركات بعد %c (%v) هتنزل في الكشف اللي بعده، وتتسدد قبل %n.', 'Entries after %c (%v) go on the next statement, due by %n.'],
+    payNone: ['مفيش مبلغ مستحق دلوقتي. اللي عليك هينزل في كشف %c ويتسدد قبل %n.', 'Nothing due now. What you owe goes on the %c statement, due by %n.'],
     bmSplitDone: ['اتفصّلت', 'Split done']
   };
   let LANG = 'ar';

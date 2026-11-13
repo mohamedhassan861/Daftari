@@ -199,6 +199,18 @@
             return c0.due > 0.5 ? c0.dueDate : cardDueFor(z.x, TODAY);
           })
           .sort()[0];
+      /* what has to be paid and by when: the closed statements (the same figure as the cards' "due" everywhere),
+         not everything owed; one date for all of them reads as a sentence, several dates fall back to the total */
+      const dueCs = owe.map(z => ({z, c0: z.c})).filter(q => q.c0.due > 0.5),
+        dueAt = dueCs.reduce((v, q) => v + toBase(q.c0.due, q.z.x.currency), 0),
+        dueDs = [...new Set(dueCs.map(q => q.c0.dueDate))],
+        dueAmt = `<b class="why" data-act="why" data-w="cDue">${fmt(dueAt)}</b>`,
+        dueLine = !dueCs.length
+          ? ''
+          : dueDs.length === 1
+            ? t('payBy').replace('%d', esc(shortDate(dueDs[0]))).replace('%v', dueAmt) +
+              (dueCs.length === 1 ? ' · ' + t('stmtTo').replace('%c', esc(dmyOf(dsDate(dueCs[0].c0.close)))) : '')
+            : t('cardDue') + ' ' + dueAmt + ' · ' + t('nextPay') + ' ' + esc(shortDate(dueDs.sort()[0]));
       const sub = (pl, fn, xf, inn) => {
         const ps = [
           [inn ? t('plIn') : t('plOut'), pl],
@@ -213,7 +225,7 @@
     ${P.proj && !P.fut ? `<div class="row tap" data-act="goAcc" style="padding:4px 14px 8px"><div class="main"><span class="t">${t('availNow')}</span></div><b class="amt ${P.now < 0 ? 'neg' : ''}"><span class="why" data-act="why" data-w="availNow">${money(P.now)}</span></b></div>` : ''}
     <div class="perf"></div>
     <div class="flowb"><div><span>${P.fut ? t('projStart') : t('carried')}</span><b class="${o < 0 ? 'neg' : ''}"><span class="why" data-act="why" data-w="opening">${money(o)}</span></b></div><div><span>+ ${t('cashIn')}</span><b class="pos"><span class="why" data-act="why" data-w="cashIn">${money(ci)}</span></b>${sub(P.ai + P.pi, P.fIn, P.xIn, 1)}</div><div><span>− ${t('cashOut')}</span><b><span class="why" data-act="why" data-w="cashOut">${money(co)}</span></b>${sub(P.ao + P.po, P.fOut, P.xOut, 0)}</div></div>
-    ${oweT > 0 ? `<div class="row tap" data-act="goCards" style="padding:8px 14px"><div class="main"><span class="t">💳 ${t('cardsOwe')}</span><span class="s">${nextD ? t('nextPay') + ' ' + esc(shortDate(nextD)) : ''}</span></div><b class="amt neg"><span class="why" data-act="why" data-w="cardsOwe">${money(oweT)}</span></b></div>` : ''}
+    ${oweT > 0 ? `<div class="row tap" data-act="goCards" style="padding:8px 14px"><div class="main"><span class="t">💳 ${t('cardsOwe')}</span><span class="s">${dueLine || (nextD ? t('nextPay') + ' ' + esc(shortDate(nextD)) : '')}</span></div><b class="amt neg"><span class="why" data-act="why" data-w="cardsOwe">${money(oweT)}</span></b></div>` : ''}
     <div class="split"><div class="tile" data-act="stmtFlow" data-ty="income"><span class="label">${t('income')} ›</span><span class="mid pos">${money(inc)}</span></div><div class="tile" data-act="stmtFlow" data-ty="expense"><span class="label">${t('expense')} ›</span><span class="mid">${money(exp)}</span></div></div>
     <div class="net tile" data-act="stmtFlow" data-ty="net" style="padding-top:6px"><span class="label">${per.mode === 'month' ? t('netMonthOnly') : t('netPer')} ›</span><span class="mid ${net < 0 ? 'neg' : 'pos'}">${money(net)} <small class="muted">${esc(curSym(BASE()))}</small></span></div>
     ${finHTML(tx)}

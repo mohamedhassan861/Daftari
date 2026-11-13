@@ -206,3 +206,15 @@
       }
     );
   }
+  /* what to pay and by when: the last closed statement, and where the newer purchases go */
+  function cardDueBox(a) {
+    /* same date as the "due" figure everywhere else (end of the period shown), so tapping it shows the same number */
+    const PE = perRange()[1],
+      c = cardInfo(a, PE),
+      solo = cards().filter(x => cardInfo(x, PE).due > 0.5).length === 1,
+      dm = d => esc(dmyOf(dsDate(d)));
+    if (c.due <= 0.5)
+      return c.owed > 0.5 ? `<p class="hint" style="margin:0">${t('payNone').replace('%c', dm(c.nextClose)).replace('%n', dm(cardDueFor(a, c.nextClose)))}</p>` : '';
+    return `<div style="padding:10px 12px;border:1px solid var(--line);border-radius:12px"><b>${t('payBy').replace('%d', esc(shortDate(c.dueDate))).replace('%v', solo ? `<span class="why neg" data-act="why" data-w="cDue">${fmt(c.due)}</span>` : `<span class="neg">${fmt(c.due)}</span>`)}</b>
+    <p class="hint" style="margin:4px 0 0">${t('payByStmt').replace('%c', dm(c.close))}${c.cycle > 0.5 ? ' ' + t('payNextCycle').replace('%c', dm(c.close)).replace('%v', fmt(Math.round(c.cycle * 100) / 100)).replace('%n', dm(cardDueFor(a, c.nextClose))) : ''}</p></div>`;
+  }
