@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v1.11 | `6bbb6a420b` | 2026-11-14 | 1.11: card statements show the balance to pay, worked out like the bank's |
 | v1.10 | `61ec541957` | 2026-11-14 | 1.10: reads the CIB card statement as it comes from the bank |
 | v1.09 | `b1d7e548be` | 2026-11-14 | 1.09: what to pay on the card and by when, on home and in the card statement |
 | v1.08 | `9860086d54` | 2026-11-13 | 1.08: paying more than what is left asks what the extra is |
