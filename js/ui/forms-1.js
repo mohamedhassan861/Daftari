@@ -17,7 +17,7 @@
         pre || {}
       );
     let type = tx.type;
-    const catOpts = ty => catOptsTree(ty, tx.cat, isNew);
+    const catOpts = (ty, sel) => catOptsTree(ty, sel || tx.cat, isNew) + quickCatOpt();
     const toDef = tx.toAcc || (S.accounts.find(a => a.id !== tx.acc) || S.accounts[0]).id;
     openSheet(
       isNew ? t('addTx') : t('editTx'),
@@ -37,6 +37,7 @@
     <label class="fld" id="xrW" hidden><span>${t('rateOfDay')} (<b id="xrC"></b>)</span><input class="in-f num" id="xr" inputmode="decimal" autocomplete="off" value="${tx.rate || ''}" placeholder=""></label>
     <label class="fld" id="toAmtW" hidden><span>${t('recvAmt')} (<b id="toC"></b>)</span><input class="in-f amt num" id="toAmt" inputmode="decimal" autocomplete="off" value="${tx.toAmount ?? ''}" placeholder="0"></label>
     <label class="fld" id="catW" ${type === 'transfer' ? 'hidden' : ''}><span>${t('category')}</span><select class="in-f" id="cat">${type === 'transfer' ? '' : catOpts(type)}</select></label>
+    ${quickCatHTML()}
     <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${tx.date}"></label>
     <label class="fld"><span>${t('note')}</span><input class="in-f" id="nt" value="${esc(tx.note)}" autocomplete="off"></label>
     ${
@@ -88,10 +89,12 @@
             $r('#toAmt').value = a && ra && rb ? Math.round(((a * ra) / rb) * 100) / 100 : '';
           }
         };
+        const ncClose = quickCatBind(r, () => type, catOpts);
         bindSeg(r, 'ty', v => {
           type = v;
           $r('#toW').hidden = v !== 'transfer';
           $r('#catW').hidden = v === 'transfer';
+          ncClose();
           $r('#accL').textContent = v === 'transfer' ? t('fromAcc') : t('account');
           if (v !== 'transfer') $r('#cat').innerHTML = catOpts(v);
           sync();
@@ -118,6 +121,12 @@
           const a = numv(r, 'amt');
           if (a <= 0) {
             toast(t('needAmt'));
+            return;
+          }
+          /* "＋ new category" chosen but not added yet */
+          if (type !== 'transfer' && $r('#cat').value === '__new') {
+            toast(t('needName'));
+            $r('#ncN').focus();
             return;
           }
           let o = {

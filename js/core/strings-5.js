@@ -113,6 +113,7 @@
     bmPwNeed: ['الملف ده عليه باسورد (البنوك بتحطه على الكشف اللي بيوصل على الإيميل). اكتبه وكمّل.', 'This file is password protected (banks lock e-mailed statements). Enter the password.'],
     bmPwWrong: ['الباسورد مش صح، جرّب تاني.', 'Wrong password, try again.'],
     bmNoCols: ['معرفناش نلاقي التاريخ والمبالغ في الملف ده لوحدنا.', 'Could not find the dates and amounts in this file automatically.'],
+    catExists: ['البند ده موجود، اخترناه', 'That category exists; it is now chosen'],
     bmSplitDone: ['اتفصّلت', 'Split done']
   };
   let LANG = 'ar';
