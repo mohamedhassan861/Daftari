@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v1.08 | `9860086d54` | 2026-11-13 | 1.08: paying more than what is left asks what the extra is |
 | v1.07 | `fa604a65b7` | 2026-11-13 | 1.07: add a category from inside the entry form |
 | v1.06 | `06b21c4920` | 2026-11-12 | 1.06: statement columns by looking at the file, headings anywhere |
 | v1.05 | `b092b652ae` | 2026-11-12 | 1.05: statement upload without the column screen |
