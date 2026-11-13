@@ -122,6 +122,12 @@
     payByStmt: ['ده رصيد كشف الحساب لحد %c.', 'That is the statement balance up to %c.'],
     payNextCycle: ['الحركات بعد %c (%v) هتنزل في الكشف اللي بعده، وتتسدد قبل %n.', 'Entries after %c (%v) go on the next statement, due by %n.'],
     payNone: ['مفيش مبلغ مستحق دلوقتي. اللي عليك هينزل في كشف %c ويتسدد قبل %n.', 'Nothing due now. What you owe goes on the %c statement, due by %n.'],
+    cStPrevBal: ['رصيد الكشف اللي قبله', 'Previous statement balance'],
+    cStBuys: ['مشتريات', 'Purchases'],
+    cStRefunds: ['مرتجعات', 'Refunds and credits'],
+    cStPays: ['مدفوعات', 'Payments'],
+    cStBal: ['رصيد الكشف (المطلوب سداده)', 'Statement balance (to pay)'],
+    cStBuysN: ['مشتريات %v', 'purchases %v'],
     bmSplitDone: ['اتفصّلت', 'Split done']
   };
   let LANG = 'ar';

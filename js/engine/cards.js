@@ -58,6 +58,15 @@
         list = S.tx.filter(
           x => x.acc === a.id && x.date > P && x.date <= C && (x.type === 'expense' || x.type === 'transfer')
         );
+      /* the statement the way the bank writes it: last balance + purchases − refunds − payments = this balance */
+      const ins = S.tx.filter(
+          x =>
+            x.date > P &&
+            x.date <= C &&
+            ((x.type === 'transfer' && x.toAcc === a.id) || (x.type === 'income' && x.acc === a.id))
+        ),
+        inAmt = x => +(x.type === 'transfer' ? (x.toAmount ?? x.amount) : x.amount) || 0,
+        r2 = v => Math.round(v * 100) / 100;
       return {
         C,
         P,
@@ -66,7 +75,12 @@
         cur: i === 1,
         left: i === 1 ? c.due : 0,
         list,
-        sum: list.reduce((v, x) => v + (+x.amount || 0), 0)
+        sum: list.reduce((v, x) => v + (+x.amount || 0), 0),
+        ins,
+        prevBal: r2(-accBalanceAt(a, P)),
+        refunds: r2(ins.filter(x => x.type === 'income').reduce((v, x) => v + inAmt(x), 0)),
+        payments: r2(ins.filter(x => x.type === 'transfer').reduce((v, x) => v + inAmt(x), 0)),
+        bal: r2(-accBalanceAt(a, C))
       };
     });
   }

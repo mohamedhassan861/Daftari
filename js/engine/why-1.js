@@ -17,14 +17,32 @@
           t('payDay') +
           ' ' +
           dmyOf(dsDate(s.due)),
-        lines: [{l: t('total'), v: toBase(s.sum, a.currency), strong: 1, total: 1}],
-        rows: s.list.map(x => ({
-          d: x.date,
-          l: x.note || (x.type === 'transfer' ? t('transfer') : catPath(x.cat)),
-          v: -toBase(+x.amount || 0, a.currency),
-          act: 'openTx',
-          id: x.id
-        })),
+        /* a closed statement adds up like the bank's: last balance + purchases − refunds − payments = balance due;
+           the one still open lists its purchases so far */
+        lines: s.open
+          ? [{l: t('total'), v: toBase(s.sum, a.currency), strong: 1, total: 1}]
+          : [
+              {l: t('cStPrevBal'), v: toBase(s.prevBal, a.currency), inv: 1},
+              {l: t('cStBuys'), v: toBase(s.sum, a.currency), inv: 1},
+              {l: t('cStRefunds'), v: -toBase(s.refunds, a.currency), inv: 1},
+              {l: t('cStPays'), v: -toBase(s.payments, a.currency), inv: 1},
+              {l: t('cStBal'), v: toBase(s.bal, a.currency), strong: 1, total: 1}
+            ],
+        rows: s.list
+          .concat(s.open ? [] : s.ins)
+          .sort(byDate)
+          .map(x => ({
+            d: x.date,
+            l: x.note || (x.type === 'transfer' ? t('transfer') : catPath(x.cat)),
+            /* signed like the lines above, from what is owed: a purchase adds, a payment or refund takes off */
+            v: s.ins.includes(x)
+              ? -toBase(+(x.type === 'transfer' ? (x.toAmount ?? x.amount) : x.amount) || 0, a.currency)
+              : toBase(+x.amount || 0, a.currency),
+            act: 'openTx',
+            id: x.id,
+            /* on a card, adding to what is owed is the bad direction */
+            inv: 1
+          })),
         go: {act: 'stmtAcc', id: a.id, l: t('statement')}
       };
     }

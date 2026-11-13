@@ -23,7 +23,7 @@
     const cy = cardCycles(a);
     if (!cy.length) return '';
     const sym = curSym(a.currency);
-    return `<div class="list cst"><div class="grp"><span>${t('cStmts')}</span></div>${cy.map(s => `<div class="row tap" data-act="why" data-w="cst:${a.id}:${s.C}"><div class="main"><span class="t">${esc((s.open ? t('cStOpen') : s.cur ? t('cStDue') : t('cStPrev')).replace('%c', s.C.slice(8, 10) + '/' + s.C.slice(5, 7)))}</span><span class="s">${esc(t('cStPay').replace('%d', s.due.slice(8, 10) + '/' + s.due.slice(5, 7)))} · ${s.list.length ? s.list.length + ' ' + t('rowsWord') : t('cStNone')}${s.cur ? ' · ' + (s.left > 0.5 ? `<span class="neg">${t('cStLeft').replace('%v', fmt(s.left))}</span>` : `<span class="pos">${t('cStPaid')}</span>`) : ''}</span></div><b class="amt">${fmt(s.sum)} <small>${esc(sym)}</small></b></div>`).join('')}</div>`;
+    return `<div class="list cst"><div class="grp"><span>${t('cStmts')}</span></div>${cy.map(s => `<div class="row tap" data-act="why" data-w="cst:${a.id}:${s.C}"><div class="main"><span class="t">${esc((s.open ? t('cStOpen') : s.cur ? t('cStDue') : t('cStPrev')).replace('%c', s.C.slice(8, 10) + '/' + s.C.slice(5, 7)))}</span><span class="s">${esc(t('cStPay').replace('%d', s.due.slice(8, 10) + '/' + s.due.slice(5, 7)))} · ${s.open ? (s.list.length ? s.list.length + ' ' + t('rowsWord') : t('cStNone')) : t('cStBuysN').replace('%v', fmt(s.sum))}${s.cur ? ' · ' + (s.left > 0.5 ? `<span class="neg">${t('cStLeft').replace('%v', fmt(s.left))}</span>` : `<span class="pos">${t('cStPaid')}</span>`) : ''}</span></div><b class="amt">${fmt(s.open ? s.sum : s.bal)} <small>${esc(sym)}</small></b></div>`).join('')}</div>`;
   }
   function payCard(id) {
     const a = accById(id);

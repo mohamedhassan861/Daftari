@@ -181,7 +181,7 @@
       : x.act
         ? `data-act="${x.act}" ${x.ty ? `data-ty="${x.ty}"` : ''} ${x.id ? `data-id="${x.id}"` : ''}`
         : '';
-    return `<div class="row ${go ? 'tap' : ''}" ${go} ${x.total ? 'data-total="1"' : ''} style="padding:7px 12px"><div class="main"><span class="t" style="${x.strong ? 'font-weight:700' : ''}">${x.l}${go ? ' ›' : ''}</span>${x.s ? `<span class="s">${x.s}</span>` : ''}</div><b class="amt ${x.v < 0 ? 'neg' : x.strong || x.plain ? '' : 'pos'}">${x.strong || x.plain ? money(x.v) : (x.v < 0 ? '− ' : '+ ') + money(Math.abs(x.v))}</b></div>`;
+    return `<div class="row ${go ? 'tap' : ''}" ${go} ${x.total ? 'data-total="1"' : ''} style="padding:7px 12px"><div class="main"><span class="t" style="${x.strong ? 'font-weight:700' : ''}">${x.l}${go ? ' ›' : ''}</span>${x.s ? `<span class="s">${x.s}</span>` : ''}</div><b class="amt ${(x.inv ? x.v > 0 : x.v < 0) ? 'neg' : x.strong || x.plain ? '' : 'pos'}">${x.strong || x.plain ? money(x.v) : (x.v < 0 ? '− ' : '+ ') + money(Math.abs(x.v))}</b></div>`;
   }
   function bridgeHTML() {
     const P = perCash(),
@@ -205,7 +205,7 @@
             .slice(0, 300)
             .map(
               r =>
-                `<div class="row ${r.act ? 'tap' : ''}" ${r.act ? `data-act="${r.act}" data-id="${r.id}"` : ''} style="padding:6px 12px"><div class="main"><span class="t" style="font-size:13px">${esc(r.l)}${r.act ? ' ›' : ''}</span><span class="s">${esc(shortDate(r.d))}${r.exp ? ' · ' + t('expWord') : ''}</span></div><b class="amt ${r.v < 0 ? 'neg' : 'pos'}">${r.v < 0 ? '− ' : '+ '}${money(Math.abs(r.v))}</b></div>`
+                `<div class="row ${r.act ? 'tap' : ''}" ${r.act ? `data-act="${r.act}" data-id="${r.id}"` : ''} style="padding:6px 12px"><div class="main"><span class="t" style="font-size:13px">${esc(r.l)}${r.act ? ' ›' : ''}</span><span class="s">${esc(shortDate(r.d))}${r.exp ? ' · ' + t('expWord') : ''}</span></div><b class="amt ${(r.inv ? r.v > 0 : r.v < 0) ? 'neg' : 'pos'}">${r.v < 0 ? '− ' : '+ '}${money(Math.abs(r.v))}</b></div>`
             )
             .join('')}</div>`
         : ''
