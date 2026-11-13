@@ -35,7 +35,7 @@
     if (!lines.length) return {pairs: [], groups: [], many: [], bankOnly: [], appOnly: []};
     const from = lines.reduce((a, l) => (l.date < a ? l.date : a), lines[0].date),
       to = lines.reduce((a, l) => (l.date > a ? l.date : a), lines[0].date),
-      tol = isCard ? 5 : 3;
+      tol = isCard ? 7 : 3;
     const bank = lines.map(l => ({l, c: cents(l.amt), used: false})),
       app = txs
         .map(x => ({x, c: cents(accEffect(x, accId)), used: false}))

@@ -3,18 +3,14 @@
      number column that moves by each row's amount; two number columns that are never both filled are out / in */
   function stmtGuessByContent(rows) {
     const width = rows.reduce((m, r) => Math.max(m, r.length), 0);
-    const isNum = v => stmtIsAmt(v) && isFinite(stmtNum(v).v);
+    /* "22-10" is a day, not an amount */
+    const isNum = v => stmtIsAmt(v) && isFinite(stmtNum(v).v) && !(typeof v === 'string' && stmtDateParts(v));
     /* Excel dates arrive as dates, so a plain number (an amount like 45,000) is never taken for one */
     const isDate = v => typeof v !== 'number' && !!stmtDateParts(v);
-    let dateCol = -1,
-      best = 0;
-    for (let j = 0; j < width; j++) {
-      const n = rows.filter(r => isDate(r[j])).length;
-      if (n > best) {
-        best = n;
-        dateCol = j;
-      }
-    }
+    /* the first column that is (nearly) all dates: transaction date usually comes before the posting date */
+    const dn = Array.from({length: width}, (_, j) => rows.filter(r => isDate(r[j])).length),
+      best = Math.max(0, ...dn),
+      dateCol = dn.findIndex(n => n >= best * 0.9 && n > 0);
     if (dateCol < 0 || best < 2) return null;
     const data = rows.map((r, i) => ({r, i})).filter(x => isDate(x.r[dateCol]));
     const first = data[0].i,

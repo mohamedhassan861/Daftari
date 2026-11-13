@@ -95,6 +95,7 @@
       dp = body.map(r => stmtDateParts(r[cols.date]));
     const mdy = dp.some(p => p && p.ab && p.ab[1] > 12) && !dp.some(p => p && p.ab && p.ab[0] > 12);
     const lines = [];
+    let closing = null;
     body.forEach((r, k) => {
       const p = dp[k],
         ymd = p ? p.ymd || (mdy ? [p.y, p.ab[0], p.ab[1]] : [p.y, p.ab[1], p.ab[0]]) : null,
@@ -118,6 +119,13 @@
           const f = /^(dr|d|debit|مدين)$/.test(ind) ? 'dr' : /^(cr|c|credit|دائن)$/.test(ind) ? 'cr' : n.f;
           amt = f === 'dr' ? -Math.abs(n.v) : f === 'cr' ? Math.abs(n.v) : isCard !== !!cols.neg ? -n.v : n.v;
         }
+      }
+      /* opening / closing balance lines are not entries; the closing one is the statement's end balance */
+      const nd = stmtNorm(desc);
+      if (/opening balance|balance (b|brought)|previous balance|رصيد (اول|سابق|افتتاحي)/.test(nd)) return;
+      if (/closing balance|balance (c|carried)|رصيد (ختامي|اخر|آخر)/.test(nd)) {
+        if (!isNaN(amt)) closing = Math.round(amt * 100) / 100;
+        return;
       }
       if (!date) {
         /* a line with text only continues the description of the line above */
@@ -151,14 +159,21 @@
     lines.forEach((l, i) => (l.i = i));
     const last = lines.filter(l => l.bal != null).pop();
     let endBal = last ? last.bal : null;
+    const endFromClosing = endBal == null && closing != null;
     if (last && last.bf === 'dr' && endBal > 0) endBal = -endBal;
     /* a card statement shows what is owed as a positive balance; in the app that is a negative balance */
     if (isCard && endBal != null && last.bf !== 'dr') endBal = -endBal;
+    /* no balance column: the closing balance line (already in the app's sign, like the amounts) */
+    if (endFromClosing) endBal = closing;
     return {
       lines,
       from: lines.length ? lines.reduce((a, l) => (l.date < a ? l.date : a), lines[0].date) : null,
       to: lines.length ? lines.reduce((a, l) => (l.date > a ? l.date : a), lines[0].date) : null,
       endBal,
-      endDate: last ? last.date : null
+      endDate: last
+        ? last.date
+        : endFromClosing && lines.length
+          ? lines.reduce((a, l) => (l.date > a ? l.date : a), lines[0].date)
+          : null
     };
   }

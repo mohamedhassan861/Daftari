@@ -4,7 +4,7 @@
    app has always used, so the decrypted data, the PIN and the keys never become globals that other scripts on the page
    (such as Google's sign-in script) could read. The order below matters. */
 (function(){
-  var V='1.09';
+  var V='1.10';
   var FILES=[
     "core/start.js",
     "core/util.js",
