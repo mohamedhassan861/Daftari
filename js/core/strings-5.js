@@ -114,6 +114,9 @@
     bmPwWrong: ['الباسورد مش صح، جرّب تاني.', 'Wrong password, try again.'],
     bmNoCols: ['معرفناش نلاقي التاريخ والمبالغ في الملف ده لوحدنا.', 'Could not find the dates and amounts in this file automatically.'],
     catExists: ['البند ده موجود، اخترناه', 'That category exists; it is now chosen'],
+    ovQ: ['المبلغ أكبر من الباقي كله (%l) بـ %x. الباقي هيتقفل، والفرق هيتسجّل مصروف لوحده. اختار بنده ودوس حفظ تاني، أو عدّل المبلغ.', 'That is %x more than everything left (%l). What is left will be closed and the extra recorded as its own expense. Choose its category and press Save again, or change the amount.'],
+    ovCat: ['الفرق يتسجّل في بند', 'Record the extra under'],
+    ovNote: ['فرق زيادة عن الباقي', 'extra over what was left'],
     bmSplitDone: ['اتفصّلت', 'Split done']
   };
   let LANG = 'ar';

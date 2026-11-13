@@ -44,6 +44,7 @@
       `<form class="form" id="f">
     ${recv ? '' : `<div class="sumgrid"><div><span class="label">${t('dueNow')}</span><b class="num">${fmt(def)} <small class="cur">${esc(curSym(cc))}</small></b></div><div><span class="label">${t('remainingAll')}</span><b class="num">${fmt(left)} <small class="cur">${esc(curSym(cc))}</small></b></div></div>`}
     <label class="fld"><span>${t('amountPaid')} (${esc(curName(cc))})</span><input class="in-f amt num" id="amt" inputmode="decimal" value="${def}"></label>
+    ${recv ? '' : `<div id="ovW" hidden style="display:grid;gap:8px;padding:10px;border:1px dashed var(--warn);border-radius:12px"><p class="hint" id="ovT" style="margin:0"></p><label class="fld"><span>${t('ovCat')}</span><select class="in-f" id="ovC">${catOptsTree('expense', (S.cats.expense.find(c => c.id === 'bankfees') || S.cats.expense.find(c => /رسوم.*بنك|bank.*(fee|charge)/i.test((c.ar || '') + ' ' + (c.en || ''))) || {id: 'other'}).id, true)}</select></label></div>`}
     <label class="fld"><span>${recv ? t('toAcc') : t('fromAcc')}</span><select class="in-f" id="acc">${accs.map(a => `<option value="${a.id}" ${a.id === pa ? 'selected' : ''}>${esc(a.name)} · ${a.currency}</option>`).join('')}</select></label>
     <label class="fld"><span>${t('date')}</span><input class="in-f" type="date" id="dt" value="${TODAY}"></label>
     ${recv ? '' : remBlock(cur > TODAY_YM ? cur : TODAY_YM, true)}
@@ -77,6 +78,11 @@
         const wa = r.querySelector('#wvA');
         if (wa) wa.onclick = () => doW(true);
         setTimeout(() => r.querySelector('#amt').select(), 60);
+        /* the question goes away again if the amount is brought back within what is left */
+        if (!recv)
+          r.querySelector('#amt').addEventListener('input', () => {
+            if (numv(r, 'amt') <= left + 0.004) r.querySelector('#ovW').hidden = true;
+          });
         const getRem = recv ? () => null : bindRem(r, def);
         r.querySelector('#f').onsubmit = e => {
           e.preventDefault();
@@ -100,9 +106,20 @@
               link: {k: 'gamr', id}
             });
           } else {
+            /* more than everything left: ask what the extra is (usually fees or interest) instead of refusing */
+            let extra = 0;
             if (a > left + 0.004) {
-              toast(t('overLeft') + ' ' + fmt(left));
-              return;
+              const w = r.querySelector('#ovW');
+              if (w.hidden) {
+                r.querySelector('#ovT').textContent = t('ovQ')
+                  .replace('%l', fmt(left))
+                  .replace('%x', fmt(Math.round((a - left) * 100) / 100));
+                w.hidden = false;
+                r.querySelector('#ovC').focus();
+                return;
+              }
+              extra = Math.round((a - left) * 100) / 100;
+              a = left;
             }
             const alloc = allocate(k, o, a),
               ms = Object.keys(alloc),
@@ -136,6 +153,11 @@
                 (ms.length === 1 && alloc[ms[0]] < oblPer(k, o) - 0.004 ? ' (' + t('partial') + ')' : ''),
               link: {k, id, alloc}
             });
+            if (extra > 0) {
+              const ex = {id: uid(), acc, type: 'expense', cat: val(r, 'ovC'), amount: extra, date, note: o.name + ' · ' + t('ovNote')};
+              S.tx.push(ex);
+              logTx('add', null, ex);
+            }
           }
           closeSheet();
           commit(t('saved'));
