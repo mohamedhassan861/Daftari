@@ -62,6 +62,8 @@
         else driveResume();
       },
       driveRestore: driveRestore,
+      driveTidy: driveTidyAsk,
+      driveKeepAll: driveKeepAll,
       driveUnlink: driveUnlink,
       driveSwitch: driveSwitch,
       driveResume: driveResume,

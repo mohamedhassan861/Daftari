@@ -123,6 +123,7 @@
       if (S && hiddenAt && (!hiddenOut || Date.now() - hiddenAt > 300000)) lockNow();
       EXT = 0;
       cover(false);
+      dayCheck();
       checkUpdate();
       if (!S) setTimeout(LOCKBIO, 250);
     }
@@ -130,6 +131,8 @@
   /* updates: the published version is in version.json; while locked the app reloads itself, while open it shows a banner and updates at the next lock */
   let NEWVER = null;
   setInterval(checkUpdate, 30 * 60000);
+  let DAYBUSY = false;
+  setInterval(dayCheck, 60000);
 
   checkUpdate();
   if (!(window.crypto && crypto.subtle)) {
@@ -140,6 +143,7 @@
   if (location.hostname === 'localhost')
     window.__T = {
       seed,
+      backupsToTrash,
       get S() {
         return S;
       },

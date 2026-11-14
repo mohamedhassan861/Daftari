@@ -200,8 +200,8 @@
     driveNone: ['مفيش نسخ على Drive لسه.', 'No backups on Drive yet.'],
     driveSyncNow: ['احفظ على Drive دلوقتي', 'Save to Drive now'],
     driveKeep: [
-      'آخر 100 نسخة بتفضل محفوظة على الـ Drive، وتقدر ترجع لأي واحدة منهم.',
-      'The latest 100 copies stay on Drive, and you can go back to any of them.'
+      'كل النسخ بتفضل محفوظة على Drive، وتقدر ترجع لأي واحدة منهم.',
+      'Every copy stays on Drive, and you can go back to any of them.'
     ],
     driveAccount: ['الحساب المربوط', 'Linked account'],
     driveSwitch: ['غيّر الحساب', 'Change account'],

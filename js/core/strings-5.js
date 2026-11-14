@@ -128,6 +128,19 @@
     cStPays: ['مدفوعات', 'Payments'],
     cStBal: ['رصيد الكشف (المطلوب سداده)', 'Statement balance (to pay)'],
     cStBuysN: ['مشتريات %v', 'purchases %v'],
+    driveKeepTidy: [
+      'النسخ القديمة بتتنضّف لوحدها: بتفضل كل نسخ آخر 7 أيام، وآخر نسخة من كل يوم لـ 3 شهور، وآخر نسخة من كل شهر قبل كده.',
+      'Old copies are cleared automatically: every copy from the last 7 days stays, then the last copy of each day for 3 months, then the last copy of each month.'
+    ],
+    tidyBtn: ['نضّف النسخ القديمة', 'Clear old copies'],
+    keepAllBtn: ['خلّي كل النسخ', 'Keep every copy'],
+    tidyQ: [
+      'عندك %n نسخة على Drive. هيفضل %k: كل نسخ آخر 7 أيام، وآخر نسخة من كل يوم لـ 3 شهور، وآخر نسخة من كل شهر قبل كده. الباقي (%g) هيروح سلة Drive، وتقدر ترجّعه منها خلال 30 يوم. وبعد كده التنضيف يبقى تلقائي.',
+      'You have %n copies on Drive. %k stay: every copy from the last 7 days, the last copy of each day for 3 months, and the last copy of each month before that. The other %g go to the Drive bin, where they can be restored for 30 days. After this, clearing is automatic.'
+    ],
+    tidyYes: ['نضّف', 'Clear'],
+    tidyDone: ['اتنقلت %n نسخة قديمة لسلة Drive', '%n old copies moved to the Drive bin'],
+    tidyNone: ['مفيش نسخ قديمة تتشال دلوقتي (عندك %n). التنضيف بقى تلقائي.', 'No old copies to clear now (you have %n). Clearing is now automatic.'],
     bmSplitDone: ['اتفصّلت', 'Split done']
   };
   let LANG = 'ar';

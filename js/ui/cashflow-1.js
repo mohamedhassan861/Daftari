@@ -175,13 +175,14 @@
   }`;
   }
   /* one line of a breakdown: label, amount, and where tapping it goes */
+  /* labels carry account, category and people names typed by the user (or by a shared-ledger member), so they are escaped */
   function whyLine(x) {
     const go = x.w
       ? `data-act="why" data-w="${x.w}"`
       : x.act
         ? `data-act="${x.act}" ${x.ty ? `data-ty="${x.ty}"` : ''} ${x.id ? `data-id="${x.id}"` : ''}`
         : '';
-    return `<div class="row ${go ? 'tap' : ''}" ${go} ${x.total ? 'data-total="1"' : ''} style="padding:7px 12px"><div class="main"><span class="t" style="${x.strong ? 'font-weight:700' : ''}">${x.l}${go ? ' ›' : ''}</span>${x.s ? `<span class="s">${x.s}</span>` : ''}</div><b class="amt ${(x.inv ? x.v > 0 : x.v < 0) ? 'neg' : x.strong || x.plain ? '' : 'pos'}">${x.strong || x.plain ? money(x.v) : (x.v < 0 ? '− ' : '+ ') + money(Math.abs(x.v))}</b></div>`;
+    return `<div class="row ${go ? 'tap' : ''}" ${go} ${x.total ? 'data-total="1"' : ''} style="padding:7px 12px"><div class="main"><span class="t" style="${x.strong ? 'font-weight:700' : ''}">${esc(x.l)}${go ? ' ›' : ''}</span>${x.s ? `<span class="s">${esc(x.s)}</span>` : ''}</div><b class="amt ${(x.inv ? x.v > 0 : x.v < 0) ? 'neg' : x.strong || x.plain ? '' : 'pos'}">${x.strong || x.plain ? money(x.v) : (x.v < 0 ? '− ' : '+ ') + money(Math.abs(x.v))}</b></div>`;
   }
   function bridgeHTML() {
     const P = perCash(),

@@ -51,7 +51,7 @@
         FRESH_DRIVE = false;
         try {
           const f = await ensureFolder();
-          const has = (await driveList(f, 10)).some(x => !isSysFile(x.name));
+          const has = (await driveList(f, 50)).some(x => isBackupFile(x.name));
           if (has) {
             toast(t('foundBackup'));
             driveRestore();
@@ -140,5 +140,19 @@
       const ks = await caches.keys();
       await Promise.all(ks.map(k => caches.delete(k)));
     } catch (e) {}
+    location.reload();
+  }
+  /* "today" is fixed when the page loads. If the day changes while the app stays open (left in the background
+     overnight), load again so new entries, reminders and "days left" use the right date. A form being filled is left
+     alone until it is closed, and an open session comes back without asking for the PIN. */
+  const dayNow = () => {
+    const d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  };
+  async function dayCheck() {
+    if (DAYBUSY || dayNow() === TODAY) return;
+    if (S ? !$('#sheet').hidden : $('#lp1') && $('#lp1').value) return;
+    DAYBUSY = true;
+    if (S) await keepSession();
     location.reload();
   }

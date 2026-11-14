@@ -1,0 +1,16 @@
+# Runs the checks in tests/ on every push, so a change that breaks something is seen at once.
+name: tests
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright && playwright install --with-deps chromium
+      - run: bash tests/run_all.sh

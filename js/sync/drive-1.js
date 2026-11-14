@@ -3,7 +3,14 @@
     try {
       localStorage.setItem(
         DRV_KEY,
-        JSON.stringify({linked: drv.linked, folderId: drv.folderId, lastUp: drv.lastUp, email: drv.email})
+        JSON.stringify({
+          linked: drv.linked,
+          folderId: drv.folderId,
+          lastUp: drv.lastUp,
+          email: drv.email,
+          keep: drv.keep,
+          tidied: drv.tidied
+        })
       );
     } catch (e) {}
   };
@@ -207,16 +214,6 @@
       )
     ).json();
     return j.files || [];
-  }
-  async function pruneOld(folder) {
-    const all = (await driveList(folder, DKEEP + 50)).filter(f => !isSysFile(f.name));
-    for (const f of all.slice(DKEEP)) {
-      await gfetch('/drive/v3/files/' + f.id, {
-        method: 'PATCH',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({trashed: true})
-      });
-    }
   }
   async function saveMonthSummary(m, manual) {
     if (!drv.linked) {

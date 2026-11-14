@@ -258,7 +258,7 @@
               plain: 1,
               act: 'stmtAcc',
               id: a.id,
-              s: c.due ? t('cardDue') + ' ' + fmt(c.due) + ' · ' + esc(shortDate(c.dueDate)) : ''
+              s: c.due ? t('cardDue') + ' ' + fmt(c.due) + ' · ' + shortDate(c.dueDate) : ''
             });
           })
           .filter(x => Math.abs(x.v) >= 0.5);

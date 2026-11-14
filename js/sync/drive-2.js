@@ -47,6 +47,14 @@
       await driveUpload();
       drv.needAuth = false;
       if (manual) toast(t('driveSaved'));
+      /* old copies are cleared once a day, and only after the user agreed to the keep rule */
+      if (drv.keep === 'tidy' && drv.tidied !== TODAY) {
+        drv.tidied = TODAY;
+        drvSave();
+        ensureFolder()
+          .then(f => tidyBackups(f, 300))
+          .catch(() => {});
+      }
     } catch (e) {
       if (e.message === 'auth' && (await ensureAccess())) {
         try {
@@ -150,7 +158,7 @@
         else await requestToken('');
       }
       const folder = await ensureFolder();
-      const files = (await driveList(folder, 1000)).filter(f => !isSysFile(f.name));
+      const files = (await driveList(folder, 1000)).filter(f => isBackupFile(f.name));
       openSheet(
         t('driveRestore'),
         files.length
@@ -188,3 +196,85 @@
   }
   const driveLastLbl = () =>
     drv.lastUp ? dateOf(new Date(drv.lastUp)) + ' ' + hmOf(new Date(drv.lastUp)) : t('never');
+  /* every backup copy in the Drive folder (Drive returns at most 1000 files per page) */
+  async function driveBackups(folder) {
+    const q = encodeURIComponent("'" + folder + "' in parents and trashed=false");
+    let out = [],
+      page = '';
+    for (let i = 0; i < 10; i++) {
+      const j = await (
+        await gfetch(
+          '/drive/v3/files?q=' +
+            q +
+            '&pageSize=1000&fields=' +
+            encodeURIComponent('nextPageToken,files(id,name,createdTime)') +
+            '&spaces=drive' +
+            (page ? '&pageToken=' + encodeURIComponent(page) : '')
+        )
+      ).json();
+      out = out.concat((j.files || []).filter(f => isBackupFile(f.name)));
+      page = j.nextPageToken;
+      if (!page) break;
+    }
+    return out;
+  }
+  /* moves the copies outside the keep rule to the Drive bin (they can be restored from there for 30 days) */
+  async function tidyBackups(folder, max) {
+    const gone = backupsToTrash(await driveBackups(folder), TODAY).slice(0, max);
+    for (let i = 0; i < gone.length; i += 5)
+      await Promise.all(
+        gone.slice(i, i + 5).map(f =>
+          gfetch('/drive/v3/files/' + f.id, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({trashed: true})
+          })
+        )
+      );
+    return gone.length;
+  }
+  /* nothing is binned before the user sees the numbers and agrees; after that it runs by itself */
+  async function driveTidyAsk() {
+    try {
+      if (!(await ensureAccess())) {
+        toast(t('driveErr'));
+        return;
+      }
+      toast(t('working'));
+      const folder = await ensureFolder(),
+        all = await driveBackups(folder),
+        gone = backupsToTrash(all, TODAY);
+      if (!gone.length) {
+        drv.keep = 'tidy';
+        drvSave();
+        render();
+        toast(t('tidyNone').replace('%n', all.length));
+        return;
+      }
+      confirmSheet(
+        t('tidyQ')
+          .replace('%n', all.length)
+          .replace('%k', all.length - gone.length)
+          .replace('%g', gone.length),
+        t('tidyYes'),
+        async () => {
+          drv.keep = 'tidy';
+          drv.tidied = TODAY;
+          drvSave();
+          render();
+          try {
+            toast(t('tidyDone').replace('%n', await tidyBackups(folder, 3000)));
+          } catch (e) {
+            toast(t('driveErr'));
+          }
+        }
+      );
+    } catch (e) {
+      toast(t('driveErr'));
+    }
+  }
+  function driveKeepAll() {
+    drv.keep = 'all';
+    drvSave();
+    render();
+  }
