@@ -37,7 +37,9 @@ async def open_app(p, when='2026-11-14T10:00:00', sample=True, init='', route=No
     await pg.goto(URL)
     await pg.wait_for_selector('#lp1')
     await pg.fill('#lp1', '123456'); await pg.fill('#lp2', '123456'); await pg.click('#lkF button.pri')
-    await pg.wait_for_function('window.__T && window.__T.S', timeout=20000)
+    for _ in range(200):  # polled with evaluate: the page policy forbids the eval that wait_for_function needs
+        if await pg.evaluate('!!(window.__T && window.__T.S)'): break
+        await pg.wait_for_timeout(100)
     if sample:
         await pg.evaluate("(()=>{const T=window.__T;T.S=T.seed();T.S.sample=false;T.migrate();T.commit()})()")
     await pg.wait_for_timeout(400)

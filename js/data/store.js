@@ -156,12 +156,24 @@
     saving = saving
       .then(async () => {
         const {iv, ct} = await seal(key, snap);
+        localStorage.setItem(VAULT, JSON.stringify({v: 2, salt: toB64(salt), iter: ITER, iv, ct}));
         try {
-          localStorage.setItem(VAULT, JSON.stringify({v: 2, salt: toB64(salt), iter: ITER, iv, ct}));
           localStorage.setItem('daftar-elbeit-lang', snap.lang);
         } catch (e) {}
       })
-      .catch(() => {});
+      .catch(saveFailed);
+  }
+  /* a change that did not reach the phone's storage would be lost on the next open, so the user is told (at most once a minute) */
+  function saveFailed() {
+    if (Date.now() - saveFailed.at < 60000) return;
+    saveFailed.at = Date.now();
+    toast(t('saveFail'), 15000);
+  }
+  /* asks the browser not to clear the saved ledger when the phone runs low on space; browsers may refuse, nothing depends on it */
+  function keepStorage() {
+    try {
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    } catch (e) {}
   }
   function migrate() {
     if (!S.base) S.base = 'EGP';

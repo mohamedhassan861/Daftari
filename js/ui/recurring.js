@@ -44,25 +44,6 @@
       }
     );
   }
-  function recPendingHTML() {
-    const L = recPending();
-    if (!L.length || ACT !== 'me') return '';
-    return `<div class="list" style="border:1px solid var(--accent);margin-bottom:10px"><div class="grp" style="background:var(--accent-soft)"><span>↻ ${t('recWaiting')}</span><span class="num">${L.length}</span></div>${L.map(
-      r => {
-        const a = accOf(r.tpl.acc),
-          late = r.next < TODAY;
-        let more = 0,
-          d = advance(r.next, r.freq, r.day),
-          g = 0;
-        while (d <= TODAY && g++ < 400 && (!r.end || d <= r.end)) {
-          more++;
-          d = advance(d, r.freq, r.day);
-        }
-        return `<div class="row" style="flex-wrap:wrap;gap:6px"><div class="main" style="min-width:60%"><span class="t">${esc(r.tpl.note || (r.tpl.type === 'transfer' ? t('transfer') : catPath(r.tpl.cat)))}</span><span class="s">${esc(shortDate(r.next))}${r.snooze && r.snooze[r.next] ? ' · ' + t('recWasLater') : ''} · ${esc(a.name)} · ${esc(freqName(r.freq))}${more ? ' · ' + t('recMore').replace('%n', more) : ''}</span></div><b class="amt ${r.tpl.type === 'income' ? 'pos' : ''}">${moneyC(+r.tpl.amount, a.currency)}</b>
-      <div style="flex-basis:100%;display:flex;gap:6px"><button class="btn sm pri" data-act="recDo" data-id="${r.id}">✓ ${t('recDo')}</button><button class="btn sm" data-act="recLater" data-id="${r.id}">⏰ ${t('recLater')}</button><button class="btn sm" data-act="recSkip" data-id="${r.id}" style="margin-inline-start:auto;color:var(--muted)">${t('recSkip')}</button></div></div>`;
-      }
-    ).join('')}</div>`;
-  }
   function recDoSheet(id) {
     const r = S.recur.find(x => x.id === id);
     if (!r) return;

@@ -48,8 +48,6 @@
     return c === BASE() ? +x.amount || 0 : (+x.amount || 0) * (+x.rate || rateAt(c, x.date));
   };
   const sumB = a => a.reduce((v, x) => v + baseAmt(x), 0);
-  const multiCur = () =>
-    S.accounts.some(a => a.currency !== BASE()) || S.loans.some(l => l.currency && l.currency !== BASE());
   function missingRates() {
     const set = new Set();
     S.accounts.forEach(a => {

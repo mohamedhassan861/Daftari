@@ -1,5 +1,4 @@
 /* Every screen text in Arabic and English. (part 4 of 5; continues from strings-3.js) */
-    sumTitle: ['الفترة في سطرين', 'The period at a glance'],
     cStmts: ['الكشوفات', 'Statements'],
     cStOpen: ['كشف %c · لسه بيتجمع', 'Statement %c · still open'],
     cStDue: ['كشف %c · اتقفل', 'Statement %c · closed'],
@@ -139,14 +138,6 @@
       'Money in is less than money out this month; the gap comes out of the balance before it if there is enough.'
     ],
     whyRows: ['الحركات والبنود اللي عملت الرقم', 'Entries behind this number'],
-    whyInNote: [
-      'فلوس دخلت الكاش أو البنك أو المحفظة من دخل حقيقي؛ السلف والجمعيات والتحويلات بين حساباتك ليها سطور لوحدها.',
-      "Money that came into cash, bank or wallets from real income; loans, gam'eyas and moves between your accounts have their own lines."
-    ],
-    whyOutNote: [
-      'فلوس خرجت من الكاش أو البنك أو المحفظة: مصروفات وأقساط وسداد كروت؛ مشتريات الكارت بتتحسب يوم السداد.',
-      'Money that left cash, bank or wallets: spending, installments and card payments; card purchases count on the day you pay the card.'
-    ],
     safeObl: ['التزامات باقية الشهر ده', 'Commitments left this month'],
     safeRec: ['مصاريف متكررة باقية', 'Regular spending left'],
     safeWhyNote: [
@@ -158,7 +149,6 @@
     asPlanned: ['زي المتوقع', 'As planned'],
     betterBy: ['أحسن من المتوقع بـ', 'Better than planned by'],
     worseBy: ['أقل من المتوقع بـ', 'Worse than planned by'],
-    finUnplanned: ['منها سلف/جمعيات مش متخططة', "of which unplanned loans/gam'eyas"],
     asOfToday: ['على النهارده', 'as of today'],
     perSummary: ['ملخص الفترة', 'Period summary'],
     projEndS: ['المتوقع آخر الفترة', 'Expected at end'],
@@ -203,7 +193,6 @@
     projStart: ['المتوقع أول الفترة', 'Expected at start'],
     actWord: ['فعلي', 'actual'],
     expWord: ['متوقع', 'expected'],
-    expShort: ['(فعلي + متوقع)', '(actual + expected)'],
     availEndMonth: ['المتاح آخر الشهر (كاش وبنوك)', 'Available at month end (cash & banks)'],
     cardsOwe: ['عليك للكروت', 'Owed on cards'],
     nextPay: ['أقرب سداد', 'Next payment'],
@@ -261,17 +250,9 @@
     applyTo: ['يتطبق على', 'Apply to'],
     fromThisOn: ['الشهر ده واللي بعده', 'This month and after'],
     resetPlan: ['رجّعه زي الأصل', 'Back to usual'],
-    fcSheetHint: [
-      'الجدول بالفلوس الفعلية (كاش وبنوك). الفرق الموجب يعني أحسن من المتوقع. تحت تقدر تعدّل المتوقع: السطور العادية، والمبالغ الإضافية اللي ضفتها بإيدك (اللي اتدفع خلاص مش بيظهر تحت).',
-      'The totals above (cash & banks) already include everything below. Below are the editable details: the usual plan and the extra amounts you added.'
-    ],
     cardPayLine: ['سداد الكارت المتوقع', 'Expected card payment'],
     cashOrBank: ['كاش أو بنك', 'Cash or bank'],
     paidIn: ['هيتسدد في', 'paid in'],
-    curUsed: [
-      'في الرصيد المتوقع للشهر ده بنحسب الأكبر بين المتوقع والفعلي لكل سطر:',
-      'For this month the forecast uses the larger of planned and actual per line:'
-    ],
     showLines: ['التفاصيل', 'Details'],
     notYet: ['الشهر لسه مجاش', 'Not here yet'],
     cashBanks: ['كاش وبنوك', 'cash & banks'],
@@ -282,7 +263,6 @@
       'Planned comes from the lines above: installments, recurring, budgets and extra amounts. ✓ means paid, 💳 means by card.'
     ],
     willLast: ['هل الفلوس هتكفي؟', 'Will the money last?'],
-    enough: ['الفلوس هتكفي لحد آخر الشهر الجاي', 'Money lasts to the end of next month'],
     notEnough: ['الفلوس مش هتكفي', 'Money will run short'],
     nowHave: ['معاك دلوقتي', 'You have now'],
     warnBefore: ['نبهني قبلها بـ', 'Warn me'],

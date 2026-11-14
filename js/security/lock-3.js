@@ -39,6 +39,7 @@
     runRecurring();
     maybeUpdateRates();
     setTimeout(pushKeep, 4000);
+    keepStorage();
     writeReminders();
     maybeAskClose();
     loadRT().then(async () => {

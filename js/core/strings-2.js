@@ -39,18 +39,10 @@
     dueNow: ['المستحق لحد دلوقتي', 'Due so far'],
     remainingAll: ['الباقي كله', 'Total remaining'],
     partial: ['جزئي', 'partial'],
-    partialHint: [
-      'لو دفعت جزء، الباقي بيفضل مستحق. ولو دفعت أكتر، الزيادة بتتخصم من الشهور اللي بعده.',
-      'Pay part and the rest stays due; pay more and the extra covers the next months.'
-    ],
-    overLeft: ['المبلغ أكبر من الباقي كله، وهو', 'The amount is more than the total remaining, which is'],
     beforeApp: ['قبل البرنامج', 'before the app'],
     recurring: ['متكرر', 'Recurring'],
     repeat: ['تكرار', 'Repeat'],
     noRepeat: ['من غير تكرار', 'No repeat'],
-    fWeekly: ['كل أسبوع', 'Weekly'],
-    fMonthly: ['كل شهر', 'Monthly'],
-    fYearly: ['كل سنة', 'Yearly'],
     nextOn: ['الجاي', 'Next'],
     endOn: ['لحد (اختياري)', 'Until (optional)'],
     stopRec: ['وقّف التكرار', 'Stop repeating'],
@@ -58,7 +50,6 @@
       'التكرار هيقف، والحركات اللي اتسجلت قبل كده هتفضل. نكمل؟',
       'Repeating stops; entries already added stay. Continue?'
     ],
-    recAdded: ['اتسجلت حركات متكررة:', 'Recurring entries added:'],
     recHint: [
       'الحركات دي بتتسجل لوحدها في ميعادها. ضيف حركة واختار "تكرار"، أو دوس + هنا.',
       'These are added automatically on their date. Add an entry and choose Repeat, or tap + here.'
@@ -82,12 +73,10 @@
     certEnd: ['تستحق في', 'Matures on'],
     certPay: ['صرف العائد', 'Return paid'],
     atMaturity: ['في الاستحقاق', 'At maturity'],
-    fQuarterly: ['كل 3 شهور', 'Quarterly'],
     certAuto: ['سجّل العائد لوحده في حساب', 'Add the return automatically to'],
     noAuto: ['لأ، هسجله بإيدي', 'No, I will add it'],
     certReturn: ['عائد شهادة', 'Certificate return'],
     netWorth: ['صافي الثروة', 'Net worth'],
-    netWorthNow: ['صافي ثروتك النهارده', 'Your net worth today'],
     nwAssets: ['الحسابات والذهب والشهادات', 'Accounts, gold & certificates'],
     nwNeg: ['أرصدة بالسالب', 'Negative balances'],
     nwObl: ['أقساط متبقية', 'Installments left'],
@@ -190,13 +179,7 @@
       'الاسترجاع بيبقى في دفترك الشخصي بس. ارجعله الأول.',
       'Restore works in your personal ledger only; switch to it first.'
     ],
-    regTitle: ['سجّل دخول بحساب جوجل', 'Sign in with Google'],
-    regHint: [
-      'مرة واحدة بس، علشان نعرف مين بيستخدم البرنامج. بنحفظ إيميلك واسمك وتاريخ التسجيل بس، وبياناتك المالية بتفضل على موبايلك ومتشفرة.',
-      'Just once, so we know who uses the app. We keep your email, name and sign-up date only; your financial data stays encrypted on your phone.'
-    ],
     regBtn: ['سجّل بجوجل', 'Sign in with Google'],
-    regLater: ['مش دلوقتي (مفيش إنترنت)', 'Later (offline)'],
     regLoading: ['لحظة، جوجل لسه بيحمّل، جرّب تاني', 'Google is still loading; try again'],
     regFail: ['معرفناش نسجّل، اتأكد من الإنترنت وجرّب تاني', 'Could not sign in; check the connection and try again'],
     regDone: ['اتسجلت بـ', 'Signed in as'],
@@ -245,7 +228,6 @@
     safeObl: ['أقساط وجمعيات مستحقة الشهر ده', "Installments & gam'eyas due this month"],
     safeRec: ['مصاريف متكررة لسه جاية', 'Recurring expenses still to come'],
     safeGoals: ['المطلوب للأهداف الشهر ده', 'Needed for goals this month'],
-    safeIncome: ['إيرادات متكررة جاية (مش محسوبة)', 'Recurring income to come (not counted)'],
     safeHint: [
       '"تقدر تصرف" = المتاح النهارده ناقص اللي لازم يتدفع لحد آخر الشهر، وده اللي ينفع تصرفه على البنود. "المتوقع آخر الشهر" بيفترض إنك صرفت الباقي من حدود البنود وقبضت الدخل الجاي، علشان كده الرقمين بيختلفوا بالفرق اللي فوق.',
       'This is your available money minus what must be paid by month end. Expected income is left out to stay safe.'

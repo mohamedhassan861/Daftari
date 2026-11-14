@@ -1,10 +1,11 @@
 /* Daftari loader.
-   The app is kept in several files so each part can be read and reviewed on its own, but it still runs as ONE script:
-   the parts are fetched in order, joined and run together. That keeps everything inside the single private closure the
-   app has always used, so the decrypted data, the PIN and the keys never become globals that other scripts on the page
-   (such as Google's sign-in script) could read. The order below matters. */
+   The source is kept in several files so each part can be read and reviewed on its own, but it runs as ONE script:
+   tools/build.py joins the parts below, in this order, into js/app.js, and that single file is what phones load.
+   Running as one script keeps everything inside the single private closure the app has always used, so the decrypted
+   data, the PIN and the keys never become globals that other scripts on the page (such as Google's sign-in script)
+   could read. The order below matters. After changing any part, run: python3 tools/build.py */
 (function(){
-  var V='1.13';
+  var V='1.14';
   var FILES=[
     "core/start.js",
     "core/util.js",
@@ -96,8 +97,7 @@
   ];
   /* the app's own registration waits for the page "load" event, which fires before the parts arrive; register here */
   if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
-  Promise.all(FILES.map(function(f){return fetch('js/'+f+'?v='+V).then(function(r){if(!r.ok)throw new Error(f);return r.text()})}))
-    .then(function(parts){var s=document.createElement('script');s.textContent=parts.join('');document.body.appendChild(s)})
-    .catch(function(){var p=document.createElement('p');p.style.cssText='position:fixed;inset:auto 0 40% 0;text-align:center;padding:20px;font-family:system-ui;z-index:99999;background:#fff;color:#17201C';
-      p.textContent='\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c. \u0627\u062a\u0623\u0643\u062f \u0645\u0646 \u0627\u0644\u0625\u0646\u062a\u0631\u0646\u062a \u0648\u0627\u0641\u062a\u062d\u0647 \u062a\u0627\u0646\u064a. \u00b7 The app could not load; check the connection and open it again.';document.body.appendChild(p)});
+  function fail(){var p=document.createElement('p');p.style.cssText='position:fixed;inset:auto 0 40% 0;text-align:center;padding:20px;font-family:system-ui;z-index:99999;background:#fff;color:#17201C';
+      p.textContent='\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c. \u0627\u062a\u0623\u0643\u062f \u0645\u0646 \u0627\u0644\u0625\u0646\u062a\u0631\u0646\u062a \u0648\u0627\u0641\u062a\u062d\u0647 \u062a\u0627\u0646\u064a. \u00b7 The app could not load; check the connection and open it again.';document.body.appendChild(p)}
+  var s=document.createElement('script');s.src='js/app.js?v='+V;s.onerror=fail;document.body.appendChild(s);
 })();

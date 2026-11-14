@@ -17,17 +17,18 @@ def sub(path, pattern, repl, count=1):
 
 sub('js/core/start.js', r"const APP_VER\s*=\s*'[^']*';", f"const APP_VER = '{v}';")
 sub('js/boot.js', r"var V='[^']*';", f"var V='{v}';")
-sub('index.html', r'\?v=[0-9.]+"', f'?v={v}"', 3)
+sub('index.html', r'\?v=[0-9.]+"', f'?v={v}"', 2)
 (R / 'version.json').write_text(json.dumps({'v': v}) + '\n', encoding='utf-8')
 boot = (R / 'js/boot.js').read_text(encoding='utf-8')
 files = json.loads(re.search(r'var FILES=(\[[\s\S]*?\]);', boot).group(1))
-css = re.findall(r'href="(css/[^"?]+)\?v=', (R / 'index.html').read_text(encoding='utf-8'))
+import subprocess
+subprocess.run([sys.executable, str(R / 'tools/build.py')], check=True)
 shell = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png',
-         f'./js/boot.js?v={v}', f'./data/rates-history.json?v={v}'] + [f'./{c}?v={v}' for c in css] + [f'./js/{f}?v={v}' for f in files]
+         f'./js/boot.js?v={v}', f'./data/rates-history.json?v={v}', f'./css/app.css?v={v}', f'./js/app.js?v={v}']
 sw = (R / 'sw.js').read_text(encoding='utf-8')
 n = int(re.search(r"const CACHE = 'daftari-v(\d+)';", sw).group(1)) + 1
 sw = re.sub(r"const CACHE = 'daftari-v\d+';", f"const CACHE = 'daftari-v{n}';", sw)
 sw = re.sub(r"const SHELL = \[[^\]]*\];", 'const SHELL = ' + json.dumps(shell, ensure_ascii=False) + ';', sw)
 (R / 'sw.js').write_text(sw, encoding='utf-8')
 for f in files: assert (R / 'js' / f).exists(), f
-print('version', v, '· cache', n, '·', len(files), 'js files ·', len(css), 'css files')
+print('version', v, '· cache', n, '·', len(files), 'source files joined into js/app.js')

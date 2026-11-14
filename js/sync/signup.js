@@ -101,51 +101,6 @@
     REG && !needDriveAtSignIn() && !(LOCKSETUP && useWorker() && !drv.linked)
       ? `<div class="acct"><span class="g">G</span><span class="em" dir="ltr">${esc(REG.email)}</span><span class="ok">✓</span></div>`
       : `<button type="button" class="btn block gbtn" id="gbtn"><span class="g">G</span>${LOCKSETUP ? t('regDriveBtn') : t('regBtn')}</button>`;
-  function regGate(done) {
-    const box = $('#lock');
-    box.hidden = false;
-    $('#lkT').textContent = t('regTitle');
-    $('#lkH').textContent = t('regHint');
-    $('#lkE').textContent = '';
-    $('#lkForgot').hidden = true;
-    $('#lkF').innerHTML =
-      `<button class="btn pri block" type="submit">${t('regBtn')}</button>${navigator.onLine ? '' : `<button class="btn block" type="button" id="regSkip">${t('regLater')}</button>`}<p class="hint" style="text-align:center"><a href="privacy.html" target="_blank" rel="noopener" style="color:var(--accent)">${t('privacy')}</a></p>`;
-    const sk = $('#regSkip');
-    if (sk)
-      sk.onclick = () => {
-        box.hidden = true;
-        $('#lkF').innerHTML = '';
-        done && done();
-      };
-    $('#lkF').onsubmit = async e => {
-      e.preventDefault();
-      const err = m => ($('#lkE').textContent = m);
-      if (!driveReady()) {
-        err(t('regLoading'));
-        return;
-      }
-      try {
-        err(t('working'));
-        const j = await doRegister();
-        box.hidden = true;
-        $('#lkF').innerHTML = '';
-        toast(t('regDone') + ' ' + j.email);
-        done && done();
-        if (PENDING_RT && KEYOBJ) {
-          RT = PENDING_RT;
-          PENDING_RT = null;
-          await saveRT();
-        }
-        if (FRESH_DRIVE && KEYOBJ && S) {
-          FRESH_DRIVE = false;
-          syncDrive(true);
-          render();
-        }
-      } catch (x) {
-        err(t('regFail'));
-      }
-    };
-  }
   async function usersSheet() {
     try {
       const tok = await idToken('', REG && REG.email);

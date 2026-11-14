@@ -174,16 +174,6 @@
     });
     return out;
   }
-  const byRoot = (list, type, amt) => {
-    const o = {};
-    list
-      .filter(x => x.type === type)
-      .forEach(x => {
-        const k = catRoot(x.cat);
-        o[k] = (o[k] || 0) + amt(x);
-      });
-    return o;
-  };
   function planVsActual(months) {
     const P = {income: {}, expense: {}, fin: {}},
       A = {income: {}, expense: {}, fin: {}},

@@ -76,7 +76,6 @@
       'دي أول سطور من الملف. اختار فوق كل عمود هو إيه: التاريخ، والمبلغ (أو خارج وداخل)، والوصف والرصيد لو موجودين.',
       'These are the first lines of the file. Above each column, choose what it is: the date, the amount (or out and in), and the description and balance if there.'
     ],
-    bmHead: ['سطر العناوين', 'Heading row'],
     bmDesc: ['الوصف', 'Description'],
     bmOut: ['مدين (خارج)', 'Debit (out)'],
     bmIn: ['دائن (داخل)', 'Credit (in)'],
@@ -138,6 +137,10 @@
     ],
     msAutoOff: ['وقّف حفظه لوحده', 'Stop saving it automatically'],
     msAutoOn: ['احفظه لوحده كل شهر', 'Save it automatically each month'],
+    saveFail: [
+      'آخر تغيير ما اتحفظش على الموبايل، غالبًا المساحة مليانة. خد نسخة احتياطية دلوقتي من الإعدادات قبل ما تقفل البرنامج.',
+      'Your last change was not saved on this phone, most likely because storage is full. Take a backup from Settings now, before closing the app.'
+    ],
     tidyBtn: ['نضّف النسخ القديمة', 'Clear old copies'],
     keepAllBtn: ['خلّي كل النسخ', 'Keep every copy'],
     tidyQ: [

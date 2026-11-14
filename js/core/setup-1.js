@@ -81,7 +81,6 @@
   };
 
   /* ---------- recurring entries ---------- */
-  const FREQS = ['weekly', 'monthly', 'quarterly', 'yearly'];
   /* a repeat is "every N units": stored as "N:u" (u = d day, w week, m month, y year); the old names still work */
   const FREQ_OLD = {weekly: '1:w', monthly: '1:m', quarterly: '3:m', yearly: '1:y', daily: '1:d', biweekly: '2:w'};
   /* what to show when the app opens: repeats due (or postponed to) today or earlier, and those whose reminder day has come */
@@ -142,7 +141,6 @@
   ];
   const KW_IN =
     /قبضت|استلمت|جالي|جالى|اتحول لي|اتحولي|حولولي|إيداع|ايداع|اضافة|إضافة|دائن|credited|received|deposit|refund|استرداد|مرتجع|تم استلام|incoming/i;
-  const KW_OUT = /صرفت|دفعت|اشتريت|خصم|سحب|شراء|مدين|debited|purchase|paid|withdraw|spent|تم دفع|سداد|charged/i;
   let pendingShare = null;
   (function () {
     try {
@@ -173,8 +171,6 @@
 
   /* ---------- sheet ---------- */
   /* the phone shows date fields in its own order (often month/day); show them as ddd dd/mm/yyyy and keep the phone's calendar for picking */
-  const LRI = '\u2066',
-    PDI = '\u2069';
   new MutationObserver(() =>
     document.querySelectorAll('input[type=date]:not([data-dw]),input[type=month]:not([data-dw])').forEach(dateField)
   ).observe(document.documentElement, {childList: true, subtree: true});

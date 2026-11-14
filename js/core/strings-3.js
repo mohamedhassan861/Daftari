@@ -44,14 +44,8 @@
     bioSetup: ['فعّل البصمة', 'Set up fingerprint'],
     bioDone: ['البصمة اشتغلت', 'Fingerprint unlock is on'],
     bioOffMsg: ['البصمة اتقفلت', 'Fingerprint unlock is off'],
-    usePin: ['اكتب الرقم السري', 'Type your PIN'],
-    lockChoose: ['افتح بالبصمة أو بالرقم السري', 'Open with fingerprint or PIN'],
     bioUnlock: ['افتح بالبصمة', 'Unlock with fingerprint'],
     bioFail: ['معرفناش نستخدم البصمة، اكتب الرقم السري', 'Fingerprint failed; enter your PIN'],
-    bioUnsupported: [
-      'الموبايل أو المتصفح ده مش بيدعم الفتح بالبصمة',
-      'This phone or browser does not support fingerprint unlock'
-    ],
     bioReset: [
       'غيّرت الرقم السري، فعّل البصمة تاني من الإعدادات',
       'PIN changed; turn fingerprint unlock on again in Settings'
@@ -75,8 +69,6 @@
     ],
     recNoKey: ['مفتاح الاسترجاع مش موجود على Drive بتاعك', 'The recovery key was not found in your Drive'],
     payCat: ['بند المصروف', 'Expense category'],
-    balOpen: ['رصيد أول الفترة', 'Opening balance'],
-    balClose: ['رصيد آخر الفترة', 'Closing balance'],
     asOf: ['في', 'as of'],
     fxDiff: ['فرق أسعار العملات:', 'Currency difference:'],
     loanDue: ['ميعاد السداد المتوقع', 'Expected repayment'],
@@ -101,7 +93,6 @@
       'ده حساب الفلوس الفعلية (كاش وبنوك): اللي بتشتريه بالكارت بيتحسب خرج في يوم سداد الكارت مش يوم الشرا. الشهور اللي فاتت فعلي، والشهور الجاية متوقع. الشهر الحالي (•) دخله وخرجه هما المتوقع زي الجدول اللي فوق، ولو صرفت في بند أكتر من المتوقع الزيادة بتظهر تحته وبتتحسب في الرصيد.',
       'Past months are actual, this month (•) takes the larger of actual and plan per category, later months are planned. Balance = all accounts together, cards as negative.'
     ],
-    balEndMonth: ['رصيدك آخر الشهر', 'Balance at month end'],
     carried: ['من اللي فات', 'Carried over'],
     cardsT: ['الكروت', 'Cards'],
     addCard: ['كارت جديد', 'New card'],
@@ -158,7 +149,6 @@
     recOrig: ['ميعادها الأصلي', 'originally'],
     recLeft: ['%n مستنيين', '%n waiting'],
     recWillRemind: ['هنفكّرك يوم %d', 'reminder on %d'],
-    recWaiting: ['حركات متكررة مستنياك', 'Repeats waiting for you'],
     recDo: ['سجّلها', 'Record'],
     recLater: ['أجّلها', 'Postpone'],
     recSkip: ['مش المرة دي', 'Skip this time'],
@@ -264,8 +254,6 @@
     reconHist: ['المطابقات اللي فاتت', 'Past reconciliations'],
     reconDoneOk: ['كله متطابق ✓', 'Everything matches ✓'],
     reconDoneAdj: ['اتسجّل %n فرق تسوية', '%n adjustments recorded'],
-    remLoan: ['سلفة', 'Loan'],
-    remCard: ['سداد الكارت', 'Card payment'],
     willGoOut: ['هيطلع', 'Going out'],
     inclFin: ['شامل السلف والجمعيات', "incl. loans & gam'eyas"],
     lowWhy: [
@@ -293,6 +281,5 @@
       'بدأ %m بـ %a، دخل %i وطلع %o (شامل السلف والجمعيات)%f، وخلص بـ %c.',
       '%m started with %a: %i in, %o out%f, ending with %c.'
     ],
-    sumFin: ['، وسلف وجمعيات وتحويلات %v', ", loans, gam'eyas and transfers %v"],
     sumFx: ['، وفروق عملة %v', ', currency differences %v'],
     sumLow: ['أقل رصيد في الـ 3 شهور الجاية %v يوم %d.', 'Lowest balance in the next 3 months: %v on %d.'],

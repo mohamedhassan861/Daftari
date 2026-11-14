@@ -72,7 +72,6 @@
     cats: ['البنود', 'Categories'],
     addCat: ['بند جديد', 'New category'],
     backup: ['النسخة الاحتياطية', 'Backup'],
-    exportB: ['صدّر البيانات', 'Export data'],
     importB: ['استرجع نسخة', 'Restore backup'],
     copy: ['انسخ', 'Copy'],
     copied: ['اتنسخ', 'Copied'],
@@ -116,10 +115,8 @@
     restored: ['اترجعت البيانات', 'Data restored'],
     over: ['عدّى الميزانية', 'Over budget'],
     near: ['قرّب من الحد', 'Near the limit'],
-    spent: ['اتصرف', 'Spent'],
     left: ['باقي', 'left'],
     months: ['شهر', 'months'],
-    payMonth: ['ادفع قسط', 'Pay for'],
     collectPay: ['اقبض الجمعية', 'Collect payout'],
     needName: ['اكتب الاسم', 'Enter a name'],
     needAmt: ['اكتب مبلغ أكبر من صفر', 'Enter an amount above zero'],
@@ -129,14 +126,8 @@
     ],
     turnOf: ['دورك', 'Your turn'],
     ofTotal: ['من', 'of'],
-    noBudgets: ['محددتش ميزانية لأي بند لسه.', 'No budgets set yet.'],
     theme: ['الشكل', 'Appearance'],
-    lockTitle: ['اكتب الرقم السري', 'Enter your PIN'],
     setupTitle: ['اعمل رقم سري للبرنامج', 'Create a PIN'],
-    setupHint: [
-      '6 أرقام على الأقل. كل البيانات بتتشفر بيه، ولو نسيته مش هتقدر ترجعها غير من نسخة احتياطية.',
-      'At least 6 digits. All data is encrypted with it; if you forget it, only a backup can bring it back.'
-    ],
     pin1: ['الرقم السري', 'PIN'],
     pin2: ['تأكيد الرقم السري', 'Confirm PIN'],
     open: ['افتح', 'Unlock'],
@@ -198,14 +189,12 @@
     ],
     driveNotSetup: ['ربط Google Drive لسه متجهزش في النسخة دي.', 'Google Drive is not set up in this build yet.'],
     driveNone: ['مفيش نسخ على Drive لسه.', 'No backups on Drive yet.'],
-    driveSyncNow: ['احفظ على Drive دلوقتي', 'Save to Drive now'],
     driveKeep: [
       'كل النسخ بتفضل محفوظة على Drive، وتقدر ترجع لأي واحدة منهم.',
       'Every copy stays on Drive, and you can go back to any of them.'
     ],
     driveAccount: ['الحساب المربوط', 'Linked account'],
     driveSwitch: ['غيّر الحساب', 'Change account'],
-    driveAccUnknown: ['هيظهر بعد أول حفظ على Drive', 'Shown after the next save to Drive'],
     driveAgain: [
       'اضغط "اربط Google Drive" مرة كمان علشان نكمّل الربط.',
       'Tap "Connect Google Drive" once more to finish linking.'
@@ -236,7 +225,6 @@
     pTo: ['إلى', 'To'],
     pNow: ['الفترة الحالية', 'Current period'],
     apply: ['اعرض', 'Show'],
-    pNeedDates: ['اختار تاريخ البداية والنهاية', 'Choose a start and end date'],
     netPer: ['صافي الفترة', 'Net for the period'],
     byMonth: ['حسب الشهور', 'By month'],
     shareApp: ['شارك البرنامج', 'Share the app'],
@@ -270,7 +258,6 @@
       'مينفعش تغيّر عملة حساب عليه حركات. اعمل حساب جديد بالعملة التانية.',
       'Cannot change the currency of an account with entries; add a new account for that currency.'
     ],
-    totalBal: ['إجمالي الأرصدة', 'Total balance'],
     baseCur: ['العملة الأساسية', 'Main currency'],
     defAcc: ['الحساب الافتراضي', 'Default account'],
     rates: ['أسعار الصرف', 'Exchange rates'],
