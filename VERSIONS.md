@@ -4,6 +4,7 @@
 
 | النسخة | commit | التاريخ | الوصف |
 |---|---|---|---|
+| v1.14 | `702db58c4a` | 2026-11-14 | v1.14: review fixes, phase 3 |
 | v1.13 | `2faa7b2815` | 2026-11-14 | v1.13: review fixes, phase 2 |
 | v1.12 | `b0827427c0` | 2026-11-14 | v1.12: review fixes, phase 1 |
 | v1.11 | `6bbb6a420b` | 2026-11-14 | 1.11: card statements show the balance to pay, worked out like the bank's |
