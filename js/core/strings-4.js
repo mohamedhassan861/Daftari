@@ -21,8 +21,8 @@
     msClose: ['رصيد آخر الشهر (كاش وبنوك)', 'Closing balance (cash & banks)'],
     msNW: ['صافي الثروة آخر الشهر', 'Net worth at month end'],
     msHint: [
-      'آخر كل شهر بيتحفظ ملخص الشهر لوحده في فولدر Daftari على Drive (ملف تفتحه وتطبعه PDF).',
-      'At each month end a summary is saved to the Daftari folder on Drive (a file you can open and print as PDF).'
+      'آخر كل شهر بيتحفظ ملخص الشهر لوحده في فولدر Daftari على Drive. ده ملف عادي مش متشفر، علشان تفتحه وتطبعه PDF.',
+      'At each month end a summary is saved to the Daftari folder on Drive. It is a plain file, not encrypted, so you can open it and print it as PDF.'
     ],
     fpMove: ['حرّك البصمة لمكان الحساس وسيبها', 'Drag the fingerprint onto the sensor and let go'],
     fpSaved: ['اتحفظ مكان البصمة', 'Fingerprint position saved'],

@@ -56,6 +56,16 @@ async function vapidHeader(endpoint, keys) {
   const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(unsigned));
   return 'vapid t=' + unsigned + '.' + b64u(sig) + ', k=' + keys.pub;
 }
+// Only the browsers' own push services are accepted, so nobody can make this Worker call any other site.
+// Chrome, Edge, Opera, Samsung (Google) · Firefox (Mozilla) · Safari (Apple) · Windows.
+const PUSH_HOSTS = /^(fcm\.googleapis\.com|android\.googleapis\.com|updates\.push\.services\.mozilla\.com|[a-z0-9-]+\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com)$/;
+function pushEndpointOk(u) {
+  if (typeof u !== 'string' || u.length > 1000) return false;
+  try {
+    const x = new URL(u);
+    return x.protocol === 'https:' && !x.username && !x.password && !x.port && PUSH_HOSTS.test(x.hostname);
+  } catch { return false; }
+}
 // Minutes past midnight right now in a user's own time zone.
 function localMinutes(tz, now) {
   try {
@@ -71,6 +81,7 @@ async function sendAll(env, now = new Date()) {
   for (const { endpoint, hm, tz } of results) {
     const m = localMinutes(tz || 'Africa/Cairo', now);
     if (m < 0 || Math.floor(m / 15) !== Math.floor((hm ?? 540) / 15)) continue;
+    if (!pushEndpointOk(endpoint)) continue;
     try {
       const r = await fetch(endpoint, { method: 'POST', headers: { TTL: '3600', Urgency: 'normal', Authorization: await vapidHeader(endpoint, keys), 'Content-Length': '0' } });
       if (r.status === 404 || r.status === 410) await env.DB.prepare('DELETE FROM push_subs WHERE endpoint = ?1').bind(endpoint).run();
@@ -94,7 +105,7 @@ export default {
       if (!env.DB) return reply({ error: 'db_not_configured' }, 500);
       if (path === '/push/key') return reply({ key: (await vapidKeys(env)).pub }, 200);
       const sub = body.sub || {};
-      if (typeof sub.endpoint !== 'string' || !/^https:\/\//.test(sub.endpoint) || sub.endpoint.length > 1000) return reply({ error: 'bad_sub' }, 400);
+      if (!pushEndpointOk(sub.endpoint)) return reply({ error: 'bad_sub' }, 400);
       if (path === '/push/subscribe') {
         const hm = Number.isInteger(body.hm) && body.hm >= 0 && body.hm < 1440 ? body.hm : 540;
         const tz = typeof body.tz === 'string' && /^[A-Za-z_+\-\/0-9]{1,64}$/.test(body.tz) && localMinutes(body.tz, new Date()) >= 0 ? body.tz : 'Africa/Cairo';

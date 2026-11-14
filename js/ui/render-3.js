@@ -64,6 +64,7 @@
       driveRestore: driveRestore,
       driveTidy: driveTidyAsk,
       driveKeepAll: driveKeepAll,
+      msAuto: msAutoToggle,
       driveUnlink: driveUnlink,
       driveSwitch: driveSwitch,
       driveResume: driveResume,

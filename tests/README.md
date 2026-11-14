@@ -22,8 +22,11 @@ bash tests/run_all.sh
 | `test_escape.py` | أي نص مكتوب عمره ما يتعرض كـ HTML |
 | `test_day_change.py` | تغيّر اليوم والبرنامج مفتوح |
 | `test_drive_keep.py` | قاعدة الاحتفاظ بنسخ Drive، وإن مفيش حاجة تتشال قبل الموافقة |
-| `test_statement_match.py` | مطابقة كشف البنك والكارت |
+| `test_statement_match.py` | مطابقة كشف البنك والكارت (CSV و Excel) |
 | `test_card_statement.py` | المطلوب سداده للكارت وحسبة الكشف |
 | `test_pay_over.py` | سداد أكبر من الباقي |
 | `test_new_category.py` | بند جديد من جوه الحركة |
+| `test_plain_copies.py` | الحاجتين اللي مش متشفرين: قايمة التنبيهات وملخص الشهر |
+| `test_excel_export.py` | تصدير Excel بالمكتبة اللي جوه البرنامج |
+| `test_worker_push_hosts.py` | السيرفر بيكلّم خدمات التنبيهات المعروفة بس |
 | `test_rate_lows.py` | جدول أقل سعر |

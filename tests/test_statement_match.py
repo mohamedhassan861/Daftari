@@ -41,6 +41,15 @@ def bank_csv():
         rows.append(f'{d},{s},{"%.2f" % -a if a < 0 else ""},{"%.2f" % a if a > 0 else ""},"{bal:,.2f}"')
     return '\n'.join(rows).encode()
 
+def bank_xlsx_rows():
+    """The same statement as an Excel sheet: real date cells, numbers as numbers, headings on the sixth row."""
+    bal, rows = 5000.0, [['Test Bank'], ['Account statement'], [], ['Customer', 'Invented Name'], [],
+                         ['Transaction Date', 'Description', 'Debit', 'Credit', 'Balance']]
+    for d, s, a in BANK:
+        bal = round(bal + a, 2)
+        rows.append(['D:%s-%s-%s' % (d[6:], d[3:5], d[:2]), s, -a if a < 0 else '', a if a > 0 else '', bal])
+    return rows
+
 def card_csv():
     L = [(',,Nov-26,OPENING BALANCE,,2000.00'), ('15-10,,16-10,MARKET ONE,,1200.50'), ('12-10,,12-10,PAYMENT RECEIVED,,2000.00 CR'),
          ('20-10,,20-10,PAYMENT RECEIVED,,500.00 CR'), ('28-10,,29-10,CLOTHES SHOP,,830.00'), ('00-00,,00-00,"SAR10,00",,.00'),
@@ -51,21 +60,29 @@ def counts(txt):
     f = lambda k: int(m.group(1)) if (m := re.search(re.escape(k) + r'[^(\n]{0,40}\((\d+)\)', txt)) else 0
     return {'bank': f('في البنك ومش عندك'), 'groups': f('إجماليات'), 'app': f('عندك ومش في البنك'), 'ok': f('متطابق')}
 
+XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
 async def match(pg, acc, name, data):
     await close_sheets(pg)
     await act(pg, 'stmtAcc', acc)
     await pg.click('#shB [data-sact=bmatch]'); await pg.wait_for_timeout(300)
     await pg.select_option('#bma', acc)
-    await pg.set_input_files('#bmf', files=[{'name': name, 'mimeType': 'text/csv', 'buffer': data}]); await pg.wait_for_timeout(2500)
+    await pg.set_input_files('#bmf', files=[{'name': name, 'mimeType': XLSX if name.endswith('.xlsx') else 'text/csv', 'buffer': data}]); await pg.wait_for_timeout(2500)
     return await pg.evaluate("document.querySelector('#shB').innerText")
 
 async def main():
     async with async_playwright() as p:
         b, pg, errs = await open_app(p, when='2026-11-14T10:00:00', sample=False)
         await pg.evaluate(LEDGER); await pg.wait_for_timeout(400)
+        want = {'bank': 2, 'groups': 1, 'app': 1, 'ok': 8}
+        txt = await match(pg, 'bank', 'bank.xlsx', await make_xlsx(pg, bank_xlsx_rows())); c = counts(txt)
+        ok('12 حركة' in txt and c == want, 'the same statement as an Excel file (date cells) gives the same result ' + str(c))
+        ok(await pg.evaluate("[...document.scripts].some(s=>/^http:\\/\\/localhost.*vendor\\/xlsx-/.test(s.src))")
+           and not await pg.evaluate("[...document.scripts].some(s=>/cdnjs|cdn\\./.test(s.src))"),
+           'the Excel reader is loaded from inside the app, not from another site')
         txt = await match(pg, 'bank', 'bank.csv', bank_csv()); c = counts(txt)
         ok('12 حركة' in txt, 'all 12 statement lines read')
-        ok(c == {'bank': 2, 'groups': 1, 'app': 1, 'ok': 8}, 'two lines missing in the app, one total with its two details, one entry missing in the bank, eight matched ' + str(c))
+        ok(c == want, 'two lines missing in the app, one total with its two details, one entry missing in the bank, eight matched ' + str(c))
         ok('الباقي بعدهم: 0' in txt, 'the balance difference is fully explained')
         sug = await pg.evaluate("[...document.querySelectorAll('[data-bl]')].map(s=>s.value)")
         ok(sug[0] == 'acc:cash', 'cash withdrawal suggested as a transfer to cash ' + str(sug))

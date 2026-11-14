@@ -132,6 +132,12 @@
       'النسخ القديمة بتتنضّف لوحدها: بتفضل كل نسخ آخر 7 أيام، وآخر نسخة من كل يوم لـ 3 شهور، وآخر نسخة من كل شهر قبل كده.',
       'Old copies are cleared automatically: every copy from the last 7 days stays, then the last copy of each day for 3 months, then the last copy of each month.'
     ],
+    msHintOff: [
+      'ملخص الشهر مش بيتحفظ لوحده. الزرار ده بيحفظه وقت ما تحب (ملف عادي مش متشفر).',
+      'The month summary is not saved on its own. This button saves it whenever you like (a plain file, not encrypted).'
+    ],
+    msAutoOff: ['وقّف حفظه لوحده', 'Stop saving it automatically'],
+    msAutoOn: ['احفظه لوحده كل شهر', 'Save it automatically each month'],
     tidyBtn: ['نضّف النسخ القديمة', 'Clear old copies'],
     keepAllBtn: ['خلّي كل النسخ', 'Keep every copy'],
     tidyQ: [

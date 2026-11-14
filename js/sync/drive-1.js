@@ -9,7 +9,8 @@
           lastUp: drv.lastUp,
           email: drv.email,
           keep: drv.keep,
-          tidied: drv.tidied
+          tidied: drv.tidied,
+          sumOff: drv.sumOff
         })
       );
     } catch (e) {}

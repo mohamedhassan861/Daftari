@@ -52,9 +52,11 @@
       return null;
     }
   }
+  /* the list is plain text in the browser, because the phone has to show it while the app is locked.
+     So it is kept only while notifications are on, and emptied as soon as they are off. */
   function writeReminders() {
     if (!('indexedDB' in window) || !PS) return;
-    pSet('reminders', upcomingReminders(PS));
+    pSet('reminders', pushOn() ? upcomingReminders(PS) : []);
     pSet('title', t('app'));
     pSet('lead', remTime().lead);
   }
@@ -130,6 +132,7 @@
     try {
       localStorage.removeItem('daftari-push');
     } catch (e) {}
+    pSet('reminders', []);
     render();
   }
   async function pushSub() {

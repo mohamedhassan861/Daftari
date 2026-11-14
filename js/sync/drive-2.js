@@ -117,6 +117,8 @@
       drv.email = '';
       drv.folderId = null;
       drv.lastUp = null;
+      /* the agreement to clear old copies was given for the old account's folder */
+      drv.keep = drv.tidied = undefined;
       drvSave();
       await authorize(true);
       await fetchDriveEmail();
@@ -275,6 +277,11 @@
   }
   function driveKeepAll() {
     drv.keep = 'all';
+    drvSave();
+    render();
+  }
+  function msAutoToggle() {
+    drv.sumOff = !drv.sumOff;
     drvSave();
     render();
   }

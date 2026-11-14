@@ -4,7 +4,8 @@
     if (XLSXP) return XLSXP;
     XLSXP = new Promise((res, rej) => {
       const sc = document.createElement('script');
-      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      /* kept inside the app (see vendor/xlsx-0.20.3/SOURCE.md): nothing outside can change it, and it works offline */
+      sc.src = 'vendor/xlsx-0.20.3/xlsx.full.min.js';
       sc.onload = () => res(window.XLSX);
       sc.onerror = () => {
         XLSXP = null;

@@ -80,7 +80,7 @@
       driveConfigured()
         ? drv.linked
           ? `<div class="list"><div class="setrow stack"><span class="label">${t('driveAccount')}</span><b class="num" dir="ltr" style="align-self:stretch;text-align:start;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${drv.email ? esc(drv.email) : `<span class="muted" style="font-weight:400">${t('loading')}</span>`}</b></div></div>
-      <p class="hint">${t('msHint')}</p><div class="acts"><button class="btn" data-act="monthSum">${t('msBtn')}</button></div>
+      <p class="hint">${t(drv.sumOff ? 'msHintOff' : 'msHint')}</p><div class="acts"><button class="btn" data-act="monthSum">${t('msBtn')}</button><button class="btn sm" data-act="msAuto">${t(drv.sumOff ? 'msAutoOn' : 'msAutoOff')}</button></div>
       <div class="acts"><button class="btn" data-act="driveRestore">${t('driveRestore')}</button><button class="btn" data-act="driveSwitch">${t('driveSwitch')}</button><button class="btn danger" data-act="driveUnlink">${t('driveUnlink')}</button></div>
       <p class="hint">${t('driveLast')}: ${esc(driveLastLbl())} · ${t(drv.keep === 'tidy' ? 'driveKeepTidy' : 'driveKeep')}</p>
       <div class="acts">${drv.keep === 'tidy' ? `<button class="btn sm" data-act="driveKeepAll">${t('keepAllBtn')}</button>` : `<button class="btn sm" data-act="driveTidy">${t('tidyBtn')}</button>`}</div>`

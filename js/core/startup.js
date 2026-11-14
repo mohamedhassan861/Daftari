@@ -149,6 +149,7 @@
       },
       set S(v) {
         S = v;
+        if (ACT === 'me') PS = v;
       },
       get per() {
         return per;

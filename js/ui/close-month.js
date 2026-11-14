@@ -176,7 +176,7 @@
             S.closed[m] = true;
             closeSheet();
             commit(t('closedMsg'));
-            setTimeout(() => saveMonthSummary(m, false), 1500);
+            if (!drv.sumOff) setTimeout(() => saveMonthSummary(m, false), 1500);
           });
         };
       }

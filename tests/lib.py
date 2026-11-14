@@ -60,4 +60,32 @@ async def act(pg, name, id_=None):
                       "document.querySelector('#view').appendChild(b);b.click();b.remove()}", [name, id_])
     await pg.wait_for_timeout(500)
 
-__all__ = ['async_playwright', 'ok', 'failed', 'open_app', 'close_sheets', 'tab', 'act', 'URL']
+LIB = 'vendor/xlsx-0.20.3/xlsx.full.min.js'
+
+async def _sheet_page(pg):
+    """A second page that holds only the app's own Excel library, to build or read test files."""
+    q = await pg.context.browser.new_page()
+    await q.goto(URL.replace('index.html', 'privacy.html'))
+    await q.add_script_tag(url=URL.replace('index.html', LIB))
+    return q
+
+async def make_xlsx(pg, rows):
+    """rows -> bytes of an .xlsx file. A value written as 'D:2026-10-01' becomes a real Excel date cell."""
+    q = await _sheet_page(pg)
+    out = await q.evaluate("""rows=>{const X=window.XLSX,
+      r=rows.map(a=>a.map(v=>typeof v==='string'&&v.startsWith('D:')?new Date(+v.slice(2,6),+v.slice(7,9)-1,+v.slice(10,12)):v));
+      const ws=X.utils.aoa_to_sheet(r,{cellDates:true}),wb=X.utils.book_new();X.utils.book_append_sheet(wb,ws,'Statement');
+      return Array.from(new Uint8Array(X.write(wb,{type:'array',bookType:'xlsx'})))}""", rows)
+    await q.close()
+    return bytes(out)
+
+async def read_xlsx(pg, data):
+    """bytes of an .xlsx file -> {rows (raw values), rtl}."""
+    q = await _sheet_page(pg)
+    out = await q.evaluate("""d=>{const X=window.XLSX,wb=X.read(new Uint8Array(d),{type:'array'});
+      return {rows:X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''}),
+              rtl:!!(wb.Workbook&&wb.Workbook.Views&&wb.Workbook.Views[0]&&wb.Workbook.Views[0].RTL)}}""", list(data))
+    await q.close()
+    return out
+
+__all__ = ['async_playwright', 'ok', 'failed', 'open_app', 'close_sheets', 'tab', 'act', 'URL', 'make_xlsx', 'read_xlsx']
